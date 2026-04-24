@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Estoque — Fábrica</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --marrom-escuro: #3E2010;
+    --marrom: #6B3A1F;
+    --marrom-medio: #8B5030;
+    --marrom-claro: #C4956A;
+    --marrom-pastel: #E8C9A8;
+    --creme: #F5EBD8;
+    --creme-claro: #FBF5EC;
+    --bordo: #6B1F2E;
+    --bordo-medio: #8B2A3E;
+    --bordo-claro: #C4607A;
+    --bordo-pastel: #E8B4BF;
+    --bordo-suave: #F5D8DC;
+    --texto-escuro: #2A1505;
+    --texto-medio: #5C3317;
+    --cinza-suave: #F0E8DE;
+    --branco: #FFFCF8;
+    --verde-ok: #5A8A5A;
+    --verde-claro: #D4E8D4;
+    --amarelo-atencao: #A07020;
+    --amarelo-claro: #F0E0B0;
+    --vermelho-critico: #8B2020;
+    --vermelho-claro: #F0D0D0;
+    --shadow-suave: 0 2px 12px rgba(62,32,16,0.08);
+    --shadow-medio: 0 4px 20px rgba(62,32,16,0.14);
+    --shadow-forte: 0 8px 32px rgba(62,32,16,0.18);
+    --radius: 12px;
+    --radius-lg: 18px;
+    --radius-sm: 8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--creme-claro);
+    color: var(--texto-escuro);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 0% 0%, rgba(107,63,31,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 100% 100%, rgba(107,31,46,0.05) 0%, transparent 60%);
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    background: linear-gradient(135deg, var(--marrom-escuro) 0%, var(--marrom) 50%, var(--bordo) 100%);
+    padding: 0 32px;
+    box-shadow: var(--shadow-forte);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, var(--marrom-pastel), var(--creme));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .logo-text {
+    font-family: 'Playfair Display', serif;
+    color: var(--creme);
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .logo-text span {
+    color: var(--marrom-pastel);
+    font-weight: 400;
+  }
+
+  .header-date {
+    color: var(--marrom-pastel);
+    font-size: 0.82rem;
+    font-weight: 400;
+  }
+
+  /* ===== NAV TABS ===== */
+  nav {
+    background: var(--branco);
+    border-bottom: 1px solid var(--marrom-pastel);
+    position: sticky;
+    top: 68px;
+    z-index: 90;
+    box-shadow: 0 2px 8px rgba(62,32,16,0.06);
+  }
+
+  .nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    padding: 0 32px;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .nav-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--texto-medio);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    background: none;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .nav-tab:hover { color: var(--marrom); background: var(--creme); }
+
+  .nav-tab.active {
+    color: var(--bordo);
+    border-bottom-color: var(--bordo);
+    font-weight: 600;
+    background: var(--bordo-suave);
+  }
+
+  .nav-tab .tab-icon { font-size: 1rem; }
+
+  /* ===== MAIN ===== */
+  main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 28px 32px 48px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeUp 0.3s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== DASHBOARD ===== */
+  .dash-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--marrom-escuro);
+    margin-bottom: 6px;
+  }
+
+  .dash-subtitle {
+    color: var(--texto-medio);
+    font-size: 0.88rem;
+    margin-bottom: 24px;
+  }
+
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .kpi-card {
+    background: var(--branco);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-suave);
+    border: 1px solid var(--marrom-pastel);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+
+  .kpi-card.marrom::before { background: linear-gradient(90deg, var(--marrom), var(--marrom-claro)); }
+  .kpi-card.bordo::before  { background: linear-gradient(90deg, var(--bordo), var(--bordo-claro)); }
+  .kpi-card.verde::before  { background: linear-gradient(90deg, var(--verde-ok), #7AAD7A); }
+  .kpi-card.critico::before{ background: linear-gradient(90deg, var(--vermelho-critico), #B03030); }
+
+  .kpi-label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--texto-medio);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  .kpi-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--marrom-escuro);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .kpi-desc {
+    font-size: 0.78rem;
+    color: var(--texto-medio);
+  }
+
+  .kpi-icon {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 1.6rem;
+    opacity: 0.18;
+  }
+
+  /* ===== PAINEL DE ESTOQUE ===== */
+  .estoque-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  @media (max-width: 1100px) {
+    .estoque-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 700px) {
+    .estoque-grid { grid-template-columns: 1fr; }
+    main { padding: 16px; }
+    .nav-inner { padding: 0 16px; }
+    header { padding: 0 16px; }
+  }
+
+  .estoque-coluna {
+    background: var(--branco);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-suave);
+    border: 1px solid var(--marrom-pastel);
+    overflow: hidden;
+  }
+
+  .col-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .col-header.mp  { background: linear-gradient(135deg, var(--marrom-escuro), var(--marrom)); }
+  .col-header.pp  { background: linear-gradient(135deg, var(--marrom), var(--bordo-medio)); }
+  .col-header.pa  { background: linear-gradient(135deg, var(--bordo), var(--bordo-escuro, #4A0F1C)); }
+
+  .col-header h3 {
+    font-family: 'Playfair Display', serif;
+    color: var(--creme);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .col-header .col-icon {
+    font-size: 1.2rem;
+    background: rgba(255,255,255,0.15);
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .col-body { padding: 12px 0; }
+
+  .produto-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--cinza-suave);
+    transition: background 0.15s;
+  }
+
+  .produto-row:last-child { border-bottom: none; }
+  .produto-row:hover { background: var(--creme); }
+
+  .prod-info { flex: 1; }
+  .prod-nome { font-size: 0.85rem; font-weight: 500; color: var(--texto-escuro); }
+  .prod-codigo { font-size: 0.72rem; color: var(--texto-medio); }
+
+  .prod-saldo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .saldo-num {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--marrom-escuro);
+    font-family: 'Playfair Display', serif;
+  }
+
+  .status-badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .status-CRITICO  { background: var(--vermelho-claro); color: var(--vermelho-critico); }
+  .status-ATENCAO  { background: var(--amarelo-claro);  color: var(--amarelo-atencao); }
+  .status-OK       { background: var(--verde-claro);    color: var(--verde-ok); }
+  .status-VENCIDO  { background: #F0D0D0; color: #8B0000; }
+  .status-ATRASADO { background: var(--amarelo-claro);  color: var(--amarelo-atencao); }
+
+  /* ===== SECTION HEADERS ===== */
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--marrom-escuro);
+    margin-bottom: 4px;
+  }
+
+  .section-desc {
+    font-size: 0.84rem;
+    color: var(--texto-medio);
+  }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--marrom), var(--marrom-medio));
+    color: var(--creme);
+    box-shadow: 0 2px 8px rgba(107,58,31,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(107,58,31,0.4); }
+
+  .btn-bordo {
+    background: linear-gradient(135deg, var(--bordo), var(--bordo-medio));
+    color: var(--creme);
+    box-shadow: 0 2px 8px rgba(107,31,46,0.3);
+  }
+  .btn-bordo:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(107,31,46,0.4); }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--marrom);
+    border: 1.5px solid var(--marrom-claro);
+  }
+  .btn-outline:hover { background: var(--creme); }
+
+  .btn-sm { padding: 6px 12px; font-size: 0.78rem; }
+  .btn-danger { background: var(--vermelho-critico); color: white; }
+
+  /* ===== FORMS / MODALS ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30,12,5,0.55);
+    backdrop-filter: blur(3px);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--branco);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-forte);
+    animation: modalIn 0.25s ease;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--marrom-pastel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    color: var(--marrom-escuro);
+  }
+
+  .modal-close {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+    color: var(--texto-medio);
+    background: var(--creme);
+    border: none;
+    transition: background 0.15s;
+  }
+
+  .modal-close:hover { background: var(--marrom-pastel); }
+
+  .modal-body { padding: 20px 24px; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--texto-medio);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  input, select, textarea {
+    padding: 9px 12px;
+    border: 1.5px solid var(--marrom-pastel);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--texto-escuro);
+    background: var(--creme-claro);
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--marrom-claro);
+    background: var(--branco);
+  }
+
+  textarea { resize: vertical; min-height: 72px; }
+
+  .form-divider {
+    grid-column: 1 / -1;
+    border: none;
+    border-top: 1px solid var(--marrom-pastel);
+    margin: 4px 0;
+  }
+
+  .form-section-title {
+    grid-column: 1 / -1;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--bordo);
+    padding-top: 4px;
+  }
+
+  .modal-footer {
+    padding: 14px 24px;
+    border-top: 1px solid var(--marrom-pastel);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* ===== TABLES ===== */
+  .table-card {
+    background: var(--branco);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-suave);
+    border: 1px solid var(--marrom-pastel);
+    overflow: hidden;
+  }
+
+  .table-toolbar {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--cinza-suave);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .table-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--creme);
+    border: 1px solid var(--marrom-pastel);
+    border-radius: 8px;
+    padding: 7px 12px;
+  }
+
+  .table-search input {
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 0.85rem;
+    width: 200px;
+  }
+
+  .table-search input:focus { outline: none; }
+
+  .table-wrap { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+  }
+
+  thead th {
+    background: var(--cinza-suave);
+    color: var(--texto-medio);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.72rem;
+    padding: 11px 14px;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--marrom-pastel);
+  }
+
+  tbody td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--cinza-suave);
+    color: var(--texto-escuro);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--creme); }
+
+  .fifo-badge {
+    background: linear-gradient(135deg, var(--marrom-escuro), var(--marrom));
+    color: var(--creme);
+    font-size: 0.66rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  .validade-ok { color: var(--verde-ok); font-weight: 600; }
+  .validade-atencao { color: var(--amarelo-atencao); font-weight: 600; }
+  .validade-vencida { color: var(--vermelho-critico); font-weight: 600; }
+
+  /* ===== FIFO INDICATOR ===== */
+  .fifo-banner {
+    background: linear-gradient(135deg, var(--marrom-escuro), var(--marrom-medio));
+    color: var(--creme);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-size: 0.84rem;
+  }
+
+  .fifo-banner strong { color: var(--marrom-pastel); }
+
+  /* ===== LOADING / EMPTY ===== */
+  .loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--texto-medio);
+    gap: 10px;
+    font-size: 0.88rem;
+  }
+
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--marrom-pastel);
+    border-top-color: var(--marrom);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--texto-medio);
+  }
+
+  .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 8px; opacity: 0.4; }
+  .empty-state p { font-size: 0.88rem; }
+
+  /* ===== TOAST ===== */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--marrom-escuro);
+    color: var(--creme);
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    font-size: 0.85rem;
+    box-shadow: var(--shadow-forte);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: toastIn 0.3s ease;
+    max-width: 320px;
+  }
+
+  .toast.success { border-left: 4px solid #6AAD6A; }
+  .toast.error   { border-left: 4px solid var(--bordo-claro); }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-bar {
+    height: 6px;
+    background: var(--cinza-suave);
+    border-radius: 3px;
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--marrom-claro), var(--marrom));
+    transition: width 0.4s ease;
+  }
+
+  .progress-fill.critico { background: linear-gradient(90deg, var(--bordo-claro), var(--vermelho-critico)); }
+  .progress-fill.ok      { background: linear-gradient(90deg, #7AAD7A, var(--verde-ok)); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">🏭</div>
+      <div class="logo-text">Estoque <span>Fábrica</span></div>
+    </div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <button class="nav-tab active" onclick="showSection('dashboard')">
+      <span class="tab-icon">📊</span> Dashboard
+    </button>
+    <button class="nav-tab" onclick="showSection('mp-produtos')">
+      <span class="tab-icon">🌾</span> Matéria-Prima
+    </button>
+    <button class="nav-tab" onclick="showSection('mp-entradas')">
+      <span class="tab-icon">📥</span> Entradas MP
+    </button>
+    <button class="nav-tab" onclick="showSection('mp-saidas')">
+      <span class="tab-icon">📤</span> Saídas MP
+    </button>
+    <button class="nav-tab" onclick="showSection('processo')">
+      <span class="tab-icon">⚙️</span> Em Processo
+    </button>
+    <button class="nav-tab" onclick="showSection('pa-cadastro')">
+      <span class="tab-icon">🧊</span> Produto Acabado
+    </button>
+    <button class="nav-tab" onclick="showSection('pa-producao')">
+      <span class="tab-icon">✅</span> Produção PA
+    </button>
+    <button class="nav-tab" onclick="showSection('expedicao')">
+      <span class="tab-icon">🚚</span> Expedição
+    </button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="sec-dashboard" class="section active">
+    <p class="dash-title">Painel de Controle</p>
+    <p class="dash-subtitle">Visão geral do estoque em tempo real</p>
+
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card marrom">
+        <div class="kpi-label">Matérias-Primas</div>
+        <div class="kpi-value" id="kpi-mp">—</div>
+        <div class="kpi-desc">produtos cadastrados</div>
+        <div class="kpi-icon">🌾</div>
+      </div>
+      <div class="kpi-card bordo">
+        <div class="kpi-label">Em Processo</div>
+        <div class="kpi-value" id="kpi-pp">—</div>
+        <div class="kpi-desc">ordens abertas</div>
+        <div class="kpi-icon">⚙️</div>
+      </div>
+      <div class="kpi-card verde">
+        <div class="kpi-label">Produtos Acabados</div>
+        <div class="kpi-value" id="kpi-pa">—</div>
+        <div class="kpi-desc">produtos cadastrados</div>
+        <div class="kpi-icon">🧊</div>
+      </div>
+      <div class="kpi-card critico">
+        <div class="kpi-label">Alertas Críticos</div>
+        <div class="kpi-value" id="kpi-critico">—</div>
+        <div class="kpi-desc">itens abaixo do mínimo</div>
+        <div class="kpi-icon">⚠️</div>
+      </div>
+    </div>
+
+    <div class="estoque-grid">
+      <!-- Matéria Prima -->
+      <div class="estoque-coluna">
+        <div class="col-header mp">
+          <div class="col-icon">🌾</div>
+          <h3>Matéria-Prima</h3>
+        </div>
+        <div class="col-body" id="dash-mp-body">
+          <div class="loading-spinner"><div class="spinner"></div> Carregando...</div>
+        </div>
+      </div>
+      <!-- Em Processo -->
+      <div class="estoque-coluna">
+        <div class="col-header pp">
+          <div class="col-icon">⚙️</div>
+          <h3>Em Processo</h3>
+        </div>
+        <div class="col-body" id="dash-pp-body">
+          <div class="loading-spinner"><div class="spinner"></div> Carregando...</div>
+        </div>
+      </div>
+      <!-- Produto Acabado -->
+      <div class="estoque-coluna">
+        <div class="col-header pa">
+          <div class="col-icon">🧊</div>
+          <h3>Produto Acabado</h3>
+        </div>
+        <div class="col-body" id="dash-pa-body">
+          <div class="loading-spinner"><div class="spinner"></div> Carregando...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MATÉRIA-PRIMA: CADASTRO ===== -->
+  <div id="sec-mp-produtos" class="section">
+    <div class="section-header">
+      <div>
+        <p class="section-title">Matéria-Prima — Cadastro</p>
+        <p class="section-desc">Gerenciar produtos e saldos</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-mp-produto')">+ Novo Produto</button>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="table-search">🔍 <input type="text" placeholder="Buscar produto..." oninput="filterTable('tbl-mp-prod', this.value)"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadMPProdutos()">↻ Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-mp-prod">
+          <thead><tr><th>Código</th><th>Produto</th><th>Unidade</th><th>Estq. Mínimo</th><th>Estq. Atual</th><th>Status</th><th>Estoque</th></tr></thead>
+          <tbody id="tbody-mp-prod"><tr><td colspan="7"><div class="loading-spinner"><div class="spinner"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ENTRADAS MP ===== -->
+  <div id="sec-mp-entradas" class="section">
+    <div class="section-header">
+      <div>
+        <p class="section-title">Entradas — Notas Fiscais</p>
+        <p class="section-desc">Registro de compras de matéria-prima com controle FIFO</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-mp-entrada')">+ Nova Entrada</button>
+    </div>
+    <div class="fifo-banner">
+      📦 <div>Método <strong>FIFO</strong>: Os lotes registrados mais antigos serão consumidos primeiro. Certifique-se de preencher data, lote e validade corretamente.</div>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="table-search">🔍 <input type="text" placeholder="Buscar NF, produto, fornecedor..." oninput="filterTable('tbl-mp-ent', this.value)"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadMPEntradas()">↻ Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-mp-ent">
+          <thead><tr><th>Data</th><th>FIFO</th><th>Produto</th><th>NF / Série</th><th>Fornecedor</th><th>Lote</th><th>Validade</th><th>Qtd</th><th>Vl. Unit.</th><th>Vl. Total</th><th>Saldo FIFO</th></tr></thead>
+          <tbody id="tbody-mp-ent"><tr><td colspan="11"><div class="loading-spinner"><div class="spinner"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SAÍDAS MP ===== -->
+  <div id="sec-mp-saidas" class="section">
+    <div class="section-header">
+      <div>
+        <p class="section-title">Saídas — Consumo de MP</p>
+        <p class="section-desc">Baixa de matéria-prima por lote FIFO (mais antigo primeiro)</p>
+      </div>
+      <button class="btn btn-bordo" onclick="openModal('modal-mp-saida')">+ Registrar Saída</button>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="table-search">🔍 <input type="text" placeholder="Buscar produto, lote, OP..." oninput="filterTable('tbl-mp-sai', this.value)"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadMPSaidas()">↻ Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-mp-sai">
+          <thead><tr><th>Data</th><th>Produto</th><th>Lote Origem</th><th>NF Origem</th><th>Quantidade</th><th>Destino</th><th>Ordem Prod.</th><th>Responsável</th><th>Custo Total</th></tr></thead>
+          <tbody id="tbody-mp-sai"><tr><td colspan="9"><div class="loading-spinner"><div class="spinner"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EM PROCESSO ===== -->
+  <div id="sec-processo" class="section">
+    <div class="section-header">
+      <div>
+        <p class="section-title">Produção em Processo</p>
+        <p class="section-desc">Ordens de produção abertas</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-processo')">+ Nova Ordem</button>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="table-search">🔍 <input type="text" placeholder="Buscar ordem, produto..." oninput="filterTable('tbl-proc', this.value)"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadProcesso()">↻ Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-proc">
+          <thead><tr><th>Ordem</th><th>Data Início</th><th>Produto</th><th>Qtd</th><th>Etapa</th><th>Conclusão</th><th>Responsável</th><th>Prev. Término</th><th>Custo MP</th><th>Status</th></tr></thead>
+          <tbody id="tbody-proc"><tr><td colspan="10"><div class="loading-spinner"><div class="spinner"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PA CADASTRO ===== -->
+  <div id="sec-pa-cadastro" class="section">
+    <div class="section-header">
+      <div>
+        <p class="section-title">Produto Acabado — Cadastro</p>
+        <p class="section-desc">Gerenciar produtos finalizados</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-pa-produto')">+ Novo Produto</button>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="table-search">🔍 <input type="text" placeholder="Buscar produto..." oninput="filterTable('tbl-pa-cad', this.value)"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadPAProdutos()">↻ Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-pa-cad">
+          <thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Unidade</th><th>Estq. Mínimo</th><th>Estq. Atual</th><th>Status</th></tr></thead>
+          <tbody id="tbody-pa-cad"><tr><td colspan="7"><div class="loading-spinner"><div class="spinner"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PA PRODUÇÃO ===== -->
+  <div id="sec-pa-producao" class="section">
+    <div class="section-header">
+      <div>
+        <p class="section-title">Entrada de Produto Acabado</p>
+        <p class="section-desc">Produtos finalizados e incorporados ao estoque (FIFO por validade)</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('modal-pa-producao')">+ Registrar Produção</button>
+    </div>
+    <div class="fifo-banner">
+      🧊 <div>Método <strong>FIFO</strong>: Lotes com validade mais próxima serão expedidos primeiro. Registre sempre data de produção e validade.</div>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="table-search">🔍 <input type="text" placeholder="Buscar produto, lote..." oninput="filterTable('tbl-pa-prod', this.value)"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadPAProducao()">↻ Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-pa-prod">
+          <thead><tr><th>Data Prod.</th><th>FIFO</th><th>Produto</th><th>Lote</th><th>Validade</th><th>Qtd</th><th>Custo Unit.</th><th>Custo Total</th><th>Saldo FIFO</th><th>Ordem Prod.</th></tr></thead>
+          <tbody id="tbody-pa-prod"><tr><td colspan="10"><div class="loading-spinner"><div class="spinner"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EXPEDIÇÃO ===== -->
+  <div id="sec-expedicao" class="section">
+    <div class="section-header">
+      <div>
+        <p class="section-title">Expedição — Saída de PA</p>
+        <p class="section-desc">Produtos acabados expedidos para venda/distribuição</p>
+      </div>
+      <button class="btn btn-bordo" onclick="openModal('modal-expedicao')">+ Registrar Expedição</button>
+    </div>
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="table-search">🔍 <input type="text" placeholder="Buscar produto, NF, destino..." oninput="filterTable('tbl-exp', this.value)"></div>
+        <button class="btn btn-outline btn-sm" onclick="loadExpedicao()">↻ Atualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table id="tbl-exp">
+          <thead><tr><th>Data Saída</th><th>Produto</th><th>Lote</th><th>Quantidade</th><th>Destino</th><th>NF Venda</th><th>Responsável</th><th>Transporte</th></tr></thead>
+          <tbody id="tbody-exp"><tr><td colspan="8"><div class="loading-spinner"><div class="spinner"></div></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ============================================================ -->
+<!-- ===================== MODALS =============================== -->
+<!-- ============================================================ -->
+
+<!-- Modal: Novo Produto MP -->
+<div class="modal-overlay" id="modal-mp-produto">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Cadastrar Matéria-Prima</span>
+      <button class="modal-close" onclick="closeModal('modal-mp-produto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Código *</label>
+          <input id="mp-prod-codigo" type="text" placeholder="Ex: MP009">
+        </div>
+        <div class="form-group">
+          <label>Unidade *</label>
+          <select id="mp-prod-unidade">
+            <option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Nome do Produto *</label>
+          <input id="mp-prod-nome" type="text" placeholder="Ex: Gordura Vegetal">
+        </div>
+        <div class="form-group">
+          <label>Estoque Mínimo *</label>
+          <input id="mp-prod-estmin" type="number" min="0" step="0.001" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Estoque Atual</label>
+          <input id="mp-prod-estatu" type="number" min="0" step="0.001" placeholder="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-mp-produto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMPProduto()">Salvar Produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Nova Entrada MP -->
+<div class="modal-overlay" id="modal-mp-entrada">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar Entrada de Matéria-Prima</span>
+      <button class="modal-close" onclick="closeModal('modal-mp-entrada')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-section-title">📋 Dados do Produto</div>
+        <div class="form-group">
+          <label>Data de Entrada *</label>
+          <input id="ent-data" type="date">
+        </div>
+        <div class="form-group">
+          <label>Produto *</label>
+          <select id="ent-produto"></select>
+        </div>
+        <div class="form-divider"></div>
+        <div class="form-section-title">🧾 Dados da Nota Fiscal</div>
+        <div class="form-group">
+          <label>Nº Nota Fiscal *</label>
+          <input id="ent-nf" type="text" placeholder="000001">
+        </div>
+        <div class="form-group">
+          <label>Série NF</label>
+          <input id="ent-serie" type="text" placeholder="1">
+        </div>
+        <div class="form-group">
+          <label>CNPJ Fornecedor</label>
+          <input id="ent-cnpj" type="text" placeholder="00.000.000/0001-00">
+        </div>
+        <div class="form-group">
+          <label>Fornecedor *</label>
+          <input id="ent-fornecedor" type="text" placeholder="Nome do fornecedor">
+        </div>
+        <div class="form-divider"></div>
+        <div class="form-section-title">📦 Quantidade e Valores</div>
+        <div class="form-group">
+          <label>Quantidade *</label>
+          <input id="ent-qtd" type="number" min="0.001" step="0.001" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Valor Unitário (R$) *</label>
+          <input id="ent-vlunit" type="number" min="0" step="0.0001" placeholder="0.00">
+        </div>
+        <div class="form-divider"></div>
+        <div class="form-section-title">🏷️ Lote e Validade (FIFO)</div>
+        <div class="form-group">
+          <label>Lote *</label>
+          <input id="ent-lote" type="text" placeholder="LOT-2024-001">
+        </div>
+        <div class="form-group">
+          <label>Data de Validade *</label>
+          <input id="ent-validade" type="date">
+        </div>
+        <div class="form-group full">
+          <label>Observações</label>
+          <textarea id="ent-obs" placeholder="Informações adicionais..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-mp-entrada')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEntrada()">Registrar Entrada</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Saída MP -->
+<div class="modal-overlay" id="modal-mp-saida">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar Saída de Matéria-Prima (FIFO)</span>
+      <button class="modal-close" onclick="closeModal('modal-mp-saida')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Data de Saída *</label>
+          <input id="sai-data" type="date">
+        </div>
+        <div class="form-group">
+          <label>Produto *</label>
+          <select id="sai-produto" onchange="carregarLotesFIFO()"></select>
+        </div>
+        <div class="form-group full">
+          <label>Lote FIFO (mais antigo disponível) *</label>
+          <select id="sai-lote"><option value="">— Selecione o produto primeiro —</option></select>
+        </div>
+        <div class="form-group">
+          <label>NF Origem</label>
+          <input id="sai-nf-origem" type="text" placeholder="Da NF da entrada">
+        </div>
+        <div class="form-group">
+          <label>Série NF Origem</label>
+          <input id="sai-serie-origem" type="text">
+        </div>
+        <div class="form-group">
+          <label>Quantidade *</label>
+          <input id="sai-qtd" type="number" min="0.001" step="0.001" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Ordem de Produção</label>
+          <input id="sai-op" type="text" placeholder="OP-001">
+        </div>
+        <div class="form-group">
+          <label>Destino</label>
+          <input id="sai-destino" type="text" placeholder="Ex: Linha 1 - Gelato">
+        </div>
+        <div class="form-group">
+          <label>Responsável</label>
+          <input id="sai-resp" type="text" placeholder="Nome do responsável">
+        </div>
+        <div class="form-group full">
+          <label>Observações</label>
+          <textarea id="sai-obs" placeholder="Informações adicionais..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-mp-saida')">Cancelar</button>
+      <button class="btn btn-bordo" onclick="salvarSaida()">Registrar Saída</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Novo Processo -->
+<div class="modal-overlay" id="modal-processo">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Nova Ordem de Produção</span>
+      <button class="modal-close" onclick="closeModal('modal-processo')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nº Ordem Produção *</label>
+          <input id="proc-op" type="text" placeholder="OP-001">
+        </div>
+        <div class="form-group">
+          <label>Data Início *</label>
+          <input id="proc-inicio" type="date">
+        </div>
+        <div class="form-group">
+          <label>Código Produto *</label>
+          <input id="proc-codigo" type="text" placeholder="PA001">
+        </div>
+        <div class="form-group">
+          <label>Produto *</label>
+          <input id="proc-produto" type="text" placeholder="Nome do produto">
+        </div>
+        <div class="form-group">
+          <label>Quantidade *</label>
+          <input id="proc-qtd" type="number" min="0.001" step="0.001">
+        </div>
+        <div class="form-group">
+          <label>Unidade *</label>
+          <select id="proc-unidade">
+            <option>Un</option><option>Kg</option><option>L</option><option>Cx</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Etapa Atual</label>
+          <input id="proc-etapa" type="text" placeholder="Ex: Mistura, Pasteurização">
+        </div>
+        <div class="form-group">
+          <label>% Conclusão</label>
+          <input id="proc-pct" type="number" min="0" max="100" step="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Responsável</label>
+          <input id="proc-resp" type="text">
+        </div>
+        <div class="form-group">
+          <label>Previsão Término</label>
+          <input id="proc-prev" type="date">
+        </div>
+        <div class="form-group">
+          <label>Custo MP (R$)</label>
+          <input id="proc-custo" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select id="proc-status">
+            <option>EM PROCESSO</option>
+            <option>AGUARDANDO</option>
+            <option>ATRASADO</option>
+            <option>FINALIZADO</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>Observações</label>
+          <textarea id="proc-obs"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-processo')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProcesso()">Salvar Ordem</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Novo Produto PA -->
+<div class="modal-overlay" id="modal-pa-produto">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Cadastrar Produto Acabado</span>
+      <button class="modal-close" onclick="closeModal('modal-pa-produto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Código *</label>
+          <input id="pa-prod-codigo" type="text" placeholder="PA008">
+        </div>
+        <div class="form-group">
+          <label>Categoria</label>
+          <input id="pa-prod-cat" type="text" placeholder="Gelato, Sorvete, Picolé...">
+        </div>
+        <div class="form-group full">
+          <label>Produto *</label>
+          <input id="pa-prod-nome" type="text" placeholder="Nome do produto">
+        </div>
+        <div class="form-group">
+          <label>Unidade *</label>
+          <select id="pa-prod-unidade">
+            <option>Un</option><option>Cx</option><option>Kg</option><option>L</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Estoque Mínimo *</label>
+          <input id="pa-prod-estmin" type="number" min="0" step="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Estoque Atual</label>
+          <input id="pa-prod-estatu" type="number" min="0" step="1" placeholder="0">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-pa-produto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarPAProduto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Registro Produção PA -->
+<div class="modal-overlay" id="modal-pa-producao">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar Produção de Produto Acabado</span>
+      <button class="modal-close" onclick="closeModal('modal-pa-producao')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Produto *</label>
+          <select id="pa-prod-sel"></select>
+        </div>
+        <div class="form-group">
+          <label>Data de Produção *</label>
+          <input id="pa-data-prod" type="date">
+        </div>
+        <div class="form-group">
+          <label>Lote *</label>
+          <input id="pa-lote" type="text" placeholder="PA-LOT-001">
+        </div>
+        <div class="form-group">
+          <label>Data de Validade *</label>
+          <input id="pa-validade" type="date">
+        </div>
+        <div class="form-group">
+          <label>Quantidade *</label>
+          <input id="pa-qtd" type="number" min="1" step="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Ordem de Produção</label>
+          <input id="pa-op" type="text" placeholder="OP-001">
+        </div>
+        <div class="form-group">
+          <label>Custo Total (R$)</label>
+          <input id="pa-custo-total" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label>Custo Unitário (R$)</label>
+          <input id="pa-custo-unit" type="number" min="0" step="0.0001" placeholder="0.00">
+        </div>
+        <div class="form-group full">
+          <label>Observações</label>
+          <textarea id="pa-obs"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-pa-producao')">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarPAProducao()">Registrar Produção</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Expedição -->
+<div class="modal-overlay" id="modal-expedicao">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Registrar Expedição (Saída de PA)</span>
+      <button class="modal-close" onclick="closeModal('modal-expedicao')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Produto *</label>
+          <select id="exp-produto" onchange="carregarLotesFIFO_PA()"></select>
+        </div>
+        <div class="form-group">
+          <label>Data de Saída *</label>
+          <input id="exp-data" type="date">
+        </div>
+        <div class="form-group full">
+          <label>Lote FIFO (mais próximo da validade) *</label>
+          <select id="exp-lote"><option value="">— Selecione o produto primeiro —</option></select>
+        </div>
+        <div class="form-group">
+          <label>Quantidade *</label>
+          <input id="exp-qtd" type="number" min="1" step="1" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>NF de Venda</label>
+          <input id="exp-nf" type="text" placeholder="000001">
+        </div>
+        <div class="form-group">
+          <label>Destino</label>
+          <input id="exp-destino" type="text" placeholder="Nome do cliente / loja">
+        </div>
+        <div class="form-group">
+          <label>Responsável</label>
+          <input id="exp-resp" type="text">
+        </div>
+        <div class="form-group">
+          <label>Transporte</label>
+          <input id="exp-transp" type="text" placeholder="Ex: Frota própria">
+        </div>
+        <div class="form-group full">
+          <label>Observações</label>
+          <textarea id="exp-obs"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modal-expedicao')">Cancelar</button>
+      <button class="btn btn-bordo" onclick="salvarExpedicao()">Confirmar Expedição</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================================ -->
+<!-- ======================== SCRIPT ============================ -->
+<!-- ============================================================ -->
+<script>
+const SUPABASE_URL = 'https://pbuhwpcpdcnaheaywmdv.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBidWh3cGNwZGNuYWhlYXl3bWR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNjU5MzksImV4cCI6MjA5MTg0MTkzOX0.Mg4PVg96ZiV3C2Rn0GLQU9c7ui_41OlU6Ldqn5jcvyY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ===== UTILS =====
+function fmt(n) { return Number(n||0).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:3}); }
+function fmtR(n) { return Number(n||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
+function fmtDate(d) { if(!d) return '—'; return new Date(d+'T00:00:00').toLocaleDateString('pt-BR'); }
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function getStatus(atual, minimo) {
+  if(atual <= 0) return 'CRÍTICO';
+  if(atual < minimo) return 'CRÍTICO';
+  if(atual < minimo * 1.5) return 'ATENÇÃO';
+  return 'OK';
+}
+
+function validadeClass(d) {
+  if(!d) return '';
+  const diff = (new Date(d) - new Date()) / 86400000;
+  if(diff < 0) return 'validade-vencida';
+  if(diff < 30) return 'validade-atencao';
+  return 'validade-ok';
+}
+
+function toast(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = (type==='success'?'✅':'❌') + ' ' + msg;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  // Load data
+  const loaders = {
+    'dashboard':    loadDashboard,
+    'mp-produtos':  loadMPProdutos,
+    'mp-entradas':  loadMPEntradas,
+    'mp-saidas':    loadMPSaidas,
+    'processo':     loadProcesso,
+    'pa-cadastro':  loadPAProdutos,
+    'pa-producao':  loadPAProducao,
+    'expedicao':    loadExpedicao,
+  };
+  if(loaders[id]) loaders[id]();
+}
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  // Pre-fill date fields
+  const dateFields = document.querySelectorAll(`#${id} input[type=date]`);
+  dateFields.forEach(f => { if(!f.value) f.value = today(); });
+  // Pre-fill produto selects if needed
+  if(id==='modal-mp-entrada') fillSelectMP('ent-produto');
+  if(id==='modal-mp-saida')   { fillSelectMP('sai-produto'); }
+  if(id==='modal-pa-producao') fillSelectPA('pa-prod-sel');
+  if(id==='modal-expedicao')   fillSelectPA('exp-produto');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  // Reset form
+  document.querySelectorAll(`#${id} input, #${id} textarea`).forEach(i => {
+    if(i.type !== 'date') i.value = '';
+  });
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target === o) o.classList.remove('open'); });
+});
+
+// Filter table rows
+function filterTable(tableId, q) {
+  const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+  q = q.toLowerCase();
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// Set header date
+document.getElementById('headerDate').textContent =
+  new Date().toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+
+// ===== FILL SELECTS =====
+async function fillSelectMP(selectId) {
+  const { data } = await sb.from('materiaprima_produtos').select('codigo, produto').order('codigo');
+  const sel = document.getElementById(selectId);
+  if(!sel) return;
+  sel.innerHTML = data ? data.map(p => `<option value="${p.codigo}">${p.codigo} — ${p.produto}</option>`).join('') : '';
+}
+
+async function fillSelectPA(selectId) {
+  const { data } = await sb.from('produto_acabado_cadastro').select('codigo, produto').order('codigo');
+  const sel = document.getElementById(selectId);
+  if(!sel) return;
+  sel.innerHTML = data ? data.map(p => `<option value="${p.codigo}">${p.codigo} — ${p.produto}</option>`).join('') : '';
+}
+
+// ===== DASHBOARD =====
+async function loadDashboard() {
+  const [mpRes, ppRes, paRes] = await Promise.all([
+    sb.from('materiaprima_produtos').select('*'),
+    sb.from('processo_ordens').select('*').neq('status','FINALIZADO'),
+    sb.from('produto_acabado_cadastro').select('*')
+  ]);
+
+  const mp = mpRes.data || [];
+  const pp = ppRes.data || [];
+  const pa = paRes.data || [];
+
+  // KPIs
+  document.getElementById('kpi-mp').textContent = mp.length;
+  document.getElementById('kpi-pp').textContent = pp.length;
+  document.getElementById('kpi-pa').textContent = pa.length;
+
+  const criticos = [...mp, ...pa].filter(p => getStatus(p.estoque_atual, p.estoque_minimo) === 'CRÍTICO').length;
+  document.getElementById('kpi-critico').textContent = criticos;
+
+  // Dashboard MP
+  const mpBody = document.getElementById('dash-mp-body');
+  if(mp.length === 0) {
+    mpBody.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum produto cadastrado</p></div>';
+  } else {
+    mpBody.innerHTML = mp.map(p => {
+      const status = getStatus(p.estoque_atual, p.estoque_minimo);
+      const pct = p.estoque_minimo > 0 ? Math.min(100, (p.estoque_atual / p.estoque_minimo) * 100) : 100;
+      return `
+        <div class="produto-row">
+          <div class="prod-info">
+            <div class="prod-nome">${p.produto}</div>
+            <div class="prod-codigo">${p.codigo}</div>
+            <div class="progress-bar" style="margin-top:6px;width:120px">
+              <div class="progress-fill ${status==='CRÍTICO'?'critico':status==='OK'?'ok':''}" style="width:${pct}%"></div>
+            </div>
+          </div>
+          <div class="prod-saldo">
+            <div class="saldo-num">${fmt(p.estoque_atual)} ${p.unidade}</div>
+            <span class="status-badge status-${status}">${status}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // Dashboard PP
+  const ppBody = document.getElementById('dash-pp-body');
+  if(pp.length === 0) {
+    ppBody.innerHTML = '<div class="empty-state"><div class="empty-icon">⚙️</div><p>Nenhuma ordem em processo</p></div>';
+  } else {
+    ppBody.innerHTML = pp.map(o => `
+      <div class="produto-row">
+        <div class="prod-info">
+          <div class="prod-nome">${o.produto}</div>
+          <div class="prod-codigo">${o.ordem_producao} • ${o.etapa_atual||'—'}</div>
+          <div class="progress-bar" style="margin-top:6px;width:120px">
+            <div class="progress-fill ok" style="width:${o.percentual_conclusao||0}%"></div>
+          </div>
+        </div>
+        <div class="prod-saldo">
+          <div class="saldo-num">${o.percentual_conclusao||0}%</div>
+          <span class="status-badge status-${o.status?.replace(' ','_')}">${o.status}</span>
+        </div>
+      </div>`).join('');
+  }
+
+  // Dashboard PA
+  const paBody = document.getElementById('dash-pa-body');
+  if(pa.length === 0) {
+    paBody.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum produto cadastrado</p></div>';
+  } else {
+    paBody.innerHTML = pa.map(p => {
+      const status = getStatus(p.estoque_atual, p.estoque_minimo);
+      const pct = p.estoque_minimo > 0 ? Math.min(100, (p.estoque_atual / p.estoque_minimo) * 100) : 100;
+      return `
+        <div class="produto-row">
+          <div class="prod-info">
+            <div class="prod-nome">${p.produto}</div>
+            <div class="prod-codigo">${p.codigo} • ${p.categoria||''}</div>
+            <div class="progress-bar" style="margin-top:6px;width:120px">
+              <div class="progress-fill ${status==='CRÍTICO'?'critico':status==='OK'?'ok':''}" style="width:${pct}%"></div>
+            </div>
+          </div>
+          <div class="prod-saldo">
+            <div class="saldo-num">${fmt(p.estoque_atual)} ${p.unidade}</div>
+            <span class="status-badge status-${status}">${status}</span>
+          </div>
+        </div>`;
+    }).join('');
+  }
+}
+
+// ===== MP PRODUTOS =====
+async function loadMPProdutos() {
+  const tbody = document.getElementById('tbody-mp-prod');
+  tbody.innerHTML = '<tr><td colspan="7"><div class="loading-spinner"><div class="spinner"></div></div></td></tr>';
+  const { data, error } = await sb.from('materiaprima_produtos').select('*').order('codigo');
+  if(error) { toast('Erro ao carregar produtos', 'error'); return; }
+  if(!data?.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📭</div><p>Nenhum produto cadastrado</p></div></td></tr>'; return; }
+  tbody.innerHTML = data.map(p => {
+    const status = getStatus(p.estoque_atual, p.estoque_minimo);
+    const pct = p.estoque_minimo > 0 ? Math.min(100, (p.estoque_atual / p.estoque_minimo) * 100) : 100;
+    return `<tr>
+      <td><code>${p.codigo}</code></td>
+      <td><strong>${p.produto}</strong></td>
+      <td>${p.unidade}</td>
+      <td>${fmt(p.estoque_minimo)}</td>
+      <td><strong>${fmt(p.estoque_atual)}</strong></td>
+      <td><span class="status-badge status-${status}">${status}</span></td>
+      <td style="min-width:100px"><div class="progress-bar"><div class="progress-fill ${status==='CRÍTICO'?'critico':status==='OK'?'ok':''}" style="width:${pct}%"></div></div></td>
+    </tr>`;
+  }).join('');
+}
+
+async function salvarMPProduto() {
+  const codigo = document.getElementById('mp-prod-codigo').value.trim();
+  const produto = document.getElementById('mp-prod-nome').value.trim();
+  const unidade = document.getElementById('mp-prod-unidade').value;
+  const estoque_minimo = parseFloat(document.getElementById('mp-prod-estmin').value) || 0;
+  const estoque_atual = parseFloat(document.getElementById('mp-prod-estatu').value) || 0;
+  if(!codigo || !produto) { toast('Preencha código e produto', 'error'); return; }
+  const { error } = await sb.from('materiaprima_produtos').insert({codigo, produto, unidade, estoque_minimo, estoque_atual});
+  if(error) { toast('Erro: ' + (error.message || 'verifique os dados'), 'error'); return; }
+  toast('Produto cadastrado com sucesso!');
+  closeModal('modal-mp-produto');
+  loadMPProdutos();
+}
+
+// ===== MP ENTRADAS =====
+async function loadMPEntradas() {
+  const tbody = document.getElementById('tbody-mp-ent');
+  tbody.innerHTML = '<tr><td colspan="11"><div class="loading-spinner"><div class="spinner"></div></div></td></tr>';
+  const { data, error } = await sb.from('materiaprima_entradas').select('*').order('data_entrada,created_at');
+  if(error) { toast('Erro ao carregar entradas', 'error'); return; }
+  if(!data?.length) { tbody.innerHTML = '<tr><td colspan="11"><div class="empty-state"><div class="empty-icon">📥</div><p>Nenhuma entrada registrada</p></div></td></tr>'; return; }
+  let fifoIdx = {};
+  tbody.innerHTML = data.map((e,i) => {
+    if(!fifoIdx[e.codigo_produto]) fifoIdx[e.codigo_produto] = 0;
+    fifoIdx[e.codigo_produto]++;
+    const isFirst = fifoIdx[e.codigo_produto] === 1 && e.saldo_fifo > 0;
+    const vClass = validadeClass(e.data_validade);
+    return `<tr>
+      <td>${fmtDate(e.data_entrada)}</td>
+      <td>${isFirst?'<span class="fifo-badge">FIFO ▶</span>':'—'}</td>
+      <td><strong>${e.produto}</strong><br><small style="color:var(--texto-medio)">${e.codigo_produto}</small></td>
+      <td>${e.nf_numero}${e.nf_serie?' / '+e.nf_serie:''}</td>
+      <td>${e.fornecedor}</td>
+      <td>${e.lote}</td>
+      <td class="${vClass}">${fmtDate(e.data_validade)}</td>
+      <td>${fmt(e.quantidade)} ${e.unidade}</td>
+      <td>${fmtR(e.valor_unitario)}</td>
+      <td>${fmtR(e.valor_total)}</td>
+      <td><strong>${fmt(e.saldo_fifo)}</strong></td>
+    </tr>`;
+  }).join('');
+}
+
+async function salvarEntrada() {
+  const data_entrada = document.getElementById('ent-data').value;
+  const prodSel = document.getElementById('ent-produto').value;
+  const [codigo_produto, ...nomeArr] = prodSel.split('—').map(s=>s.trim());
+  const codOpts = document.getElementById('ent-produto');
+  const selOpt = codOpts.options[codOpts.selectedIndex];
+  const produto = selOpt.text.split('—')[1]?.trim() || '';
+  const nf_numero = document.getElementById('ent-nf').value.trim();
+  const nf_serie = document.getElementById('ent-serie').value.trim();
+  const cnpj_fornecedor = document.getElementById('ent-cnpj').value.trim();
+  const fornecedor = document.getElementById('ent-fornecedor').value.trim();
+  const quantidade = parseFloat(document.getElementById('ent-qtd').value);
+  const valor_unitario = parseFloat(document.getElementById('ent-vlunit').value) || 0;
+  const lote = document.getElementById('ent-lote').value.trim();
+  const data_validade = document.getElementById('ent-validade').value;
+  const observacoes = document.getElementById('ent-obs').value.trim();
+
+  // get unidade
+  const { data: prodData } = await sb.from('materiaprima_produtos').select('unidade').eq('codigo', codOpts.value).single();
+  const unidade = prodData?.unidade || 'Un';
+
+  if(!data_entrada||!nf_numero||!fornecedor||!quantidade||!lote||!data_validade) {
+    toast('Preencha todos os campos obrigatórios','error'); return;
+  }
+
+  const { error } = await sb.from('materiaprima_entradas').insert({
+    data_entrada, codigo_produto: codOpts.value, produto, nf_numero, nf_serie: nf_serie||null,
+    cnpj_fornecedor: cnpj_fornecedor||null, fornecedor, quantidade, unidade,
+    valor_unitario, lote, data_validade, saldo_fifo: quantidade,
+    observacoes: observacoes||null
+  });
+  if(error) { toast('Erro: '+error.message,'error'); return; }
+
+  // Update estoque atual
+  const { data: pd } = await sb.from('materiaprima_produtos').select('estoque_atual').eq('codigo', codOpts.value).single();
+  await sb.from('materiaprima_produtos').update({estoque_atual: (pd?.estoque_atual||0) + quantidade, updated_at: new Date().toISOString()}).eq('codigo', codOpts.value);
+
+  toast('Entrada registrada!');
+  closeModal('modal-mp-entrada');
+  loadMPEntradas();
+}
+
+// ===== MP SAÍDAS =====
+async function carregarLotesFIFO() {
+  const cod = document.getElementById('sai-produto').value;
+  if(!cod) return;
+  const { data } = await sb.from('materiaprima_entradas')
+    .select('lote, nf_numero, nf_serie, saldo_fifo, data_validade, valor_unitario')
+    .eq('codigo_produto', cod).gt('saldo_fifo', 0).order('data_entrada').order('created_at');
+  const sel = document.getElementById('sai-lote');
+  if(!data?.length) { sel.innerHTML = '<option value="">Sem lotes disponíveis</option>'; return; }
+  sel.innerHTML = data.map((l,i) =>
+    `<option value="${l.lote}" data-nf="${l.nf_numero}" data-serie="${l.nf_serie||''}" data-saldo="${l.saldo_fifo}" data-vunit="${l.valor_unitario}">${i===0?'🥇 FIFO: ':''} ${l.lote} | Saldo: ${fmt(l.saldo_fifo)} | Val: ${fmtDate(l.data_validade)}</option>`
+  ).join('');
+  // Auto-fill NF
+  sel.onchange = () => {
+    const opt = sel.options[sel.selectedIndex];
+    document.getElementById('sai-nf-origem').value = opt.dataset.nf||'';
+    document.getElementById('sai-serie-origem').value = opt.dataset.serie||'';
+  };
+  sel.dispatchEvent(new Event('change'));
+}
+
+async function loadMPSaidas() {
+  const tbody = document.getElementById('tbody-mp-sai');
+  tbody.innerHTML = '<tr><td colspan="9"><div class="loading-spinner"><div class="spinner"></div></div></td></tr>';
+  const { data, error } = await sb.from('materiaprima_saidas').select('*').order('data_saida', {ascending:false});
+  if(error) { toast('Erro','error'); return; }
+  if(!data?.length) { tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">📤</div><p>Nenhuma saída registrada</p></div></td></tr>'; return; }
+  tbody.innerHTML = data.map(s => `<tr>
+    <td>${fmtDate(s.data_saida)}</td>
+    <td><strong>${s.codigo_produto}</strong></td>
+    <td>${s.lote_origem}</td>
+    <td>${s.nf_numero_origem||'—'}</td>
+    <td>${fmt(s.quantidade)} ${s.unidade}</td>
+    <td>${s.destino||'—'}</td>
+    <td>${s.ordem_producao||'—'}</td>
+    <td>${s.responsavel||'—'}</td>
+    <td>${fmtR(s.custo_unitario * s.quantidade)}</td>
+  </tr>`).join('');
+}
+
+async function salvarSaida() {
+  const data_saida = document.getElementById('sai-data').value;
+  const codigo_produto = document.getElementById('sai-produto').value;
+  const lote_selecionado = document.getElementById('sai-lote');
+  const lote_origem = lote_selecionado.value;
+  const opt = lote_selecionado.options[lote_selecionado.selectedIndex];
+  const quantidade = parseFloat(document.getElementById('sai-qtd').value);
+  const nf_numero_origem = document.getElementById('sai-nf-origem').value.trim();
+  const nf_serie_origem = document.getElementById('sai-serie-origem').value.trim();
+  const ordem_producao = document.getElementById('sai-op').value.trim();
+  const destino = document.getElementById('sai-destino').value.trim();
+  const responsavel = document.getElementById('sai-resp').value.trim();
+  const observacoes = document.getElementById('sai-obs').value.trim();
+  const saldoDisp = parseFloat(opt?.dataset.saldo || 0);
+  const custo_unitario = parseFloat(opt?.dataset.vunit || 0);
+
+  if(!data_saida||!codigo_produto||!lote_origem||!quantidade) { toast('Preencha campos obrigatórios','error'); return; }
+  if(quantidade > saldoDisp) { toast(`Saldo insuficiente. Disponível: ${fmt(saldoDisp)}`,'error'); return; }
+
+  const { data: prod } = await sb.from('materiaprima_produtos').select('unidade').eq('codigo', codigo_produto).single();
+  const unidade = prod?.unidade || 'Un';
+
+  const { error } = await sb.from('materiaprima_saidas').insert({
+    data_saida, codigo_produto, nf_numero_origem: nf_numero_origem||null,
+    nf_serie_origem: nf_serie_origem||null, quantidade, unidade,
+    destino: destino||null, ordem_producao: ordem_producao||null,
+    lote_origem, responsavel: responsavel||null, custo_unitario,
+    observacoes: observacoes||null
+  });
+  if(error) { toast('Erro: '+error.message,'error'); return; }
+
+  // Update saldo FIFO do lote
+  const { data: loteAtual } = await sb.from('materiaprima_entradas').select('saldo_fifo').eq('lote', lote_origem).eq('codigo_produto', codigo_produto).order('data_entrada').limit(1).single();
+  const novoSaldo = Math.max(0, (loteAtual?.saldo_fifo||0) - quantidade);
+  await sb.from('materiaprima_entradas').update({saldo_fifo: novoSaldo}).eq('lote', lote_origem).eq('codigo_produto', codigo_produto);
+
+  // Update estoque atual
+  const { data: pAtual } = await sb.from('materiaprima_produtos').select('estoque_atual').eq('codigo', codigo_produto).single();
+  await sb.from('materiaprima_produtos').update({estoque_atual: Math.max(0,(pAtual?.estoque_atual||0)-quantidade), updated_at: new Date().toISOString()}).eq('codigo', codigo_produto);
+
+  toast('Saída registrada com FIFO!');
+  closeModal('modal-mp-saida');
+  loadMPSaidas();
+}
+
+// ===== PROCESSO =====
+async function loadProcesso() {
+  const tbody = document.getElementById('tbody-proc');
+  tbody.innerHTML = '<tr><td colspan="10"><div class="loading-spinner"><div class="spinner"></div></div></td></tr>';
+  const { data, error } = await sb.from('processo_ordens').select('*').order('data_inicio', {ascending:false});
+  if(error) { toast('Erro','error'); return; }
+  if(!data?.length) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">⚙️</div><p>Nenhuma ordem registrada</p></div></td></tr>'; return; }
+  tbody.innerHTML = data.map(o => `<tr>
+    <td><strong>${o.ordem_producao}</strong></td>
+    <td>${fmtDate(o.data_inicio)}</td>
+    <td>${o.produto}<br><small style="color:var(--texto-medio)">${o.codigo_produto}</small></td>
+    <td>${fmt(o.quantidade)} ${o.unidade}</td>
+    <td>${o.etapa_atual||'—'}</td>
+    <td>
+      <div class="progress-bar" style="width:90px;display:inline-block">
+        <div class="progress-fill ok" style="width:${o.percentual_conclusao||0}%"></div>
+      </div>
+      <small> ${o.percentual_conclusao||0}%</small>
+    </td>
+    <td>${o.responsavel||'—'}</td>
+    <td>${fmtDate(o.previsao_termino)}</td>
+    <td>${fmtR(o.custo_mp)}</td>
+    <td><span class="status-badge status-${(o.status||'').replace(/\s+/g,'_')}">${o.status}</span></td>
+  </tr>`).join('');
+}
+
+async function salvarProcesso() {
+  const ordem_producao = document.getElementById('proc-op').value.trim();
+  const data_inicio = document.getElementById('proc-inicio').value;
+  const codigo_produto = document.getElementById('proc-codigo').value.trim();
+  const produto = document.getElementById('proc-produto').value.trim();
+  const quantidade = parseFloat(document.getElementById('proc-qtd').value);
+  const unidade = document.getElementById('proc-unidade').value;
+  const etapa_atual = document.getElementById('proc-etapa').value.trim();
+  const percentual_conclusao = parseFloat(document.getElementById('proc-pct').value)||0;
+  const responsavel = document.getElementById('proc-resp').value.trim();
+  const previsao_termino = document.getElementById('proc-prev').value||null;
+  const custo_mp = parseFloat(document.getElementById('proc-custo').value)||0;
+  const status = document.getElementById('proc-status').value;
+  const observacoes = document.getElementById('proc-obs').value.trim();
+  if(!ordem_producao||!data_inicio||!produto||!quantidade) { toast('Preencha campos obrigatórios','error'); return; }
+  const { error } = await sb.from('processo_ordens').insert({
+    ordem_producao, data_inicio, codigo_produto, produto, quantidade, unidade,
+    etapa_atual:etapa_atual||null, percentual_conclusao, responsavel:responsavel||null,
+    previsao_termino, custo_mp, status, observacoes:observacoes||null
+  });
+  if(error) { toast('Erro: '+error.message,'error'); return; }
+  toast('Ordem registrada!');
+  closeModal('modal-processo');
+  loadProcesso();
+}
+
+// ===== PA CADASTRO =====
+async function loadPAProdutos() {
+  const tbody = document.getElementById('tbody-pa-cad');
+  tbody.innerHTML = '<tr><td colspan="7"><div class="loading-spinner"><div class="spinner"></div></div></td></tr>';
+  const { data, error } = await sb.from('produto_acabado_cadastro').select('*').order('codigo');
+  if(error) { toast('Erro','error'); return; }
+  if(!data?.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>Nenhum produto</p></div></td></tr>'; return; }
+  tbody.innerHTML = data.map(p => {
+    const status = getStatus(p.estoque_atual, p.estoque_minimo);
+    return `<tr>
+      <td><code>${p.codigo}</code></td>
+      <td><strong>${p.produto}</strong></td>
+      <td>${p.categoria||'—'}</td>
+      <td>${p.unidade}</td>
+      <td>${fmt(p.estoque_minimo)}</td>
+      <td><strong>${fmt(p.estoque_atual)}</strong></td>
+      <td><span class="status-badge status-${status}">${status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+async function salvarPAProduto() {
+  const codigo = document.getElementById('pa-prod-codigo').value.trim();
+  const produto = document.getElementById('pa-prod-nome').value.trim();
+  const categoria = document.getElementById('pa-prod-cat').value.trim();
+  const unidade = document.getElementById('pa-prod-unidade').value;
+  const estoque_minimo = parseFloat(document.getElementById('pa-prod-estmin').value)||0;
+  const estoque_atual = parseFloat(document.getElementById('pa-prod-estatu').value)||0;
+  if(!codigo||!produto) { toast('Preencha código e produto','error'); return; }
+  const { error } = await sb.from('produto_acabado_cadastro').insert({codigo, produto, categoria:categoria||null, unidade, estoque_minimo, estoque_atual});
+  if(error) { toast('Erro: '+error.message,'error'); return; }
+  toast('Produto acabado cadastrado!');
+  closeModal('modal-pa-produto');
+  loadPAProdutos();
+}
+
+// ===== PA PRODUÇÃO =====
+async function loadPAProducao() {
+  const tbody = document.getElementById('tbody-pa-prod');
+  tbody.innerHTML = '<tr><td colspan="10"><div class="loading-spinner"><div class="spinner"></div></div></td></tr>';
+  const { data, error } = await sb.from('produto_acabado_producao').select('*, produto_acabado_cadastro(produto)').order('data_producao').order('data_validade');
+  if(error) { toast('Erro','error'); return; }
+  if(!data?.length) { tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><p>Nenhum registro</p></div></td></tr>'; return; }
+  let fifoIdx = {};
+  tbody.innerHTML = data.map(p => {
+    if(!fifoIdx[p.codigo_produto]) fifoIdx[p.codigo_produto] = 0;
+    fifoIdx[p.codigo_produto]++;
+    const isFirst = fifoIdx[p.codigo_produto]===1 && p.saldo_fifo > 0;
+    const vClass = validadeClass(p.data_validade);
+    return `<tr>
+      <td>${fmtDate(p.data_producao)}</td>
+      <td>${isFirst?'<span class="fifo-badge">FIFO ▶</span>':'—'}</td>
+      <td><strong>${p.produto_acabado_cadastro?.produto||p.codigo_produto}</strong></td>
+      <td>${p.lote}</td>
+      <td class="${vClass}">${fmtDate(p.data_validade)}</td>
+      <td>${fmt(p.quantidade)} ${p.unidade}</td>
+      <td>${fmtR(p.custo_unitario)}</td>
+      <td>${fmtR(p.custo_total)}</td>
+      <td><strong>${fmt(p.saldo_fifo)}</strong></td>
+      <td>${p.ordem_producao||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function salvarPAProducao() {
+  const sel = document.getElementById('pa-prod-sel');
+  const codigo_produto = sel.value;
+  const data_producao = document.getElementById('pa-data-prod').value;
+  const lote = document.getElementById('pa-lote').value.trim();
+  const data_validade = document.getElementById('pa-validade').value;
+  const quantidade = parseFloat(document.getElementById('pa-qtd').value);
+  const ordem_producao = document.getElementById('pa-op').value.trim();
+  const custo_total = parseFloat(document.getElementById('pa-custo-total').value)||0;
+  const custo_unitario = parseFloat(document.getElementById('pa-custo-unit').value)||0;
+  const observacoes = document.getElementById('pa-obs').value.trim();
+  const { data: pd } = await sb.from('produto_acabado_cadastro').select('unidade').eq('codigo', codigo_produto).single();
+  const unidade = pd?.unidade||'Un';
+  if(!data_producao||!lote||!data_validade||!quantidade) { toast('Preencha campos obrigatórios','error'); return; }
+  const { error } = await sb.from('produto_acabado_producao').insert({
+    codigo_produto, data_producao, lote, data_validade, quantidade, unidade,
+    ordem_producao:ordem_producao||null, custo_total, custo_unitario,
+    saldo_fifo: quantidade, observacoes:observacoes||null
+  });
+  if(error) { toast('Erro: '+error.message,'error'); return; }
+  // Update stock
+  const { data: pAtual } = await sb.from('produto_acabado_cadastro').select('estoque_atual').eq('codigo', codigo_produto).single();
+  await sb.from('produto_acabado_cadastro').update({estoque_atual: (pAtual?.estoque_atual||0)+quantidade, updated_at: new Date().toISOString()}).eq('codigo', codigo_produto);
+  toast('Produção registrada!');
+  closeModal('modal-pa-producao');
+  loadPAProducao();
+}
+
+// ===== EXPEDIÇÃO =====
+async function carregarLotesFIFO_PA() {
+  const cod = document.getElementById('exp-produto').value;
+  if(!cod) return;
+  const { data } = await sb.from('produto_acabado_producao')
+    .select('lote, saldo_fifo, data_validade')
+    .eq('codigo_produto', cod).gt('saldo_fifo', 0).order('data_validade').order('data_producao');
+  const sel = document.getElementById('exp-lote');
+  if(!data?.length) { sel.innerHTML = '<option>Sem lotes disponíveis</option>'; return; }
+  sel.innerHTML = data.map((l,i) =>
+    `<option value="${l.lote}" data-saldo="${l.saldo_fifo}">${i===0?'🥇 FIFO: ':''} ${l.lote} | Saldo: ${fmt(l.saldo_fifo)} | Val: ${fmtDate(l.data_validade)}</option>`
+  ).join('');
+}
+
+async function loadExpedicao() {
+  const tbody = document.getElementById('tbody-exp');
+  tbody.innerHTML = '<tr><td colspan="8"><div class="loading-spinner"><div class="spinner"></div></div></td></tr>';
+  const { data, error } = await sb.from('produto_acabado_expedicao').select('*, produto_acabado_cadastro(produto)').order('data_saida', {ascending:false});
+  if(error) { toast('Erro','error'); return; }
+  if(!data?.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🚚</div><p>Nenhuma expedição registrada</p></div></td></tr>'; return; }
+  tbody.innerHTML = data.map(e => `<tr>
+    <td>${fmtDate(e.data_saida)}</td>
+    <td><strong>${e.produto_acabado_cadastro?.produto||e.codigo_produto}</strong></td>
+    <td>${e.lote}</td>
+    <td>${fmt(e.quantidade)} ${e.unidade}</td>
+    <td>${e.destino||'—'}</td>
+    <td>${e.nf_venda||'—'}</td>
+    <td>${e.responsavel||'—'}</td>
+    <td>${e.transporte||'—'}</td>
+  </tr>`).join('');
+}
+
+async function salvarExpedicao() {
+  const sel = document.getElementById('exp-produto');
+  const codigo_produto = sel.value;
+  const data_saida = document.getElementById('exp-data').value;
+  const loteSel = document.getElementById('exp-lote');
+  const lote = loteSel.value;
+  const saldoDisp = parseFloat(loteSel.options[loteSel.selectedIndex]?.dataset.saldo||0);
+  const quantidade = parseFloat(document.getElementById('exp-qtd').value);
+  const nf_venda = document.getElementById('exp-nf').value.trim();
+  const destino = document.getElementById('exp-destino').value.trim();
+  const responsavel = document.getElementById('exp-resp').value.trim();
+  const transporte = document.getElementById('exp-transp').value.trim();
+  const observacoes = document.getElementById('exp-obs').value.trim();
+  const { data: pd } = await sb.from('produto_acabado_cadastro').select('unidade').eq('codigo', codigo_produto).single();
+  const unidade = pd?.unidade||'Un';
+  if(!data_saida||!lote||!quantidade) { toast('Preencha campos obrigatórios','error'); return; }
+  if(quantidade > saldoDisp) { toast(`Saldo insuficiente. Disponível: ${fmt(saldoDisp)}`,'error'); return; }
+  const { error } = await sb.from('produto_acabado_expedicao').insert({
+    codigo_produto, data_saida, lote, quantidade, unidade,
+    destino:destino||null, nf_venda:nf_venda||null,
+    responsavel:responsavel||null, transporte:transporte||null, observacoes:observacoes||null
+  });
+  if(error) { toast('Erro: '+error.message,'error'); return; }
+  // Update saldo fifo lote
+  const { data: loteAtual } = await sb.from('produto_acabado_producao').select('saldo_fifo').eq('lote', lote).eq('codigo_produto', codigo_produto).order('data_producao').limit(1).single();
+  await sb.from('produto_acabado_producao').update({saldo_fifo: Math.max(0,(loteAtual?.saldo_fifo||0)-quantidade)}).eq('lote', lote).eq('codigo_produto', codigo_produto);
+  // Update estoque
+  const { data: pAtual } = await sb.from('produto_acabado_cadastro').select('estoque_atual').eq('codigo', codigo_produto).single();
+  await sb.from('produto_acabado_cadastro').update({estoque_atual: Math.max(0,(pAtual?.estoque_atual||0)-quantidade), updated_at: new Date().toISOString()}).eq('codigo', codigo_produto);
+  toast('Expedição registrada!');
+  closeModal('modal-expedicao');
+  loadExpedicao();
+}
+
+// ===== INIT =====
+loadDashboard();
+</script>
+</body>
+</html>
