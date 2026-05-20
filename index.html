@@ -101,6 +101,33 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
 .lsr{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--mp);border-radius:8px;background:var(--cc);margin-bottom:8px;cursor:pointer}.lsr:hover{border-color:var(--mc);background:var(--cr)}
 .lsr input[type=checkbox]{width:16px;height:16px;accent-color:var(--m);flex-shrink:0}
 .lin{flex:1}.lin strong{font-size:.85rem;color:var(--te)}.lin small{font-size:.75rem;color:var(--tm);display:block}
+/* DELETE BUTTON */
+.del-btn{background:none;border:none;color:var(--bc);cursor:pointer;font-size:.85rem;padding:2px 5px;border-radius:4px;transition:all .15s;line-height:1}
+.del-btn:hover{background:var(--vl);color:var(--vc)}
+/* REPORTS */
+.rel-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:22px}
+.rel-tab{padding:8px 16px;border-radius:8px;border:1.5px solid var(--mp);background:transparent;color:var(--tm);font-family:'DM Sans',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s}
+.rel-tab.active{background:var(--b);border-color:var(--b);color:#fff}
+.rel-tab:hover:not(.active){border-color:var(--m);color:var(--m)}
+.rel-filter-bar{background:var(--br);border:1px solid var(--mp);border-radius:var(--r);padding:16px 20px;display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+.rel-filter-bar label{font-size:.72rem;font-weight:600;color:var(--tm);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px}
+.rel-filter-bar input,.rel-filter-bar select{padding:8px 10px;border:1.5px solid var(--mp);border-radius:var(--rs);font-size:.84rem;font-family:'DM Sans',sans-serif;color:var(--te);background:var(--cc);width:auto;min-width:130px}
+.rel-filter-bar input:focus,.rel-filter-bar select:focus{outline:none;border-color:var(--mc)}
+.rel-content{display:none}.rel-content.active{display:block}
+.rel-kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.rel-kpi{background:var(--br);border:1px solid var(--mp);border-radius:var(--r);padding:16px;text-align:center}
+.rel-kpi .rv{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--me);line-height:1.1}
+.rel-kpi .rl{font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
+.rel-kpi.pos .rv{color:var(--gok)}.rel-kpi.neg .rv{color:var(--vc)}.rel-kpi.warn .rv{color:var(--ya)}
+.rel-section-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--b);margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+.rel-section-title::after{content:'';flex:1;height:1px;background:var(--mp)}
+/* EDIT BUTTON */
+.edit-btn{background:none;border:none;color:var(--mc);cursor:pointer;font-size:.85rem;padding:2px 5px;border-radius:4px;transition:all .15s;line-height:1}
+.edit-btn:hover{background:var(--mp);color:var(--m)}
+/* VALUE HIGHLIGHT */
+.val-pos{color:var(--gok);font-weight:700}
+.val-neg{color:var(--vc);font-weight:700}
+.preco-cell{font-family:'DM Mono',monospace;font-size:.82rem}
 @media(max-width:1100px){.eg{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.eg{grid-template-columns:1fr};main{padding:16px};.ni{padding:0 16px};header{padding:0 16px};.fg{grid-template-columns:1fr};.fg3{grid-template-columns:1fr}}
 </style>
@@ -117,6 +144,10 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <button class="nt" onclick="showSec('pa-prod',this)">✅ Produção PA</button>
   <button class="nt" onclick="showSec('expd',this)">🚚 Expedição</button>
   <button class="nt" onclick="showSec('etq',this)">🏷️ Etiquetas</button>
+  <button class="nt" onclick="showSec('ins-p',this)">🧴 Insumos</button>
+  <button class="nt" onclick="showSec('ins-e',this)">📥 Entradas Ins.</button>
+  <button class="nt" onclick="showSec('ins-s',this)">📤 Saídas Ins.</button>
+  <button class="nt" onclick="showSec('rel',this)">📋 Relatórios</button>
 </div></nav>
 <main>
 
@@ -141,7 +172,7 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <div class="sh"><div><p class="st">Matéria-Prima — Cadastro</p><p class="sd">Produtos com Nº Lote, Fabricação e Vencimento</p></div>
   <div class="bg"><button class="btn btn-l" onclick="openEtqModal('mp')">🏷️ Etiquetas</button><button class="btn btn-p" onclick="openModal('m-mp-p')">+ Novo Produto</button></div></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-mp-p',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadMP()">↻</button></div>
-  <div class="tw"><table id="t-mp-p"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Nº Lote</th><th>Dt. Fabricação</th><th>Dt. Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Status</th><th>🏷️</th></tr></thead>
+  <div class="tw"><table id="t-mp-p"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Nº Lote</th><th>Dt. Fabricação</th><th>Dt. Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
   <tbody id="tb-mp-p"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
@@ -160,7 +191,7 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <div class="sh"><div><p class="st">Saídas — Consumo MP (FIFO)</p><p class="sd">Baixa pelo lote mais antigo disponível</p></div>
   <button class="btn btn-b" onclick="openModal('m-mp-s')">+ Registrar Saída</button></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-mp-s',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadMPSai()">↻</button></div>
-  <div class="tw"><table id="t-mp-s"><thead><tr><th>Data Saída</th><th>Produto</th><th>Nº Lote</th><th>NF Origem</th><th>Quantidade</th><th>Destino</th><th>Ordem Prod.</th><th>Responsável</th><th>Custo Total</th></tr></thead>
+  <div class="tw"><table id="t-mp-s"><thead><tr><th>Data Saída</th><th>Produto</th><th>Nº Lote</th><th>NF Origem</th><th>Quantidade</th><th>Destino</th><th>Ordem Prod.</th><th>Responsável</th><th>Custo Total</th><th></th></tr></thead>
   <tbody id="tb-mp-s"><tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
@@ -169,7 +200,7 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <div class="sh"><div><p class="st">Produção em Processo</p><p class="sd">Ordens de produção em andamento</p></div>
   <button class="btn btn-p" onclick="openModal('m-proc')">+ Nova Ordem</button></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-proc',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadProc()">↻</button></div>
-  <div class="tw"><table id="t-proc"><thead><tr><th>Ordem</th><th>Data Início</th><th>Produto</th><th>Qtd</th><th>Etapa</th><th>Conclusão</th><th>Responsável</th><th>Prev. Término</th><th>Custo MP</th><th>Status</th></tr></thead>
+  <div class="tw"><table id="t-proc"><thead><tr><th>Ordem</th><th>Data Início</th><th>Produto</th><th>Qtd</th><th>Etapa</th><th>Conclusão</th><th>Responsável</th><th>Prev. Término</th><th>Custo MP</th><th>Status</th><th></th></tr></thead>
   <tbody id="tb-proc"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
@@ -178,8 +209,8 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <div class="sh"><div><p class="st">Produto Acabado — Cadastro</p><p class="sd">Produtos com Nº Lote, Fabricação e Vencimento</p></div>
   <div class="bg"><button class="btn btn-l" onclick="openEtqModal('pa')">🏷️ Etiquetas</button><button class="btn btn-p" onclick="openModal('m-pa-p')">+ Novo Produto</button></div></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-pa-p',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadPA()">↻</button></div>
-  <div class="tw"><table id="t-pa-p"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Un.</th><th>Nº Lote</th><th>Dt. Fabricação</th><th>Dt. Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Status</th><th>🏷️</th></tr></thead>
-  <tbody id="tb-pa-p"><tr><td colspan="11"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+  <div class="tw"><table id="t-pa-p"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Un.</th><th>Nº Lote</th><th>Dt. Fabricação</th><th>Dt. Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Preço Venda</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
+  <tbody id="tb-pa-p"><tr><td colspan="14"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
 <!-- PA PRODUÇÃO -->
@@ -197,7 +228,7 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <div class="sh"><div><p class="st">Expedição — Saída de PA</p><p class="sd">Saída de produtos acabados para venda</p></div>
   <button class="btn btn-b" onclick="openModal('m-expd')">+ Registrar Expedição</button></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-expd',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadExpd()">↻</button></div>
-  <div class="tw"><table id="t-expd"><thead><tr><th>Data Saída</th><th>Produto</th><th>Nº Lote</th><th>Quantidade</th><th>Destino</th><th>NF Venda</th><th>Responsável</th><th>Transporte</th></tr></thead>
+  <div class="tw"><table id="t-expd"><thead><tr><th>Data Saída</th><th>Produto</th><th>Nº Lote</th><th>Quantidade</th><th>Destino</th><th>NF Venda</th><th>Responsável</th><th>Transporte</th><th></th></tr></thead>
   <tbody id="tb-expd"><tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
@@ -227,6 +258,121 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
     </div>
     <div class="etg" id="etq-grid"></div>
   </div>
+</div>
+
+<!-- RELATÓRIOS -->
+<div id="sec-rel" class="sec">
+  <div class="sh"><div><p class="st">Relatórios</p><p class="sd">Situação atual dos estoques e movimentações por período</p></div>
+  <button class="btn btn-l" onclick="exportRelPDF()" id="btn-exp-pdf" style="display:none">⬇️ Exportar PDF</button></div>
+
+  <!-- Sub-abas -->
+  <div class="rel-tabs">
+    <button class="rel-tab active" onclick="showRelTab('sit',this)">📦 Situação dos Estoques</button>
+    <button class="rel-tab" onclick="showRelTab('mov-mp',this)">🌾 Movimentações MP</button>
+    <button class="rel-tab" onclick="showRelTab('mov-pa',this)">🧊 Movimentações PA</button>
+    <button class="rel-tab" onclick="showRelTab('val',this)">⚠️ Vencimentos</button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="rel-filter-bar" id="rel-filters">
+    <div id="flt-periodo" style="display:flex;gap:14px;flex-wrap:wrap">
+      <div><label>Data Início</label><input type="date" id="flt-ini"></div>
+      <div><label>Data Fim</label><input type="date" id="flt-fim"></div>
+    </div>
+    <div id="flt-produto-wrap"><label>Produto</label><select id="flt-produto"><option value="">Todos</option></select></div>
+    <div id="flt-tipo-wrap"><label>Tipo</label><select id="flt-tipo"><option value="">Todos</option><option value="entrada">Entradas</option><option value="saida">Saídas</option></select></div>
+    <div id="flt-venc-wrap" style="display:none"><label>Vence em até</label><select id="flt-dias"><option value="30">30 dias</option><option value="60">60 dias</option><option value="90">90 dias</option><option value="180">180 dias</option><option value="0">Vencidos</option></select></div>
+    <button class="btn btn-p btn-sm" onclick="applyRelFilter()">🔍 Filtrar</button>
+    <button class="btn btn-o btn-sm" onclick="clearRelFilter()">✕ Limpar</button>
+  </div>
+
+  <!-- Situação dos Estoques -->
+  <div id="rel-sit" class="rel-content active">
+    <div class="rel-kpi-row" id="rel-sit-kpis"></div>
+    <div class="rel-section-title">Matéria-Prima</div>
+    <div class="tc"><div class="tw"><table id="trel-mp">
+      <thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Status</th></tr></thead>
+      <tbody id="trel-mp-body"><tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr></tbody>
+    </table></div></div>
+    <div class="rel-section-title" style="margin-top:22px">Produto Acabado</div>
+    <div class="tc"><div class="tw"><table id="trel-pa">
+      <thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Un.</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Status</th></tr></thead>
+      <tbody id="trel-pa-body"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody>
+    </table></div></div>
+  </div>
+
+  <!-- Movimentações MP -->
+  <div id="rel-mov-mp" class="rel-content">
+    <div class="rel-kpi-row" id="rel-movmp-kpis"></div>
+    <div class="rel-section-title">Entradas de Matéria-Prima</div>
+    <div class="tc"><div class="tw"><table id="trel-ent">
+      <thead><tr><th>Data</th><th>Produto</th><th>NF</th><th>Fornecedor</th><th>Lote</th><th>Fabricação</th><th>Validade</th><th>Qtd</th><th>Vl. Unit.</th><th>Vl. Total</th></tr></thead>
+      <tbody id="trel-ent-body"></tbody>
+    </table></div></div>
+    <div class="rel-section-title" style="margin-top:22px">Saídas de Matéria-Prima</div>
+    <div class="tc"><div class="tw"><table id="trel-sai">
+      <thead><tr><th>Data</th><th>Produto</th><th>Lote</th><th>Qtd</th><th>Destino</th><th>Ordem Prod.</th><th>Responsável</th><th>Custo</th></tr></thead>
+      <tbody id="trel-sai-body"></tbody>
+    </table></div></div>
+  </div>
+
+  <!-- Movimentações PA -->
+  <div id="rel-mov-pa" class="rel-content">
+    <div class="rel-kpi-row" id="rel-movpa-kpis"></div>
+    <div class="rel-section-title">Produções Registradas</div>
+    <div class="tc"><div class="tw"><table id="trel-prod">
+      <thead><tr><th>Data</th><th>Produto</th><th>Lote</th><th>Fabricação</th><th>Validade</th><th>Qtd</th><th>Custo Unit.</th><th>Custo Total</th></tr></thead>
+      <tbody id="trel-prod-body"></tbody>
+    </table></div></div>
+    <div class="rel-section-title" style="margin-top:22px">Expedições</div>
+    <div class="tc"><div class="tw"><table id="trel-exp">
+      <thead><tr><th>Data</th><th>Produto</th><th>Lote</th><th>Qtd</th><th>Destino</th><th>NF Venda</th><th>Responsável</th></tr></thead>
+      <tbody id="trel-exp-body"></tbody>
+    </table></div></div>
+  </div>
+
+  <!-- Vencimentos -->
+  <div id="rel-val" class="rel-content">
+    <div class="rel-kpi-row" id="rel-val-kpis"></div>
+    <div class="rel-section-title">Lotes por Vencimento — Matéria-Prima</div>
+    <div class="tc"><div class="tw"><table id="trel-vmp">
+      <thead><tr><th>Produto</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Dias p/ Vencer</th><th>Saldo FIFO</th><th>Situação</th></tr></thead>
+      <tbody id="trel-vmp-body"></tbody>
+    </table></div></div>
+    <div class="rel-section-title" style="margin-top:22px">Lotes por Vencimento — Produto Acabado</div>
+    <div class="tc"><div class="tw"><table id="trel-vpa">
+      <thead><tr><th>Produto</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Dias p/ Vencer</th><th>Saldo FIFO</th><th>Situação</th></tr></thead>
+      <tbody id="trel-vpa-body"></tbody>
+    </table></div></div>
+  </div>
+</div>
+
+<!-- INSUMOS CADASTRO -->
+<div id="sec-ins-p" class="sec">
+  <div class="sh"><div><p class="st">Insumos — Cadastro</p><p class="sd">Embalagens, descartáveis, produtos de limpeza e outros insumos</p></div>
+  <div class="bg"><button class="btn btn-l" onclick="openEtqModal('ins')">🏷️ Etiquetas</button><button class="btn btn-p" onclick="openModal('m-ins-p')">+ Novo Insumo</button></div></div>
+  <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-ins-p',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadIns()">↻</button></div>
+  <div class="tw"><table id="t-ins-p"><thead><tr><th>Código</th><th>Insumo</th><th>Categoria</th><th>Un.</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
+  <tbody id="tb-ins-p"><tr><td colspan="13"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+</div>
+
+<!-- INSUMOS ENTRADAS -->
+<div id="sec-ins-e" class="sec">
+  <div class="sh"><div><p class="st">Entradas — Notas Fiscais de Insumos</p><p class="sd">Lote, Fabricação, Validade e FIFO</p></div>
+  <div class="bg"><button class="btn btn-l" onclick="openEtqModal('ins-ent')">🏷️ Etiquetas Lotes</button><button class="btn btn-p" onclick="openModal('m-ins-e')">+ Nova Entrada</button></div></div>
+  <div class="fib">📦 <div>Método <strong>FIFO</strong>: Lotes mais antigos são consumidos primeiro.</div></div>
+  <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar NF, insumo, lote..." oninput="filt('t-ins-e',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadInsEnt()">↻</button></div>
+  <div class="tw"><table id="t-ins-e"><thead><tr><th>Data Entrada</th><th>FIFO</th><th>Insumo</th><th>NF/Série</th><th>Fornecedor</th><th>Lote</th><th>Dt. Fabricação</th><th>Dt. Validade</th><th>Qtd</th><th>Vl. Unit.</th><th>Vl. Total</th><th>Saldo FIFO</th><th>🏷️</th><th></th></tr></thead>
+  <tbody id="tb-ins-e"><tr><td colspan="14"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+</div>
+
+<!-- INSUMOS SAÍDAS -->
+<div id="sec-ins-s" class="sec">
+  <div class="sh"><div><p class="st">Saídas — Consumo de Insumos (FIFO)</p><p class="sd">Baixa pelo lote mais antigo disponível</p></div>
+  <button class="btn btn-b" onclick="openModal('m-ins-s')">+ Registrar Saída</button></div>
+  <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-ins-s',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadInsSai()">↻</button></div>
+  <div class="tw"><table id="t-ins-s"><thead><tr><th>Data Saída</th><th>Insumo</th><th>Lote</th><th>NF Origem</th><th>Quantidade</th><th>Destino</th><th>Ordem Prod.</th><th>Responsável</th><th>Custo Total</th><th></th></tr></thead>
+  <tbody id="tb-ins-s"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
 </main>
@@ -387,6 +533,138 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   </div></div>
 </div>
 
+<!-- Edit MP -->
+<div class="mo" id="m-mp-edit">
+  <div class="md"><div class="mh"><span class="mt">✏️ Editar Matéria-Prima</span><button class="mc" onclick="closeModal('m-mp-edit')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <div class="fgr"><label>Código</label><input id="mpe-cod" type="text" disabled style="opacity:.6"></div>
+    <div class="fgr"><label>Unidade</label><select id="mpe-un"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
+    <div class="fgr full"><label>Produto *</label><input id="mpe-nome" type="text"></div>
+    <div class="ftit">🏷️ Identificação do Lote</div>
+    <div class="fgr"><label>Número do Lote</label><input id="mpe-lote" type="text"></div>
+    <div class="fgr"><label>Data de Fabricação</label><input id="mpe-fab" type="date"></div>
+    <div class="fgr"><label>Data de Vencimento</label><input id="mpe-venc" type="date"></div>
+    <hr class="fdiv">
+    <div class="ftit">💰 Preços e Estoque</div>
+    <div class="fgr"><label>Estoque Mínimo</label><input id="mpe-emin" type="number" min="0" step="0.001"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="mpe-eatu" type="number" min="0" step="0.001"></div>
+    <div class="fgr"><label>Preço de Custo (R$)</label><input id="mpe-preco" type="number" min="0" step="0.0001"></div>
+    <div class="fgr"><label>Preço Médio Ponderado</label><input id="mpe-medio" type="number" min="0" step="0.0001"></div>
+  </div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-mp-edit')">Cancelar</button><button class="btn btn-p" onclick="saveEditMP()">Salvar Alterações</button></div></div>
+</div>
+
+<!-- Edit PA -->
+<div class="mo" id="m-pa-edit">
+  <div class="md"><div class="mh"><span class="mt">✏️ Editar Produto Acabado</span><button class="mc" onclick="closeModal('m-pa-edit')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <div class="fgr"><label>Código</label><input id="pae-cod" type="text" disabled style="opacity:.6"></div>
+    <div class="fgr"><label>Categoria</label><input id="pae-cat" type="text"></div>
+    <div class="fgr full"><label>Produto *</label><input id="pae-nome" type="text"></div>
+    <div class="ftit">🏷️ Identificação do Lote</div>
+    <div class="fgr"><label>Número do Lote</label><input id="pae-lote" type="text"></div>
+    <div class="fgr"><label>Data de Fabricação</label><input id="pae-fab" type="date"></div>
+    <div class="fgr"><label>Data de Vencimento</label><input id="pae-venc" type="date"></div>
+    <hr class="fdiv">
+    <div class="ftit">💰 Preços e Estoque</div>
+    <div class="fgr"><label>Unidade</label><select id="pae-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option></select></div>
+    <div class="fgr"><label>Estoque Mínimo</label><input id="pae-emin" type="number" min="0" step="1"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="pae-eatu" type="number" min="0" step="1"></div>
+    <div class="fgr"><label>Preço de Custo (R$)</label><input id="pae-preco" type="number" min="0" step="0.0001"></div>
+    <div class="fgr"><label>Preço Médio (R$)</label><input id="pae-medio" type="number" min="0" step="0.0001"></div>
+    <div class="fgr"><label>Preço de Venda (R$)</label><input id="pae-venda" type="number" min="0" step="0.0001"></div>
+  </div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-pa-edit')">Cancelar</button><button class="btn btn-p" onclick="saveEditPA()">Salvar Alterações</button></div></div>
+</div>
+
+<!-- Cadastro Insumo -->
+<div class="mo" id="m-ins-p">
+  <div class="md"><div class="mh"><span class="mt">Cadastrar Insumo</span><button class="mc" onclick="closeModal('m-ins-p')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <div class="fgr"><label>Código *</label><input id="ins-cod" type="text" placeholder="INS001"></div>
+    <div class="fgr"><label>Unidade *</label><select id="ins-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option><option>Pc</option><option>Rl</option><option>Frd</option></select></div>
+    <div class="fgr full"><label>Insumo *</label><input id="ins-nome" type="text" placeholder="Ex: Pote 500ml, Embalagem..."></div>
+    <div class="fgr full"><label>Categoria</label><input id="ins-cat" type="text" placeholder="Ex: Embalagem, Limpeza, Descartável..."></div>
+    <div class="ftit">🏷️ Identificação do Lote</div>
+    <div class="fgr"><label>Número do Lote</label><input id="ins-lote" type="text" placeholder="LOT-INS-001"></div>
+    <div class="fgr"><label>Data de Fabricação</label><input id="ins-fab" type="date"></div>
+    <div class="fgr"><label>Data de Vencimento</label><input id="ins-venc" type="date"></div>
+    <hr class="fdiv">
+    <div class="ftit">💰 Preços e Estoque</div>
+    <div class="fgr"><label>Estoque Mínimo *</label><input id="ins-emin" type="number" min="0" step="0.001" placeholder="0"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="ins-eatu" type="number" min="0" step="0.001" placeholder="0"></div>
+    <div class="fgr"><label>Preço de Custo (R$)</label><input id="ins-preco" type="number" min="0" step="0.0001" placeholder="0.00"></div>
+    <div class="fgr"><label>Preço Médio (R$)</label><input id="ins-medio" type="number" min="0" step="0.0001" placeholder="0.00"></div>
+  </div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-ins-p')">Cancelar</button><button class="btn btn-p" onclick="saveIns()">Salvar</button></div></div>
+</div>
+
+<!-- Edit Insumo -->
+<div class="mo" id="m-ins-edit">
+  <div class="md"><div class="mh"><span class="mt">✏️ Editar Insumo</span><button class="mc" onclick="closeModal('m-ins-edit')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <div class="fgr"><label>Código</label><input id="inse-cod" type="text" disabled style="opacity:.6"></div>
+    <div class="fgr"><label>Unidade</label><select id="inse-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option><option>Pc</option><option>Rl</option><option>Frd</option></select></div>
+    <div class="fgr full"><label>Insumo *</label><input id="inse-nome" type="text"></div>
+    <div class="fgr full"><label>Categoria</label><input id="inse-cat" type="text"></div>
+    <div class="ftit">🏷️ Identificação do Lote</div>
+    <div class="fgr"><label>Número do Lote</label><input id="inse-lote" type="text"></div>
+    <div class="fgr"><label>Data de Fabricação</label><input id="inse-fab" type="date"></div>
+    <div class="fgr"><label>Data de Vencimento</label><input id="inse-venc" type="date"></div>
+    <hr class="fdiv">
+    <div class="ftit">💰 Preços e Estoque</div>
+    <div class="fgr"><label>Estoque Mínimo</label><input id="inse-emin" type="number" min="0" step="0.001"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="inse-eatu" type="number" min="0" step="0.001"></div>
+    <div class="fgr"><label>Preço de Custo (R$)</label><input id="inse-preco" type="number" min="0" step="0.0001"></div>
+    <div class="fgr"><label>Preço Médio (R$)</label><input id="inse-medio" type="number" min="0" step="0.0001"></div>
+  </div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-ins-edit')">Cancelar</button><button class="btn btn-p" onclick="saveEditIns()">Salvar Alterações</button></div></div>
+</div>
+
+<!-- Entrada Insumo -->
+<div class="mo" id="m-ins-e">
+  <div class="md md-lg"><div class="mh"><span class="mt">Registrar Entrada de Insumo</span><button class="mc" onclick="closeModal('m-ins-e')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <div class="ftit">📋 Produto e Data</div>
+    <div class="fgr"><label>Data de Entrada *</label><input id="iens-dt" type="date"></div>
+    <div class="fgr"><label>Insumo *</label><select id="iens-prod"></select></div>
+    <hr class="fdiv">
+    <div class="ftit">🧾 Nota Fiscal</div>
+    <div class="fgr"><label>Nº NF *</label><input id="iens-nf" type="text" placeholder="000001"></div>
+    <div class="fgr"><label>Série NF</label><input id="iens-ser" type="text" placeholder="1"></div>
+    <div class="fgr"><label>Fornecedor *</label><input id="iens-forn" type="text"></div>
+    <div class="fgr"><label>CNPJ Fornecedor</label><input id="iens-cnpj" type="text"></div>
+    <hr class="fdiv">
+    <div class="ftit">📦 Quantidade</div>
+    <div class="fgr"><label>Quantidade *</label><input id="iens-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
+    <div class="fgr"><label>Valor Unitário (R$) *</label><input id="iens-vl" type="number" min="0" step="0.0001" placeholder="0.00"></div>
+    <hr class="fdiv">
+    <div class="ftit">🏷️ Lote e Datas (FIFO)</div>
+    <div class="fgr"><label>Número do Lote *</label><input id="iens-lote" type="text" placeholder="LOT-INS-001"></div>
+    <div class="fgr"><label>Data de Fabricação *</label><input id="iens-fab" type="date"></div>
+    <div class="fgr"><label>Data de Validade *</label><input id="iens-val" type="date"></div>
+    <div class="fgr full"><label>Observações</label><textarea id="iens-obs"></textarea></div>
+  </div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-ins-e')">Cancelar</button><button class="btn btn-p" onclick="saveInsEnt()">Registrar Entrada</button></div></div>
+</div>
+
+<!-- Saída Insumo -->
+<div class="mo" id="m-ins-s">
+  <div class="md"><div class="mh"><span class="mt">Registrar Saída de Insumo (FIFO)</span><button class="mc" onclick="closeModal('m-ins-s')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <div class="fgr"><label>Data de Saída *</label><input id="sins-dt" type="date"></div>
+    <div class="fgr"><label>Insumo *</label><select id="sins-prod" onchange="loadLotesFIFO_Ins()"></select></div>
+    <div class="fgr full"><label>Lote FIFO (mais antigo disponível) *</label><select id="sins-lote"><option value="">— Selecione o insumo primeiro —</option></select></div>
+    <div class="fgr"><label>NF Origem</label><input id="sins-nf" type="text"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="sins-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
+    <div class="fgr"><label>Destino</label><input id="sins-dest" type="text" placeholder="Ex: Linha de produção"></div>
+    <div class="fgr"><label>Ordem de Produção</label><input id="sins-op" type="text" placeholder="OP-001"></div>
+    <div class="fgr"><label>Responsável</label><input id="sins-resp" type="text"></div>
+    <div class="fgr full"><label>Observações</label><textarea id="sins-obs"></textarea></div>
+  </div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-ins-s')">Cancelar</button><button class="btn btn-b" onclick="saveInsSai()">Registrar Saída</button></div></div>
+</div>
+
 <div class="tct" id="tct"></div>
 
 <script>
@@ -412,17 +690,27 @@ function showSec(id,btn){
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
-  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd};
+  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd,'ins-p':loadIns,'ins-e':loadInsEnt,'ins-s':loadInsSai};
   if(map[id])map[id]();
+  if(id==='rel'){
+    document.getElementById('btn-exp-pdf').style.display='';
+    document.getElementById('flt-periodo').style.display='none';
+    document.getElementById('flt-produto-wrap').style.display='none';
+    document.getElementById('flt-tipo-wrap').style.display='none';
+    document.getElementById('flt-venc-wrap').style.display='none';
+    loadRelSit();
+  }
 }
 
 function openModal(id){
   document.getElementById(id).classList.add('open');
   document.querySelectorAll(`#${id} input[type=date]`).forEach(f=>{if(!f.value)f.value=today();});
   if(id==='m-mp-e')fillSel(sb,'ent-prod','materiaprima_produtos');
-  if(id==='m-mp-s')fillSel(sb,'sai-prod','materiaprima_produtos');
+  if(id==='m-mp-s'){fillSel(sb,'sai-prod','materiaprima_produtos');loadLotesFIFO();}
   if(id==='m-pa-prod')fillSel(sb,'paprod-sel','produto_acabado_cadastro');
   if(id==='m-expd')fillSel(sb,'exp-prod','produto_acabado_cadastro');
+  if(id==='m-ins-e')fillSelIns('iens-prod');
+  if(id==='m-ins-s'){fillSelIns('sins-prod');loadLotesFIFO_Ins();}
 }
 function closeModal(id){
   document.getElementById(id).classList.remove('open');
@@ -478,7 +766,8 @@ async function loadMP(){
     const vc=vCls(p.data_vencimento);
     const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
     const ed=JSON.stringify({nome:p.produto,codigo:p.codigo,lote:p.numero_lote||'',fab:p.data_fabricacao||'',venc:p.data_vencimento||''});
-    return`<tr><td><code>${p.codigo}</code></td><td><strong>${p.produto}</strong></td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td><span class="sb ${sk}">${st}</span></td><td><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button></td></tr>`;
+    const vEst=(p.estoque_atual||0)*(p.preco_medio||0);
+    return`<tr><td><code>${p.codigo}</code></td><td><strong>${p.produto}</strong></td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td class="preco-cell">${fmtR(p.preco_medio||0)}</td><td class="preco-cell val-pos">${fmtR(vEst)}</td><td><span class="sb ${sk}">${st}</span></td><td style="display:flex;gap:4px"><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button><button class="edit-btn" title="Editar" onclick='openEditMP(${JSON.stringify(p)})'>✏️</button><button class="del-btn" title="Excluir" onclick="delMP('${p.codigo}','${p.produto.replace(/'/g,'')}')">🗑</button></td></tr>`;
   }).join('');
 }
 async function saveMP(){
@@ -508,7 +797,7 @@ async function loadMPEnt(){
     const isF=fi[e.codigo_produto]===1&&e.saldo_fifo>0;
     const vc=vCls(e.data_validade);
     const ed=JSON.stringify({nome:e.produto,codigo:e.codigo_produto,lote:e.lote||'',fab:e.data_fabricacao||'',venc:e.data_validade||''});
-    return`<tr><td>${fmtD(e.data_entrada)}</td><td>${isF?'<span class="fb">FIFO ▶</span>':'—'}</td><td><strong>${e.produto}</strong><br><small style="color:var(--tm)">${e.codigo_produto}</small></td><td>${e.nf_numero}${e.nf_serie?'/'+e.nf_serie:''}</td><td>${e.fornecedor}</td><td>${e.lote||'—'}</td><td>${fmtD(e.data_fabricacao)}</td><td class="${vc}">${fmtD(e.data_validade)}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${fmtR(e.valor_unitario)}</td><td>${fmtR(e.valor_total)}</td><td><strong>${fmt(e.saldo_fifo)}</strong></td><td><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button></td></tr>`;
+    return`<tr><td>${fmtD(e.data_entrada)}</td><td>${isF?'<span class="fb">FIFO ▶</span>':'—'}</td><td><strong>${e.produto}</strong><br><small style="color:var(--tm)">${e.codigo_produto}</small></td><td>${e.nf_numero}${e.nf_serie?'/'+e.nf_serie:''}</td><td>${e.fornecedor}</td><td>${e.lote||'—'}</td><td>${fmtD(e.data_fabricacao)}</td><td class="${vc}">${fmtD(e.data_validade)}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${fmtR(e.valor_unitario)}</td><td>${fmtR(e.valor_total)}</td><td><strong>${fmt(e.saldo_fifo)}</strong></td><td style="display:flex;gap:4px"><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button><button class="del-btn" title="Excluir" onclick="delMPEnt('${e.id}','${(e.lote||'').replace(/'/g,'')}')">🗑</button></td></tr>`;
   }).join('');
 }
 async function saveEnt(){
@@ -551,7 +840,7 @@ async function loadMPSai(){
   tb.innerHTML='<tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr>';
   const{data,error}=await sb.from('materiaprima_saidas').select('*').order('data_saida',{ascending:false});
   if(error||!data?.length){tb.innerHTML=`<tr><td colspan="9"><div class="es"><div class="ei">📤</div><p>${error?'Erro':'Nenhuma saída'}</p></div></td></tr>`;return;}
-  tb.innerHTML=data.map(s=>`<tr><td>${fmtD(s.data_saida)}</td><td><strong>${s.codigo_produto}</strong></td><td>${s.lote_origem}</td><td>${s.nf_numero_origem||'—'}</td><td>${fmt(s.quantidade)} ${s.unidade}</td><td>${s.destino||'—'}</td><td>${s.ordem_producao||'—'}</td><td>${s.responsavel||'—'}</td><td>${fmtR(s.custo_unitario*s.quantidade)}</td></tr>`).join('');
+  tb.innerHTML=data.map(s=>`<tr><td>${fmtD(s.data_saida)}</td><td><strong>${s.codigo_produto}</strong></td><td>${s.lote_origem}</td><td>${s.nf_numero_origem||'—'}</td><td>${fmt(s.quantidade)} ${s.unidade}</td><td>${s.destino||'—'}</td><td>${s.ordem_producao||'—'}</td><td>${s.responsavel||'—'}</td><td>${fmtR(s.custo_unitario*s.quantidade)}</td><td><button class="del-btn" title="Excluir" onclick="delMPSai('${s.id}')">🗑</button></td></tr>`).join('');
 }
 async function saveSai(){
   const dt=document.getElementById('sai-dt').value;
@@ -589,7 +878,7 @@ async function loadProc(){
   if(error||!data?.length){tb.innerHTML=`<tr><td colspan="10"><div class="es"><div class="ei">⚙️</div><p>${error?'Erro':'Nenhuma ordem'}</p></div></td></tr>`;return;}
   tb.innerHTML=data.map(o=>{
     const sk=(o.status||'').replace(/\s+/g,'_').replace(/Í/g,'I');
-    return`<tr><td><strong>${o.ordem_producao}</strong></td><td>${fmtD(o.data_inicio)}</td><td>${o.produto}<br><small style="color:var(--tm)">${o.codigo_produto}</small></td><td>${fmt(o.quantidade)} ${o.unidade}</td><td>${o.etapa_atual||'—'}</td><td><div class="pb" style="width:80px;display:inline-block"><div class="pf ok" style="width:${o.percentual_conclusao||0}%"></div></div> <small>${o.percentual_conclusao||0}%</small></td><td>${o.responsavel||'—'}</td><td>${fmtD(o.previsao_termino)}</td><td>${fmtR(o.custo_mp)}</td><td><span class="sb ${sk}">${o.status}</span></td></tr>`;
+    return`<tr><td><strong>${o.ordem_producao}</strong></td><td>${fmtD(o.data_inicio)}</td><td>${o.produto}<br><small style="color:var(--tm)">${o.codigo_produto}</small></td><td>${fmt(o.quantidade)} ${o.unidade}</td><td>${o.etapa_atual||'—'}</td><td><div class="pb" style="width:80px;display:inline-block"><div class="pf ok" style="width:${o.percentual_conclusao||0}%"></div></div> <small>${o.percentual_conclusao||0}%</small></td><td>${o.responsavel||'—'}</td><td>${fmtD(o.previsao_termino)}</td><td>${fmtR(o.custo_mp)}</td><td><span class="sb ${sk}">${o.status}</span></td><td><button class="del-btn" title="Excluir" onclick="delProc('${o.id}','${o.ordem_producao}')">🗑</button></td></tr>`;
   }).join('');
 }
 async function saveProc(){
@@ -623,7 +912,8 @@ async function loadPA(){
     const vc=vCls(p.data_vencimento);
     const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
     const ed=JSON.stringify({nome:p.produto,codigo:p.codigo,lote:p.numero_lote||'',fab:p.data_fabricacao||'',venc:p.data_vencimento||''});
-    return`<tr><td><code>${p.codigo}</code></td><td><strong>${p.produto}</strong></td><td>${p.categoria||'—'}</td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td><span class="sb ${sk}">${st}</span></td><td><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button></td></tr>`;
+    const vEst=(p.estoque_atual||0)*(p.preco_medio||0);
+    return`<tr><td><code>${p.codigo}</code></td><td><strong>${p.produto}</strong></td><td>${p.categoria||'—'}</td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td class="preco-cell">${fmtR(p.preco_medio||0)}</td><td class="preco-cell">${fmtR(p.preco_venda||0)}</td><td class="preco-cell val-pos">${fmtR(vEst)}</td><td><span class="sb ${sk}">${st}</span></td><td style="display:flex;gap:4px"><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button><button class="edit-btn" title="Editar" onclick='openEditPA(${JSON.stringify(p)})'>✏️</button><button class="del-btn" title="Excluir" onclick="delPA('${p.codigo}','${p.produto.replace(/'/g,'')}')">🗑</button></td></tr>`;
   }).join('');
 }
 async function savePA(){
@@ -655,7 +945,7 @@ async function loadPAProd(){
     const vc=vCls(p.data_validade);
     const nom=p.produto_acabado_cadastro?.produto||p.codigo_produto;
     const ed=JSON.stringify({nome:nom,codigo:p.codigo_produto,lote:p.lote||'',fab:p.data_fabricacao||'',venc:p.data_validade||''});
-    return`<tr><td>${fmtD(p.data_producao)}</td><td>${isF?'<span class="fb">FIFO ▶</span>':'—'}</td><td><strong>${nom}</strong></td><td>${p.lote}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_validade)}</td><td>${fmt(p.quantidade)} ${p.unidade}</td><td>${fmtR(p.custo_unitario)}</td><td>${fmtR(p.custo_total)}</td><td><strong>${fmt(p.saldo_fifo)}</strong></td><td><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button></td></tr>`;
+    return`<tr><td>${fmtD(p.data_producao)}</td><td>${isF?'<span class="fb">FIFO ▶</span>':'—'}</td><td><strong>${nom}</strong></td><td>${p.lote}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_validade)}</td><td>${fmt(p.quantidade)} ${p.unidade}</td><td>${fmtR(p.custo_unitario)}</td><td>${fmtR(p.custo_total)}</td><td><strong>${fmt(p.saldo_fifo)}</strong></td><td style="display:flex;gap:4px"><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button><button class="del-btn" title="Excluir" onclick="delPAProd('${p.id}','${(p.lote||'').replace(/'/g,'')}')">🗑</button></td></tr>`;
   }).join('');
 }
 async function savePAProd(){
@@ -693,7 +983,7 @@ async function loadExpd(){
   tb.innerHTML='<tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr>';
   const{data,error}=await sb.from('produto_acabado_expedicao').select('*,produto_acabado_cadastro(produto)').order('data_saida',{ascending:false});
   if(error||!data?.length){tb.innerHTML=`<tr><td colspan="8"><div class="es"><div class="ei">🚚</div><p>${error?'Erro':'Nenhuma expedição'}</p></div></td></tr>`;return;}
-  tb.innerHTML=data.map(e=>`<tr><td>${fmtD(e.data_saida)}</td><td><strong>${e.produto_acabado_cadastro?.produto||e.codigo_produto}</strong></td><td>${e.lote}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${e.destino||'—'}</td><td>${e.nf_venda||'—'}</td><td>${e.responsavel||'—'}</td><td>${e.transporte||'—'}</td></tr>`).join('');
+  tb.innerHTML=data.map(e=>`<tr><td>${fmtD(e.data_saida)}</td><td><strong>${e.produto_acabado_cadastro?.produto||e.codigo_produto}</strong></td><td>${e.lote}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${e.destino||'—'}</td><td>${e.nf_venda||'—'}</td><td>${e.responsavel||'—'}</td><td>${e.transporte||'—'}</td><td><button class="del-btn" title="Excluir" onclick="delExpd('${e.id}')">🗑</button></td></tr>`).join('');
 }
 async function saveExpd(){
   const sel=document.getElementById('exp-prod');
@@ -897,6 +1187,717 @@ function pdfLotes(){
 
 // Init
 loadDash();
+
+// ================================================================
+// ======================== EXCLUSÕES =============================
+// ================================================================
+
+async function delMP(cod, nome) {
+  if(!confirm(`Excluir Matéria-Prima "${nome}" (${cod})?\n⚠️ Isso removerá também todas as entradas e saídas deste produto.`)) return;
+  await sb.from('materiaprima_saidas').delete().eq('codigo_produto', cod);
+  await sb.from('materiaprima_entradas').delete().eq('codigo_produto', cod);
+  const {error} = await sb.from('materiaprima_produtos').delete().eq('codigo', cod);
+  if(error){toast('Erro ao excluir: '+error.message,'error');return;}
+  toast('Matéria-Prima excluída!'); loadMP();
+}
+
+async function delPA(cod, nome) {
+  if(!confirm(`Excluir Produto Acabado "${nome}" (${cod})?\n⚠️ Isso removerá também todas as produções e expedições deste produto.`)) return;
+  await sb.from('produto_acabado_expedicao').delete().eq('codigo_produto', cod);
+  await sb.from('produto_acabado_producao').delete().eq('codigo_produto', cod);
+  const {error} = await sb.from('produto_acabado_cadastro').delete().eq('codigo', cod);
+  if(error){toast('Erro ao excluir: '+error.message,'error');return;}
+  toast('Produto Acabado excluído!'); loadPA();
+}
+
+async function delMPEnt(id, lote) {
+  if(!confirm(`Excluir entrada do lote "${lote}"?\n⚠️ O estoque será ajustado automaticamente.`)) return;
+  const {data:ent} = await sb.from('materiaprima_entradas').select('codigo_produto,quantidade').eq('id',id).single();
+  const {error} = await sb.from('materiaprima_entradas').delete().eq('id', id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  if(ent){
+    const {data:cur} = await sb.from('materiaprima_produtos').select('estoque_atual').eq('codigo',ent.codigo_produto).single();
+    await sb.from('materiaprima_produtos').update({estoque_atual:Math.max(0,(cur?.estoque_atual||0)-ent.quantidade)}).eq('codigo',ent.codigo_produto);
+  }
+  toast('Entrada excluída!'); loadMPEnt();
+}
+
+async function delMPSai(id) {
+  if(!confirm('Excluir este registro de saída?')) return;
+  const {data:sai} = await sb.from('materiaprima_saidas').select('codigo_produto,quantidade,lote_origem,custo_unitario').eq('id',id).single();
+  const {error} = await sb.from('materiaprima_saidas').delete().eq('id', id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  if(sai){
+    // Restore saldo_fifo on the entry and estoque on the product
+    const {data:ent} = await sb.from('materiaprima_entradas').select('saldo_fifo').eq('lote',sai.lote_origem).eq('codigo_produto',sai.codigo_produto).order('data_entrada').limit(1).single();
+    if(ent) await sb.from('materiaprima_entradas').update({saldo_fifo:(ent.saldo_fifo||0)+sai.quantidade}).eq('lote',sai.lote_origem).eq('codigo_produto',sai.codigo_produto);
+    const {data:cur} = await sb.from('materiaprima_produtos').select('estoque_atual').eq('codigo',sai.codigo_produto).single();
+    await sb.from('materiaprima_produtos').update({estoque_atual:(cur?.estoque_atual||0)+sai.quantidade}).eq('codigo',sai.codigo_produto);
+  }
+  toast('Saída excluída e estoque restaurado!'); loadMPSai();
+}
+
+async function delProc(id, op) {
+  if(!confirm(`Excluir ordem de produção "${op}"?`)) return;
+  const {error} = await sb.from('processo_ordens').delete().eq('id', id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Ordem excluída!'); loadProc();
+}
+
+async function delPAProd(id, lote) {
+  if(!confirm(`Excluir produção do lote "${lote}"?\n⚠️ O estoque será ajustado automaticamente.`)) return;
+  const {data:prod} = await sb.from('produto_acabado_producao').select('codigo_produto,quantidade').eq('id',id).single();
+  const {error} = await sb.from('produto_acabado_producao').delete().eq('id', id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  if(prod){
+    const {data:cur} = await sb.from('produto_acabado_cadastro').select('estoque_atual').eq('codigo',prod.codigo_produto).single();
+    await sb.from('produto_acabado_cadastro').update({estoque_atual:Math.max(0,(cur?.estoque_atual||0)-prod.quantidade)}).eq('codigo',prod.codigo_produto);
+  }
+  toast('Produção excluída!'); loadPAProd();
+}
+
+async function delExpd(id) {
+  if(!confirm('Excluir este registro de expedição?\n⚠️ O saldo do lote será restaurado.')) return;
+  const {data:exp} = await sb.from('produto_acabado_expedicao').select('codigo_produto,lote,quantidade').eq('id',id).single();
+  const {error} = await sb.from('produto_acabado_expedicao').delete().eq('id', id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  if(exp){
+    const {data:la} = await sb.from('produto_acabado_producao').select('saldo_fifo').eq('lote',exp.lote).eq('codigo_produto',exp.codigo_produto).order('data_producao').limit(1).single();
+    if(la) await sb.from('produto_acabado_producao').update({saldo_fifo:(la.saldo_fifo||0)+exp.quantidade}).eq('lote',exp.lote).eq('codigo_produto',exp.codigo_produto);
+    const {data:cur} = await sb.from('produto_acabado_cadastro').select('estoque_atual').eq('codigo',exp.codigo_produto).single();
+    await sb.from('produto_acabado_cadastro').update({estoque_atual:(cur?.estoque_atual||0)+exp.quantidade}).eq('codigo',exp.codigo_produto);
+  }
+  toast('Expedição excluída e saldo restaurado!'); loadExpd();
+}
+
+// ================================================================
+// ======================== RELATÓRIOS ============================
+// ================================================================
+
+let _relTab = 'sit';
+
+function showRelTab(tab, btn) {
+  _relTab = tab;
+  document.querySelectorAll('.rel-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.rel-content').forEach(c => c.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('rel-'+tab).classList.add('active');
+
+  // Show/hide filter controls per tab
+  document.getElementById('flt-periodo').style.display = tab==='sit' ? 'none' : 'flex';
+  document.getElementById('flt-produto-wrap').style.display = (tab==='sit'||tab==='val') ? 'none' : '';
+  document.getElementById('flt-tipo-wrap').style.display = tab==='mov-mp' ? '' : 'none';
+  document.getElementById('flt-venc-wrap').style.display = tab==='val' ? '' : 'none';
+  document.getElementById('btn-exp-pdf').style.display = '';
+
+  applyRelFilter();
+}
+
+function clearRelFilter() {
+  document.getElementById('flt-ini').value = '';
+  document.getElementById('flt-fim').value = '';
+  document.getElementById('flt-produto').value = '';
+  document.getElementById('flt-tipo').value = '';
+  document.getElementById('flt-dias').value = '30';
+  applyRelFilter();
+}
+
+async function applyRelFilter() {
+  const ini = document.getElementById('flt-ini').value;
+  const fim = document.getElementById('flt-fim').value;
+  const prod = document.getElementById('flt-produto').value;
+  const tipo = document.getElementById('flt-tipo').value;
+  const dias = parseInt(document.getElementById('flt-dias').value);
+
+  if(_relTab==='sit')   await loadRelSit();
+  if(_relTab==='mov-mp') await loadRelMovMP(ini, fim, prod, tipo);
+  if(_relTab==='mov-pa') await loadRelMovPA(ini, fim, prod);
+  if(_relTab==='val')    await loadRelVal(dias);
+}
+
+// --- Situação dos Estoques ---
+async function loadRelSit() {
+  const [mpR, paR] = await Promise.all([
+    sb.from('materiaprima_produtos').select('*').order('codigo'),
+    sb.from('produto_acabado_cadastro').select('*').order('codigo')
+  ]);
+  const mp = mpR.data||[], pa = paR.data||[];
+
+  // KPIs
+  const mpCri = mp.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
+  const paCri = pa.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
+  document.getElementById('rel-sit-kpis').innerHTML = `
+    <div class="rel-kpi"><div class="rv">${mp.length}</div><div class="rl">Matérias-Primas</div></div>
+    <div class="rel-kpi"><div class="rv">${pa.length}</div><div class="rl">Produtos Acabados</div></div>
+    <div class="rel-kpi ${mpCri+paCri>0?'neg':'pos'}"><div class="rv">${mpCri+paCri}</div><div class="rl">Itens Críticos</div></div>
+    <div class="rel-kpi"><div class="rv">${mp.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='OK').length+pa.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='OK').length}</div><div class="rl">Itens OK</div></div>`;
+
+  // MP table
+  document.getElementById('trel-mp-body').innerHTML = mp.length
+    ? mp.map(p=>{const st=gst(p.estoque_atual,p.estoque_minimo);const vc=vCls(p.data_vencimento);const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
+        return`<tr><td><code>${p.codigo}</code></td><td>${p.produto}</td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td><span class="sb ${sk}">${st}</span></td></tr>`;
+      }).join('')
+    : '<tr><td colspan="9"><div class="es"><p>Sem dados</p></div></td></tr>';
+
+  // PA table
+  document.getElementById('trel-pa-body').innerHTML = pa.length
+    ? pa.map(p=>{const st=gst(p.estoque_atual,p.estoque_minimo);const vc=vCls(p.data_vencimento);const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
+        return`<tr><td><code>${p.codigo}</code></td><td>${p.produto}</td><td>${p.categoria||'—'}</td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td><span class="sb ${sk}">${st}</span></td></tr>`;
+      }).join('')
+    : '<tr><td colspan="10"><div class="es"><p>Sem dados</p></div></td></tr>';
+}
+
+// --- Movimentações MP ---
+async function loadRelMovMP(ini, fim, prod, tipo) {
+  let qEnt = sb.from('materiaprima_entradas').select('*').order('data_entrada',{ascending:false});
+  let qSai = sb.from('materiaprima_saidas').select('*').order('data_saida',{ascending:false});
+  if(ini){ qEnt=qEnt.gte('data_entrada',ini); qSai=qSai.gte('data_saida',ini); }
+  if(fim){ qEnt=qEnt.lte('data_entrada',fim); qSai=qSai.lte('data_saida',fim); }
+  if(prod){ qEnt=qEnt.eq('codigo_produto',prod); qSai=qSai.eq('codigo_produto',prod); }
+
+  const showEnt = !tipo || tipo==='entrada';
+  const showSai = !tipo || tipo==='saida';
+  const [entR, saiR] = await Promise.all([showEnt?qEnt:Promise.resolve({data:[]}), showSai?qSai:Promise.resolve({data:[]})]);
+  const ents = entR.data||[], sais = saiR.data||[];
+
+  const totalEnt = ents.reduce((s,e)=>s+(e.valor_total||0),0);
+  const totalSai = sais.reduce((s,s2)=>s+(s2.custo_unitario*s2.quantidade),0);
+  document.getElementById('rel-movmp-kpis').innerHTML = `
+    <div class="rel-kpi pos"><div class="rv">${ents.length}</div><div class="rl">Entradas no Período</div></div>
+    <div class="rel-kpi pos"><div class="rv">${fmtR(totalEnt)}</div><div class="rl">Valor Total Entradas</div></div>
+    <div class="rel-kpi neg"><div class="rv">${sais.length}</div><div class="rl">Saídas no Período</div></div>
+    <div class="rel-kpi neg"><div class="rv">${fmtR(totalSai)}</div><div class="rl">Custo Total Saídas</div></div>`;
+
+  document.getElementById('trel-ent-body').innerHTML = ents.length
+    ? ents.map(e=>`<tr><td>${fmtD(e.data_entrada)}</td><td><strong>${e.produto}</strong><br><small>${e.codigo_produto}</small></td><td>${e.nf_numero}</td><td>${e.fornecedor}</td><td>${e.lote||'—'}</td><td>${fmtD(e.data_fabricacao)}</td><td>${fmtD(e.data_validade)}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${fmtR(e.valor_unitario)}</td><td><strong>${fmtR(e.valor_total)}</strong></td></tr>`).join('')
+    : '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--tm)">Nenhuma entrada no período</td></tr>';
+
+  document.getElementById('trel-sai-body').innerHTML = sais.length
+    ? sais.map(s=>`<tr><td>${fmtD(s.data_saida)}</td><td><strong>${s.codigo_produto}</strong></td><td>${s.lote_origem}</td><td>${fmt(s.quantidade)} ${s.unidade}</td><td>${s.destino||'—'}</td><td>${s.ordem_producao||'—'}</td><td>${s.responsavel||'—'}</td><td>${fmtR(s.custo_unitario*s.quantidade)}</td></tr>`).join('')
+    : '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--tm)">Nenhuma saída no período</td></tr>';
+}
+
+// --- Movimentações PA ---
+async function loadRelMovPA(ini, fim, prod) {
+  let qProd = sb.from('produto_acabado_producao').select('*,produto_acabado_cadastro(produto)').order('data_producao',{ascending:false});
+  let qExp  = sb.from('produto_acabado_expedicao').select('*,produto_acabado_cadastro(produto)').order('data_saida',{ascending:false});
+  if(ini){ qProd=qProd.gte('data_producao',ini); qExp=qExp.gte('data_saida',ini); }
+  if(fim){ qProd=qProd.lte('data_producao',fim); qExp=qExp.lte('data_saida',fim); }
+  if(prod){ qProd=qProd.eq('codigo_produto',prod); qExp=qExp.eq('codigo_produto',prod); }
+  const [pR, eR] = await Promise.all([qProd, qExp]);
+  const prods = pR.data||[], exps = eR.data||[];
+
+  const totalProd = prods.reduce((s,p)=>s+p.quantidade,0);
+  const totalExp  = exps.reduce((s,e)=>s+e.quantidade,0);
+  const custoProd = prods.reduce((s,p)=>s+(p.custo_total||0),0);
+  document.getElementById('rel-movpa-kpis').innerHTML = `
+    <div class="rel-kpi pos"><div class="rv">${prods.length}</div><div class="rl">Lotes Produzidos</div></div>
+    <div class="rel-kpi pos"><div class="rv">${fmt(totalProd)}</div><div class="rl">Unid. Produzidas</div></div>
+    <div class="rel-kpi warn"><div class="rv">${exps.length}</div><div class="rl">Expedições</div></div>
+    <div class="rel-kpi neg"><div class="rv">${fmt(totalExp)}</div><div class="rl">Unid. Expedidas</div></div>`;
+
+  document.getElementById('trel-prod-body').innerHTML = prods.length
+    ? prods.map(p=>`<tr><td>${fmtD(p.data_producao)}</td><td><strong>${p.produto_acabado_cadastro?.produto||p.codigo_produto}</strong></td><td>${p.lote}</td><td>${fmtD(p.data_fabricacao)}</td><td>${fmtD(p.data_validade)}</td><td>${fmt(p.quantidade)} ${p.unidade}</td><td>${fmtR(p.custo_unitario)}</td><td>${fmtR(p.custo_total)}</td></tr>`).join('')
+    : '<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--tm)">Nenhuma produção no período</td></tr>';
+
+  document.getElementById('trel-exp-body').innerHTML = exps.length
+    ? exps.map(e=>`<tr><td>${fmtD(e.data_saida)}</td><td><strong>${e.produto_acabado_cadastro?.produto||e.codigo_produto}</strong></td><td>${e.lote}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${e.destino||'—'}</td><td>${e.nf_venda||'—'}</td><td>${e.responsavel||'—'}</td></tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--tm)">Nenhuma expedição no período</td></tr>';
+}
+
+// --- Vencimentos ---
+async function loadRelVal(dias) {
+  const hoje = new Date();
+  const limite = new Date();
+  if(dias===0){ /* vencidos */ } else { limite.setDate(hoje.getDate()+dias); }
+
+  const [mpR, paR] = await Promise.all([
+    sb.from('materiaprima_entradas').select('produto,codigo_produto,lote,data_fabricacao,data_validade,saldo_fifo').gt('saldo_fifo',0).order('data_validade'),
+    sb.from('produto_acabado_producao').select('*,produto_acabado_cadastro(produto)').gt('saldo_fifo',0).order('data_validade')
+  ]);
+  const mpAll = (mpR.data||[]), paAll = (paR.data||[]);
+
+  function filterVenc(items, dateField) {
+    return items.filter(it=>{
+      if(!it[dateField]) return false;
+      const d = new Date(it[dateField]+'T12:00:00');
+      if(dias===0) return d < hoje;
+      return d <= limite;
+    });
+  }
+  const mpFilt = filterVenc(mpAll,'data_validade');
+  const paFilt = filterVenc(paAll,'data_validade');
+
+  const vencidosMP = mpFilt.filter(i=>new Date(i.data_validade+'T12:00:00')<hoje).length;
+  const vencidosPA = paFilt.filter(i=>new Date(i.data_validade+'T12:00:00')<hoje).length;
+  document.getElementById('rel-val-kpis').innerHTML = `
+    <div class="rel-kpi ${mpFilt.length>0?'neg':'pos'}"><div class="rv">${mpFilt.length}</div><div class="rl">Lotes MP no Alerta</div></div>
+    <div class="rel-kpi ${paFilt.length>0?'neg':'pos'}"><div class="rv">${paFilt.length}</div><div class="rl">Lotes PA no Alerta</div></div>
+    <div class="rel-kpi ${vencidosMP+vencidosPA>0?'neg':'pos'}"><div class="rv">${vencidosMP+vencidosPA}</div><div class="rl">Já Vencidos</div></div>
+    <div class="rel-kpi warn"><div class="rv">${mpFilt.length+paFilt.length-(vencidosMP+vencidosPA)}</div><div class="rl">Próximos ao Venc.</div></div>`;
+
+  function diasParaVencer(d){const diff=Math.ceil((new Date(d+'T12:00:00')-new Date())/86400000);return diff;}
+  function statusVenc(d){const df=diasParaVencer(d);if(df<0)return{label:'VENCIDO',cls:'VENCIDO'};if(df<=30)return{label:`${df} dias`,cls:'CRITICO'};if(df<=90)return{label:`${df} dias`,cls:'ATEN'};return{label:`${df} dias`,cls:'OK'};}
+
+  document.getElementById('trel-vmp-body').innerHTML = mpFilt.length
+    ? mpFilt.map(i=>{const sv=statusVenc(i.data_validade);return`<tr><td><strong>${i.produto}</strong><br><small>${i.codigo_produto}</small></td><td>${i.lote}</td><td>${fmtD(i.data_fabricacao)}</td><td>${fmtD(i.data_validade)}</td><td style="font-weight:700">${diasParaVencer(i.data_validade)} dias</td><td>${fmt(i.saldo_fifo)}</td><td><span class="sb ${sv.cls}">${sv.label}</span></td></tr>`;}).join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--tm)">Nenhum lote no alerta selecionado</td></tr>';
+
+  document.getElementById('trel-vpa-body').innerHTML = paFilt.length
+    ? paFilt.map(i=>{const nom=i.produto_acabado_cadastro?.produto||i.codigo_produto;const sv=statusVenc(i.data_validade);return`<tr><td><strong>${nom}</strong><br><small>${i.codigo_produto}</small></td><td>${i.lote}</td><td>${fmtD(i.data_fabricacao)}</td><td>${fmtD(i.data_validade)}</td><td style="font-weight:700">${diasParaVencer(i.data_validade)} dias</td><td>${fmt(i.saldo_fifo)}</td><td><span class="sb ${sv.cls}">${sv.label}</span></td></tr>`;}).join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--tm)">Nenhum lote no alerta selecionado</td></tr>';
+}
+
+// --- Exportar relatório como PDF ---
+function exportRelPDF() {
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({unit:'mm',format:'a4',orientation:'landscape'});
+  const W=297, margin=14;
+  let y=margin;
+  const titles={'sit':'Situação dos Estoques','mov-mp':'Movimentações de Matéria-Prima','mov-pa':'Movimentações de Produto Acabado','val':'Relatório de Vencimentos'};
+  const ini=document.getElementById('flt-ini').value;
+  const fim=document.getElementById('flt-fim').value;
+  const periodo = ini||fim ? `Período: ${ini?fmtD(ini):'início'} a ${fim?fmtD(fim):'hoje'}` : `Gerado em: ${new Date().toLocaleDateString('pt-BR')}`;
+
+  // Header
+  doc.setFillColor(62,32,16);doc.rect(0,0,W,18,'F');
+  doc.setTextColor(245,235,216);doc.setFontSize(13);doc.setFont('helvetica','bold');
+  doc.text('ESTOQUE FÁBRICA — '+titles[_relTab].toUpperCase(),margin,11);
+  doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text(periodo,W-margin,11,{align:'right'});
+  y=26;
+
+  // Collect visible tables
+  const tables = document.querySelectorAll(`#rel-${_relTab} table`);
+  tables.forEach((tbl,ti)=>{
+    if(ti>0) y+=8;
+    // Section label from rel-section-title
+    const titles2 = document.querySelectorAll(`#rel-${_relTab} .rel-section-title`);
+    if(titles2[ti]){
+      doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(107,31,46);
+      doc.text(titles2[ti].textContent.trim(),margin,y);
+      y+=5;
+      doc.setDrawColor(107,31,46);doc.setLineWidth(0.3);doc.line(margin,y,W-margin,y);
+      y+=4;
+    }
+
+    const heads = [...tbl.querySelectorAll('thead th')].map(th=>th.textContent.trim()).filter(Boolean);
+    const rows  = [...tbl.querySelectorAll('tbody tr')].map(tr=>
+      [...tr.querySelectorAll('td')].map(td=>td.textContent.trim()).filter((v,i)=>heads[i]!==undefined)
+    ).filter(r=>r.length>0);
+
+    if(!rows.length){y+=6;return;}
+    const colW = (W-margin*2)/heads.length;
+
+    // Table header
+    doc.setFillColor(240,232,222);doc.rect(margin,y,W-margin*2,6,'F');
+    doc.setFontSize(6);doc.setFont('helvetica','bold');doc.setTextColor(92,51,23);
+    heads.forEach((h,i)=>doc.text(h.substring(0,18),margin+i*colW+1,y+4));
+    y+=7;
+
+    // Table rows
+    doc.setFont('helvetica','normal');doc.setTextColor(42,21,5);
+    rows.forEach((row,ri)=>{
+      if(y>190){doc.addPage();y=margin;}
+      if(ri%2===0){doc.setFillColor(251,248,244);doc.rect(margin,y-1,W-margin*2,6,'F');}
+      doc.setFontSize(6);
+      row.forEach((cell,i)=>{ if(heads[i]) doc.text((cell||'').substring(0,22),margin+i*colW+1,y+3); });
+      y+=5;
+    });
+    y+=4;
+  });
+
+  doc.save(`relatorio_${_relTab}_${new Date().toISOString().slice(0,10)}.pdf`);
+  toast('PDF do relatório gerado!');
+}
+
+// Update showSec to handle rel tab
+const _origShowSec = showSec;
+function showSec(id, btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nt').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd};
+  if(map[id])map[id]();
+  if(id==='rel'){
+    // init rel tab
+    document.getElementById('btn-exp-pdf').style.display='';
+    document.getElementById('flt-periodo').style.display='none';
+    document.getElementById('flt-produto-wrap').style.display='none';
+    document.getElementById('flt-tipo-wrap').style.display='none';
+    document.getElementById('flt-venc-wrap').style.display='none';
+    loadRelSit();
+  }
+}
+
+// ================================================================
+// ==================== EDIÇÃO DE CADASTROS =======================
+// ================================================================
+
+function openEditMP(p) {
+  document.getElementById('mpe-cod').value   = p.codigo||'';
+  document.getElementById('mpe-nome').value  = p.produto||'';
+  document.getElementById('mpe-un').value    = p.unidade||'Kg';
+  document.getElementById('mpe-lote').value  = p.numero_lote||'';
+  document.getElementById('mpe-fab').value   = p.data_fabricacao||'';
+  document.getElementById('mpe-venc').value  = p.data_vencimento||'';
+  document.getElementById('mpe-emin').value  = p.estoque_minimo||0;
+  document.getElementById('mpe-eatu').value  = p.estoque_atual||0;
+  document.getElementById('mpe-preco').value = p.preco_custo||0;
+  document.getElementById('mpe-medio').value = p.preco_medio||0;
+  openModal('m-mp-edit');
+}
+async function saveEditMP() {
+  const cod = document.getElementById('mpe-cod').value;
+  const upd = {
+    produto:        document.getElementById('mpe-nome').value.trim(),
+    unidade:        document.getElementById('mpe-un').value,
+    numero_lote:    document.getElementById('mpe-lote').value.trim()||null,
+    data_fabricacao:document.getElementById('mpe-fab').value||null,
+    data_vencimento:document.getElementById('mpe-venc').value||null,
+    estoque_minimo: parseFloat(document.getElementById('mpe-emin').value)||0,
+    estoque_atual:  parseFloat(document.getElementById('mpe-eatu').value)||0,
+    preco_custo:    parseFloat(document.getElementById('mpe-preco').value)||0,
+    preco_medio:    parseFloat(document.getElementById('mpe-medio').value)||0,
+    updated_at:     new Date().toISOString(),
+  };
+  const {error} = await sb.from('materiaprima_produtos').update(upd).eq('codigo',cod);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Matéria-Prima atualizada!'); closeModal('m-mp-edit'); loadMP();
+}
+
+function openEditPA(p) {
+  document.getElementById('pae-cod').value   = p.codigo||'';
+  document.getElementById('pae-nome').value  = p.produto||'';
+  document.getElementById('pae-cat').value   = p.categoria||'';
+  document.getElementById('pae-un').value    = p.unidade||'Un';
+  document.getElementById('pae-lote').value  = p.numero_lote||'';
+  document.getElementById('pae-fab').value   = p.data_fabricacao||'';
+  document.getElementById('pae-venc').value  = p.data_vencimento||'';
+  document.getElementById('pae-emin').value  = p.estoque_minimo||0;
+  document.getElementById('pae-eatu').value  = p.estoque_atual||0;
+  document.getElementById('pae-preco').value = p.preco_custo||0;
+  document.getElementById('pae-medio').value = p.preco_medio||0;
+  document.getElementById('pae-venda').value = p.preco_venda||0;
+  openModal('m-pa-edit');
+}
+async function saveEditPA() {
+  const cod = document.getElementById('pae-cod').value;
+  const upd = {
+    produto:        document.getElementById('pae-nome').value.trim(),
+    categoria:      document.getElementById('pae-cat').value.trim()||null,
+    unidade:        document.getElementById('pae-un').value,
+    numero_lote:    document.getElementById('pae-lote').value.trim()||null,
+    data_fabricacao:document.getElementById('pae-fab').value||null,
+    data_vencimento:document.getElementById('pae-venc').value||null,
+    estoque_minimo: parseFloat(document.getElementById('pae-emin').value)||0,
+    estoque_atual:  parseFloat(document.getElementById('pae-eatu').value)||0,
+    preco_custo:    parseFloat(document.getElementById('pae-preco').value)||0,
+    preco_medio:    parseFloat(document.getElementById('pae-medio').value)||0,
+    preco_venda:    parseFloat(document.getElementById('pae-venda').value)||0,
+    updated_at:     new Date().toISOString(),
+  };
+  const {error} = await sb.from('produto_acabado_cadastro').update(upd).eq('codigo',cod);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Produto Acabado atualizado!'); closeModal('m-pa-edit'); loadPA();
+}
+
+// ================================================================
+// ========================= INSUMOS ==============================
+// ================================================================
+
+async function fillSelIns(sid) {
+  const {data} = await sb.from('insumos_produtos').select('codigo,produto').order('codigo');
+  const s = document.getElementById(sid); if(!s) return;
+  s.innerHTML = (data||[]).map(p=>`<option value="${p.codigo}">${p.codigo} — ${p.produto}</option>`).join('');
+}
+
+async function loadIns() {
+  const tb = document.getElementById('tb-ins-p');
+  tb.innerHTML = '<tr><td colspan="13"><div class="ls"><div class="sp"></div></div></td></tr>';
+  const {data,error} = await sb.from('insumos_produtos').select('*').order('codigo');
+  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="13"><div class="es"><p>${error?'Erro ao carregar':'Nenhum insumo cadastrado'}</p></div></td></tr>`;return;}
+  tb.innerHTML = data.map(p => {
+    const st  = gst(p.estoque_atual, p.estoque_minimo);
+    const vc  = vCls(p.data_vencimento);
+    const sk  = st.replace(/Í/g,'I').replace(/Ã/g,'A');
+    const vEst= (p.estoque_atual||0)*(p.preco_medio||0);
+    const ed  = JSON.stringify({nome:p.produto,codigo:p.codigo,lote:p.numero_lote||'',fab:p.data_fabricacao||'',venc:p.data_vencimento||''});
+    return `<tr>
+      <td><code>${p.codigo}</code></td><td><strong>${p.produto}</strong></td><td>${p.categoria||'—'}</td><td>${p.unidade}</td>
+      <td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td>
+      <td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td>
+      <td class="preco-cell">${fmtR(p.preco_medio||0)}</td><td class="preco-cell val-pos">${fmtR(vEst)}</td>
+      <td><span class="sb ${sk}">${st}</span></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button>
+        <button class="edit-btn" title="Editar" onclick='openEditIns(${JSON.stringify(p)})'>✏️</button>
+        <button class="del-btn" title="Excluir" onclick="delIns('${p.codigo}','${p.produto.replace(/'/g,'')}')">🗑</button>
+      </td></tr>`;
+  }).join('');
+}
+
+async function saveIns() {
+  const cod   = document.getElementById('ins-cod').value.trim();
+  const nome  = document.getElementById('ins-nome').value.trim();
+  const cat   = document.getElementById('ins-cat').value.trim()||null;
+  const un    = document.getElementById('ins-un').value;
+  const lote  = document.getElementById('ins-lote').value.trim()||null;
+  const fab   = document.getElementById('ins-fab').value||null;
+  const venc  = document.getElementById('ins-venc').value||null;
+  const emin  = parseFloat(document.getElementById('ins-emin').value)||0;
+  const eatu  = parseFloat(document.getElementById('ins-eatu').value)||0;
+  const preco = parseFloat(document.getElementById('ins-preco').value)||0;
+  const medio = parseFloat(document.getElementById('ins-medio').value)||0;
+  if(!cod||!nome){toast('Preencha código e insumo','error');return;}
+  const {error} = await sb.from('insumos_produtos').insert({codigo:cod,produto:nome,categoria:cat,unidade:un,numero_lote:lote,data_fabricacao:fab,data_vencimento:venc,estoque_minimo:emin,estoque_atual:eatu,preco_custo:preco,preco_medio:medio});
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Insumo cadastrado!'); closeModal('m-ins-p'); loadIns();
+}
+
+function openEditIns(p) {
+  document.getElementById('inse-cod').value   = p.codigo||'';
+  document.getElementById('inse-nome').value  = p.produto||'';
+  document.getElementById('inse-cat').value   = p.categoria||'';
+  document.getElementById('inse-un').value    = p.unidade||'Un';
+  document.getElementById('inse-lote').value  = p.numero_lote||'';
+  document.getElementById('inse-fab').value   = p.data_fabricacao||'';
+  document.getElementById('inse-venc').value  = p.data_vencimento||'';
+  document.getElementById('inse-emin').value  = p.estoque_minimo||0;
+  document.getElementById('inse-eatu').value  = p.estoque_atual||0;
+  document.getElementById('inse-preco').value = p.preco_custo||0;
+  document.getElementById('inse-medio').value = p.preco_medio||0;
+  openModal('m-ins-edit');
+}
+async function saveEditIns() {
+  const cod = document.getElementById('inse-cod').value;
+  const upd = {
+    produto:        document.getElementById('inse-nome').value.trim(),
+    categoria:      document.getElementById('inse-cat').value.trim()||null,
+    unidade:        document.getElementById('inse-un').value,
+    numero_lote:    document.getElementById('inse-lote').value.trim()||null,
+    data_fabricacao:document.getElementById('inse-fab').value||null,
+    data_vencimento:document.getElementById('inse-venc').value||null,
+    estoque_minimo: parseFloat(document.getElementById('inse-emin').value)||0,
+    estoque_atual:  parseFloat(document.getElementById('inse-eatu').value)||0,
+    preco_custo:    parseFloat(document.getElementById('inse-preco').value)||0,
+    preco_medio:    parseFloat(document.getElementById('inse-medio').value)||0,
+    updated_at:     new Date().toISOString(),
+  };
+  const {error} = await sb.from('insumos_produtos').update(upd).eq('codigo',cod);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Insumo atualizado!'); closeModal('m-ins-edit'); loadIns();
+}
+
+async function delIns(cod, nome) {
+  if(!confirm(`Excluir Insumo "${nome}" (${cod})?\n⚠️ Isso removerá também todas as entradas e saídas deste insumo.`)) return;
+  await sb.from('insumos_saidas').delete().eq('codigo_produto',cod);
+  await sb.from('insumos_entradas').delete().eq('codigo_produto',cod);
+  const {error} = await sb.from('insumos_produtos').delete().eq('codigo',cod);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Insumo excluído!'); loadIns();
+}
+
+// --- Entradas de Insumos ---
+async function loadInsEnt() {
+  const tb = document.getElementById('tb-ins-e');
+  tb.innerHTML = '<tr><td colspan="14"><div class="ls"><div class="sp"></div></div></td></tr>';
+  const {data,error} = await sb.from('insumos_entradas').select('*').order('data_entrada').order('created_at');
+  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="14"><div class="es"><div class="ei">📥</div><p>${error?'Erro':'Nenhuma entrada'}</p></div></td></tr>`;return;}
+  let fi={};
+  tb.innerHTML = data.map(e=>{
+    if(!fi[e.codigo_produto])fi[e.codigo_produto]=0; fi[e.codigo_produto]++;
+    const isF = fi[e.codigo_produto]===1 && e.saldo_fifo>0;
+    const vc  = vCls(e.data_validade);
+    const ed  = JSON.stringify({nome:e.produto,codigo:e.codigo_produto,lote:e.lote||'',fab:e.data_fabricacao||'',venc:e.data_validade||''});
+    return `<tr>
+      <td>${fmtD(e.data_entrada)}</td><td>${isF?'<span class="fb">FIFO ▶</span>':'—'}</td>
+      <td><strong>${e.produto}</strong><br><small style="color:var(--tm)">${e.codigo_produto}</small></td>
+      <td>${e.nf_numero}${e.nf_serie?'/'+e.nf_serie:''}</td><td>${e.fornecedor}</td><td>${e.lote||'—'}</td>
+      <td>${fmtD(e.data_fabricacao)}</td><td class="${vc}">${fmtD(e.data_validade)}</td>
+      <td>${fmt(e.quantidade)} ${e.unidade}</td><td>${fmtR(e.valor_unitario)}</td><td>${fmtR(e.valor_total)}</td>
+      <td><strong>${fmt(e.saldo_fifo)}</strong></td>
+      <td><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button></td>
+      <td><button class="del-btn" title="Excluir" onclick="delInsEnt('${e.id}','${(e.lote||'').replace(/'/g,'')}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveInsEnt() {
+  const dt   = document.getElementById('iens-dt').value;
+  const sel  = document.getElementById('iens-prod');
+  const cod  = sel.value;
+  const prod = sel.options[sel.selectedIndex].text.split('—')[1]?.trim()||'';
+  const nf   = document.getElementById('iens-nf').value.trim();
+  const ser  = document.getElementById('iens-ser').value.trim()||null;
+  const forn = document.getElementById('iens-forn').value.trim();
+  const cnpj = document.getElementById('iens-cnpj').value.trim()||null;
+  const qtd  = parseFloat(document.getElementById('iens-qtd').value);
+  const vl   = parseFloat(document.getElementById('iens-vl').value)||0;
+  const lote = document.getElementById('iens-lote').value.trim();
+  const fab  = document.getElementById('iens-fab').value||null;
+  const val  = document.getElementById('iens-val').value;
+  const obs  = document.getElementById('iens-obs').value.trim()||null;
+  const {data:pd} = await sb.from('insumos_produtos').select('unidade').eq('codigo',cod).single();
+  const un = pd?.unidade||'Un';
+  if(!dt||!nf||!forn||!qtd||!lote||!val){toast('Preencha todos os campos obrigatórios','error');return;}
+  const {error} = await sb.from('insumos_entradas').insert({data_entrada:dt,codigo_produto:cod,produto:prod,nf_numero:nf,nf_serie:ser,cnpj_fornecedor:cnpj,fornecedor:forn,quantidade:qtd,unidade:un,valor_unitario:vl,lote,data_fabricacao:fab,data_validade:val,saldo_fifo:qtd,observacoes:obs});
+  if(error){toast('Erro: '+error.message,'error');return;}
+  // Atualiza estoque e preço médio ponderado
+  const {data:cur} = await sb.from('insumos_produtos').select('estoque_atual,preco_medio').eq('codigo',cod).single();
+  const estAtual = cur?.estoque_atual||0;
+  const pmAtual  = cur?.preco_medio||0;
+  const novoEst  = estAtual + qtd;
+  const novoPm   = novoEst > 0 ? ((estAtual*pmAtual)+(qtd*vl))/novoEst : vl;
+  await sb.from('insumos_produtos').update({estoque_atual:novoEst,preco_medio:novoPm,updated_at:new Date().toISOString()}).eq('codigo',cod);
+  toast('Entrada de insumo registrada!'); closeModal('m-ins-e'); loadInsEnt();
+}
+
+async function delInsEnt(id, lote) {
+  if(!confirm(`Excluir entrada do lote "${lote}"?\n⚠️ O estoque será ajustado.`)) return;
+  const {data:ent} = await sb.from('insumos_entradas').select('codigo_produto,quantidade').eq('id',id).single();
+  const {error} = await sb.from('insumos_entradas').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  if(ent){
+    const {data:cur} = await sb.from('insumos_produtos').select('estoque_atual').eq('codigo',ent.codigo_produto).single();
+    await sb.from('insumos_produtos').update({estoque_atual:Math.max(0,(cur?.estoque_atual||0)-ent.quantidade)}).eq('codigo',ent.codigo_produto);
+  }
+  toast('Entrada excluída!'); loadInsEnt();
+}
+
+// --- Saídas de Insumos ---
+async function loadLotesFIFO_Ins() {
+  const cod = document.getElementById('sins-prod').value; if(!cod) return;
+  const {data} = await sb.from('insumos_entradas').select('lote,nf_numero,nf_serie,saldo_fifo,data_validade,valor_unitario').eq('codigo_produto',cod).gt('saldo_fifo',0).order('data_entrada').order('created_at');
+  const sel = document.getElementById('sins-lote');
+  if(!data?.length){sel.innerHTML='<option value="">Sem lotes disponíveis</option>';return;}
+  sel.innerHTML = data.map((l,i)=>`<option value="${l.lote}" data-sal="${l.saldo_fifo}" data-vu="${l.valor_unitario}">${i===0?'🥇 FIFO: ':''}${l.lote} | Saldo: ${fmt(l.saldo_fifo)} | Val: ${fmtD(l.data_validade)}</option>`).join('');
+}
+
+async function loadInsSai() {
+  const tb = document.getElementById('tb-ins-s');
+  tb.innerHTML = '<tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr>';
+  const {data,error} = await sb.from('insumos_saidas').select('*').order('data_saida',{ascending:false});
+  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="10"><div class="es"><div class="ei">📤</div><p>${error?'Erro':'Nenhuma saída'}</p></div></td></tr>`;return;}
+  tb.innerHTML = data.map(s=>`<tr>
+    <td>${fmtD(s.data_saida)}</td><td><strong>${s.codigo_produto}</strong></td><td>${s.lote_origem}</td>
+    <td>${s.nf_numero_origem||'—'}</td><td>${fmt(s.quantidade)} ${s.unidade}</td><td>${s.destino||'—'}</td>
+    <td>${s.ordem_producao||'—'}</td><td>${s.responsavel||'—'}</td>
+    <td>${fmtR((s.custo_unitario||0)*s.quantidade)}</td>
+    <td><button class="del-btn" title="Excluir" onclick="delInsSai('${s.id}')">🗑</button></td>
+  </tr>`).join('');
+}
+
+async function saveInsSai() {
+  const dt   = document.getElementById('sins-dt').value;
+  const cod  = document.getElementById('sins-prod').value;
+  const lsel = document.getElementById('sins-lote');
+  const lote = lsel.value;
+  const opt  = lsel.options[lsel.selectedIndex];
+  const qtd  = parseFloat(document.getElementById('sins-qtd').value);
+  const sal  = parseFloat(opt?.dataset.sal||0);
+  const vu   = parseFloat(opt?.dataset.vu||0);
+  const nf   = document.getElementById('sins-nf').value.trim()||null;
+  const dest = document.getElementById('sins-dest').value.trim()||null;
+  const op   = document.getElementById('sins-op').value.trim()||null;
+  const resp = document.getElementById('sins-resp').value.trim()||null;
+  const obs  = document.getElementById('sins-obs').value.trim()||null;
+  const {data:pd} = await sb.from('insumos_produtos').select('unidade').eq('codigo',cod).single();
+  const un = pd?.unidade||'Un';
+  if(!dt||!cod||!lote||!qtd){toast('Preencha campos obrigatórios','error');return;}
+  if(qtd>sal){toast(`Saldo insuficiente. Disponível: ${fmt(sal)}`,'error');return;}
+  const {error} = await sb.from('insumos_saidas').insert({data_saida:dt,codigo_produto:cod,nf_numero_origem:nf,quantidade:qtd,unidade:un,destino:dest,ordem_producao:op,lote_origem:lote,responsavel:resp,custo_unitario:vu,observacoes:obs});
+  if(error){toast('Erro: '+error.message,'error');return;}
+  // Atualiza saldo FIFO da entrada
+  const {data:la} = await sb.from('insumos_entradas').select('saldo_fifo').eq('lote',lote).eq('codigo_produto',cod).order('data_entrada').limit(1).single();
+  await sb.from('insumos_entradas').update({saldo_fifo:Math.max(0,(la?.saldo_fifo||0)-qtd)}).eq('lote',lote).eq('codigo_produto',cod);
+  const {data:cur} = await sb.from('insumos_produtos').select('estoque_atual').eq('codigo',cod).single();
+  await sb.from('insumos_produtos').update({estoque_atual:Math.max(0,(cur?.estoque_atual||0)-qtd),updated_at:new Date().toISOString()}).eq('codigo',cod);
+  toast('Saída FIFO registrada!'); closeModal('m-ins-s'); loadInsSai();
+}
+
+async function delInsSai(id) {
+  if(!confirm('Excluir este registro de saída?\n⚠️ O saldo do lote será restaurado.')) return;
+  const {data:sai} = await sb.from('insumos_saidas').select('codigo_produto,quantidade,lote_origem').eq('id',id).single();
+  const {error} = await sb.from('insumos_saidas').delete().eq('id',id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  if(sai){
+    const {data:la} = await sb.from('insumos_entradas').select('saldo_fifo').eq('lote',sai.lote_origem).eq('codigo_produto',sai.codigo_produto).order('data_entrada').limit(1).single();
+    if(la) await sb.from('insumos_entradas').update({saldo_fifo:(la.saldo_fifo||0)+sai.quantidade}).eq('lote',sai.lote_origem).eq('codigo_produto',sai.codigo_produto);
+    const {data:cur} = await sb.from('insumos_produtos').select('estoque_atual').eq('codigo',sai.codigo_produto).single();
+    await sb.from('insumos_produtos').update({estoque_atual:(cur?.estoque_atual||0)+sai.quantidade}).eq('codigo',sai.codigo_produto);
+  }
+  toast('Saída excluída e saldo restaurado!'); loadInsSai();
+}
+
+// ================================================================
+// ========= RELATÓRIO SITUAÇÃO — incluir valor e insumos =========
+// ================================================================
+
+// Patch loadRelSit to include value columns and insumos
+const _origLoadRelSit = loadRelSit;
+async function loadRelSit() {
+  const [mpR, paR, insR] = await Promise.all([
+    sb.from('materiaprima_produtos').select('*').order('codigo'),
+    sb.from('produto_acabado_cadastro').select('*').order('codigo'),
+    sb.from('insumos_produtos').select('*').order('codigo'),
+  ]);
+  const mp = mpR.data||[], pa = paR.data||[], ins = insR.data||[];
+
+  const mpCri  = mp.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
+  const paCri  = pa.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
+  const insCri = ins.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
+  const totalMP  = mp.reduce((s,p)=>s+((p.estoque_atual||0)*(p.preco_medio||0)),0);
+  const totalPA  = pa.reduce((s,p)=>s+((p.estoque_atual||0)*(p.preco_medio||0)),0);
+  const totalIns = ins.reduce((s,p)=>s+((p.estoque_atual||0)*(p.preco_medio||0)),0);
+
+  document.getElementById('rel-sit-kpis').innerHTML = `
+    <div class="rel-kpi"><div class="rv">${mp.length+pa.length+ins.length}</div><div class="rl">Total de Itens</div></div>
+    <div class="rel-kpi pos"><div class="rv">${fmtR(totalMP+totalPA+totalIns)}</div><div class="rl">Valor Total em Estoque</div></div>
+    <div class="rel-kpi warn"><div class="rv">${fmtR(totalMP)}</div><div class="rl">Valor MP</div></div>
+    <div class="rel-kpi warn"><div class="rv">${fmtR(totalPA)}</div><div class="rl">Valor PA</div></div>
+    <div class="rel-kpi warn"><div class="rv">${fmtR(totalIns)}</div><div class="rl">Valor Insumos</div></div>
+    <div class="rel-kpi ${mpCri+paCri+insCri>0?'neg':'pos'}"><div class="rv">${mpCri+paCri+insCri}</div><div class="rl">Itens Críticos</div></div>`;
+
+  function buildTableRows(items, hasVenda) {
+    return items.map(p=>{
+      const st=gst(p.estoque_atual,p.estoque_minimo);
+      const vc=vCls(p.data_vencimento);
+      const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
+      const vEst=(p.estoque_atual||0)*(p.preco_medio||0);
+      return `<tr>
+        <td><code>${p.codigo}</code></td><td>${p.produto}</td><td>${p.categoria||p.unidade}</td>
+        <td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td>
+        <td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td>
+        <td class="preco-cell">${fmtR(p.preco_medio||0)}</td>
+        ${hasVenda?`<td class="preco-cell">${fmtR(p.preco_venda||0)}</td>`:''}
+        <td class="preco-cell val-pos"><strong>${fmtR(vEst)}</strong></td>
+        <td><span class="sb ${sk}">${st}</span></td>
+      </tr>`;
+    }).join('') || '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--tm)">Sem dados</td></tr>';
+  }
+
+  // Rebuild tables with value columns if they haven't been extended yet
+  const sit = document.getElementById('rel-sit');
+  sit.innerHTML = `
+    <div class="rel-kpi-row" id="rel-sit-kpis-inner"></div>
+    <div class="rel-section-title">Matéria-Prima — Quantidade e Valor</div>
+    <div class="tc"><div class="tw"><table><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead>
+    <tbody>${buildTableRows(mp,false)}</tbody></table></div></div>
+    <div class="rel-section-title" style="margin-top:22px">Produto Acabado — Quantidade e Valor</div>
+    <div class="tc"><div class="tw"><table><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Preço Venda</th><th>Valor Estoque</th><th>Status</th></tr></thead>
+    <tbody>${buildTableRows(pa,true)}</tbody></table></div></div>
+    <div class="rel-section-title" style="margin-top:22px">Insumos — Quantidade e Valor</div>
+    <div class="tc"><div class="tw"><table><thead><tr><th>Código</th><th>Insumo</th><th>Categoria</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead>
+    <tbody>${buildTableRows(ins,false)}</tbody></table></div></div>
+    <div style="background:var(--br);border:2px solid var(--m);border-radius:var(--r);padding:18px 22px;margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+      <div><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">💰 Valor Total MP</div><div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--m)">${fmtR(totalMP)}</div></div>
+      <div><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">🧊 Valor Total PA</div><div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--b)">${fmtR(totalPA)}</div></div>
+      <div><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">🧴 Valor Total Insumos</div><div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--mm)">${fmtR(totalIns)}</div></div>
+      <div style="border-left:3px solid var(--mc);padding-left:14px"><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">📦 VALOR TOTAL EM ESTOQUE</div><div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--me)">${fmtR(totalMP+totalPA+totalIns)}</div></div>
+    </div>`;
+}
 </script>
 </body>
 </html>
