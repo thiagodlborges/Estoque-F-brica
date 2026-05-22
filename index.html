@@ -128,6 +128,24 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
 .val-pos{color:var(--gok);font-weight:700}
 .val-neg{color:var(--vc);font-weight:700}
 .preco-cell{font-family:'DM Mono',monospace;font-size:.82rem}
+/* PRODUCT SEARCH AUTOCOMPLETE */
+.prod-search-wrap{position:relative;width:100%}
+.prod-search-input{width:100%;padding:9px 12px 9px 34px;border:1.5px solid var(--mp);border-radius:var(--rs);font-size:.88rem;font-family:'DM Sans',sans-serif;color:var(--te);background:var(--cc);transition:border-color .2s;outline:none}
+.prod-search-input:focus{border-color:var(--mc);background:var(--br)}
+.prod-search-input.selected{border-color:var(--gok);background:rgba(90,138,90,.06)}
+.prod-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.9rem;pointer-events:none;opacity:.5}
+.prod-search-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--tm);padding:2px 4px;border-radius:4px;opacity:.6;transition:opacity .15s}
+.prod-search-clear:hover{opacity:1;color:var(--vc)}
+.prod-search-dropdown{position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--br);border:1.5px solid var(--mc);border-radius:var(--rs);box-shadow:var(--sm);z-index:300;max-height:220px;overflow-y:auto;display:none}
+.prod-search-dropdown.open{display:block}
+.prod-search-item{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--cs)}
+.prod-search-item:last-child{border-bottom:none}
+.prod-search-item:hover,.prod-search-item.focused{background:var(--cr)}
+.prod-search-item .psi-cod{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--m);background:var(--mp);padding:1px 6px;border-radius:4px;flex-shrink:0}
+.prod-search-item .psi-nome{font-size:.85rem;font-weight:500;color:var(--te);flex:1}
+.prod-search-item .psi-info{font-size:.72rem;color:var(--tm)}
+.prod-search-empty{padding:14px 12px;text-align:center;color:var(--tm);font-size:.82rem}
+.prod-search-cod-display{font-size:.72rem;color:var(--m);font-family:'DM Mono',monospace;margin-top:3px;min-height:16px;font-weight:600}
 @media(max-width:1100px){.eg{grid-template-columns:1fr 1fr}}
 @media(max-width:700px){.eg{grid-template-columns:1fr};main{padding:16px};.ni{padding:0 16px};header{padding:0 16px};.fg{grid-template-columns:1fr};.fg3{grid-template-columns:1fr}}
 </style>
@@ -383,7 +401,7 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
 <div class="mo" id="m-mp-p">
   <div class="md"><div class="mh"><span class="mt">Cadastrar Matéria-Prima</span><button class="mc" onclick="closeModal('m-mp-p')">✕</button></div>
   <div class="mb"><div class="fg">
-    <div class="fgr"><label>Código *</label><input id="mp-cod" type="text" placeholder="MP009"></div>
+    <div class="fgr"><label>Código <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="mp-cod" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
     <div class="fgr"><label>Unidade *</label><select id="mp-un"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
     <div class="fgr full"><label>Produto *</label><input id="mp-nome" type="text" placeholder="Ex: Gordura Vegetal"></div>
     <div class="fgr"><label>Estoque Mínimo *</label><input id="mp-emin" type="number" min="0" step="0.001" placeholder="0"></div>
@@ -398,7 +416,17 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <div class="mb"><div class="fg">
     <div class="ftit">📋 Produto e Data</div>
     <div class="fgr"><label>Data de Entrada *</label><input id="ent-dt" type="date"></div>
-    <div class="fgr"><label>Produto *</label><select id="ent-prod"></select></div>
+    <div class="fgr full"><label>Produto *</label>
+      <div class="prod-search-wrap" id="psw-ent">
+        <span class="prod-search-icon">🔍</span>
+        <input class="prod-search-input" id="ent-prod-search" type="text" placeholder="Digite o nome do produto..." autocomplete="off"
+          oninput="psSearch(this,'ent','mp')" onfocus="psSearch(this,'ent','mp')" onkeydown="psKey(event,'ent')">
+        <button class="prod-search-clear" onclick="psClear('ent')" tabindex="-1" title="Limpar">✕</button>
+        <div class="prod-search-dropdown" id="psd-ent"></div>
+      </div>
+      <div class="prod-search-cod-display" id="ps-cod-ent"></div>
+      <input type="hidden" id="ent-prod">
+    </div>
     <hr class="fdiv">
     <div class="ftit">🧾 Nota Fiscal</div>
     <div class="fgr"><label>Nº NF *</label><input id="ent-nf" type="text" placeholder="000001"></div>
@@ -424,7 +452,17 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <div class="md"><div class="mh"><span class="mt">Registrar Saída de MP (FIFO)</span><button class="mc" onclick="closeModal('m-mp-s')">✕</button></div>
   <div class="mb"><div class="fg">
     <div class="fgr"><label>Data de Saída *</label><input id="sai-dt" type="date"></div>
-    <div class="fgr"><label>Produto *</label><select id="sai-prod" onchange="loadLotesFIFO()"></select></div>
+    <div class="fgr full"><label>Produto *</label>
+      <div class="prod-search-wrap" id="psw-sai">
+        <span class="prod-search-icon">🔍</span>
+        <input class="prod-search-input" id="sai-prod-search" type="text" placeholder="Digite o nome do produto..." autocomplete="off"
+          oninput="psSearch(this,'sai','mp')" onfocus="psSearch(this,'sai','mp')" onkeydown="psKey(event,'sai')">
+        <button class="prod-search-clear" onclick="psClear('sai')" tabindex="-1" title="Limpar">✕</button>
+        <div class="prod-search-dropdown" id="psd-sai"></div>
+      </div>
+      <div class="prod-search-cod-display" id="ps-cod-sai"></div>
+      <input type="hidden" id="sai-prod">
+    </div>
     <div class="fgr full"><label>Lote FIFO (mais antigo disponível) *</label><select id="sai-lote"><option value="">— Selecione o produto primeiro —</option></select></div>
     <div class="fgr"><label>NF Origem</label><input id="sai-nf" type="text"></div>
     <div class="fgr"><label>Série NF Origem</label><input id="sai-ser" type="text"></div>
@@ -462,7 +500,7 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
 <div class="mo" id="m-pa-p">
   <div class="md"><div class="mh"><span class="mt">Cadastrar Produto Acabado</span><button class="mc" onclick="closeModal('m-pa-p')">✕</button></div>
   <div class="mb"><div class="fg">
-    <div class="fgr"><label>Código *</label><input id="pa-cod" type="text" placeholder="PA008"></div>
+    <div class="fgr"><label>Código <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="pa-cod" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
     <div class="fgr"><label>Categoria</label><input id="pa-cat" type="text" placeholder="Gelato, Sorvete, Picolé..."></div>
     <div class="fgr full"><label>Produto *</label><input id="pa-nome" type="text" placeholder="Nome do produto"></div>
     <div class="fgr"><label>Unidade *</label><select id="pa-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option></select></div>
@@ -476,7 +514,17 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
 <div class="mo" id="m-pa-prod">
   <div class="md"><div class="mh"><span class="mt">Registrar Produção de Produto Acabado</span><button class="mc" onclick="closeModal('m-pa-prod')">✕</button></div>
   <div class="mb"><div class="fg">
-    <div class="fgr"><label>Produto *</label><select id="paprod-sel"></select></div>
+    <div class="fgr full"><label>Produto *</label>
+      <div class="prod-search-wrap" id="psw-paprod">
+        <span class="prod-search-icon">🔍</span>
+        <input class="prod-search-input" id="paprod-search" type="text" placeholder="Digite o nome do produto..." autocomplete="off"
+          oninput="psSearch(this,'paprod','pa')" onfocus="psSearch(this,'paprod','pa')" onkeydown="psKey(event,'paprod')">
+        <button class="prod-search-clear" onclick="psClear('paprod')" tabindex="-1" title="Limpar">✕</button>
+        <div class="prod-search-dropdown" id="psd-paprod"></div>
+      </div>
+      <div class="prod-search-cod-display" id="ps-cod-paprod"></div>
+      <input type="hidden" id="paprod-sel">
+    </div>
     <div class="fgr"><label>Ordem de Produção</label><input id="paprod-op" type="text" placeholder="OP-001"></div>
     <div class="ftit">🏷️ Lote e Datas</div>
     <div class="fgr"><label>Número do Lote *</label><input id="paprod-lote" type="text" placeholder="PA-LOT-001"></div>
@@ -496,7 +544,17 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
 <div class="mo" id="m-expd">
   <div class="md"><div class="mh"><span class="mt">Registrar Expedição</span><button class="mc" onclick="closeModal('m-expd')">✕</button></div>
   <div class="mb"><div class="fg">
-    <div class="fgr"><label>Produto *</label><select id="exp-prod" onchange="loadLotesFIFO_PA()"></select></div>
+    <div class="fgr full"><label>Produto *</label>
+      <div class="prod-search-wrap" id="psw-exp">
+        <span class="prod-search-icon">🔍</span>
+        <input class="prod-search-input" id="exp-prod-search" type="text" placeholder="Digite o nome do produto..." autocomplete="off"
+          oninput="psSearch(this,'exp','pa')" onfocus="psSearch(this,'exp','pa')" onkeydown="psKey(event,'exp')">
+        <button class="prod-search-clear" onclick="psClear('exp')" tabindex="-1" title="Limpar">✕</button>
+        <div class="prod-search-dropdown" id="psd-exp"></div>
+      </div>
+      <div class="prod-search-cod-display" id="ps-cod-exp"></div>
+      <input type="hidden" id="exp-prod">
+    </div>
     <div class="fgr"><label>Data de Saída *</label><input id="exp-dt" type="date"></div>
     <div class="fgr full"><label>Lote FIFO (validade mais próxima) *</label><select id="exp-lote"><option value="">— Selecione o produto primeiro —</option></select></div>
     <div class="fgr"><label>Quantidade *</label><input id="exp-qtd" type="number" min="1" step="1" placeholder="0"></div>
@@ -561,7 +619,7 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
 <div class="mo" id="m-ins-p">
   <div class="md"><div class="mh"><span class="mt">Cadastrar Insumo</span><button class="mc" onclick="closeModal('m-ins-p')">✕</button></div>
   <div class="mb"><div class="fg">
-    <div class="fgr"><label>Código *</label><input id="ins-cod" type="text" placeholder="INS001"></div>
+    <div class="fgr"><label>Código <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="ins-cod" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
     <div class="fgr"><label>Unidade *</label><select id="ins-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option><option>Pc</option><option>Rl</option><option>Frd</option></select></div>
     <div class="fgr full"><label>Insumo *</label><input id="ins-nome" type="text" placeholder="Ex: Pote 500ml, Embalagem..."></div>
     <div class="fgr full"><label>Categoria</label><input id="ins-cat" type="text" placeholder="Ex: Embalagem, Limpeza, Descartável..."></div>
@@ -597,7 +655,17 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <div class="mb"><div class="fg">
     <div class="ftit">📋 Produto e Data</div>
     <div class="fgr"><label>Data de Entrada *</label><input id="iens-dt" type="date"></div>
-    <div class="fgr"><label>Insumo *</label><select id="iens-prod"></select></div>
+    <div class="fgr full"><label>Insumo *</label>
+      <div class="prod-search-wrap" id="psw-iens">
+        <span class="prod-search-icon">🔍</span>
+        <input class="prod-search-input" id="iens-prod-search" type="text" placeholder="Digite o nome do insumo..." autocomplete="off"
+          oninput="psSearch(this,'iens','ins')" onfocus="psSearch(this,'iens','ins')" onkeydown="psKey(event,'iens')">
+        <button class="prod-search-clear" onclick="psClear('iens')" tabindex="-1" title="Limpar">✕</button>
+        <div class="prod-search-dropdown" id="psd-iens"></div>
+      </div>
+      <div class="prod-search-cod-display" id="ps-cod-iens"></div>
+      <input type="hidden" id="iens-prod">
+    </div>
     <hr class="fdiv">
     <div class="ftit">🧾 Nota Fiscal</div>
     <div class="fgr"><label>Nº NF *</label><input id="iens-nf" type="text" placeholder="000001"></div>
@@ -623,7 +691,17 @@ code{background:var(--cs);padding:2px 6px;border-radius:4px;font-size:.78rem;fon
   <div class="md"><div class="mh"><span class="mt">Registrar Saída de Insumo (FIFO)</span><button class="mc" onclick="closeModal('m-ins-s')">✕</button></div>
   <div class="mb"><div class="fg">
     <div class="fgr"><label>Data de Saída *</label><input id="sins-dt" type="date"></div>
-    <div class="fgr"><label>Insumo *</label><select id="sins-prod" onchange="loadLotesFIFO_Ins()"></select></div>
+    <div class="fgr full"><label>Insumo *</label>
+      <div class="prod-search-wrap" id="psw-sins">
+        <span class="prod-search-icon">🔍</span>
+        <input class="prod-search-input" id="sins-prod-search" type="text" placeholder="Digite o nome do insumo..." autocomplete="off"
+          oninput="psSearch(this,'sins','ins')" onfocus="psSearch(this,'sins','ins')" onkeydown="psKey(event,'sins')">
+        <button class="prod-search-clear" onclick="psClear('sins')" tabindex="-1" title="Limpar">✕</button>
+        <div class="prod-search-dropdown" id="psd-sins"></div>
+      </div>
+      <div class="prod-search-cod-display" id="ps-cod-sins"></div>
+      <input type="hidden" id="sins-prod">
+    </div>
     <div class="fgr full"><label>Lote FIFO (mais antigo disponível) *</label><select id="sins-lote"><option value="">— Selecione o insumo primeiro —</option></select></div>
     <div class="fgr"><label>NF Origem</label><input id="sins-nf" type="text"></div>
     <div class="fgr"><label>Quantidade *</label><input id="sins-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
@@ -675,12 +753,24 @@ function showSec(id,btn){
 function openModal(id){
   document.getElementById(id).classList.add('open');
   document.querySelectorAll(`#${id} input[type=date]`).forEach(f=>{if(!f.value)f.value=today();});
-  if(id==='m-mp-e')fillSel(sb,'ent-prod','materiaprima_produtos');
-  if(id==='m-mp-s'){fillSel(sb,'sai-prod','materiaprima_produtos');loadLotesFIFO();}
-  if(id==='m-pa-prod')fillSel(sb,'paprod-sel','produto_acabado_cadastro');
-  if(id==='m-expd')fillSel(sb,'exp-prod','produto_acabado_cadastro');
-  if(id==='m-ins-e')fillSelIns('iens-prod');
-  if(id==='m-ins-s'){fillSelIns('sins-prod');loadLotesFIFO_Ins();}
+  // Gera código sequencial ao abrir modal de cadastro
+  if(id==='m-mp-p')  gerarCodigo('MP','mp-cod');
+  if(id==='m-pa-p')  gerarCodigo('PF','pa-cod');
+  if(id==='m-ins-p') gerarCodigo('IN','ins-cod');
+}
+
+async function gerarCodigo(prefixo, campoId) {
+  const campo = document.getElementById(campoId);
+  if(!campo) return;
+  campo.value = '⏳ Gerando...';
+  try {
+    const { data, error } = await sb.rpc('next_codigo', { prefixo });
+    if(error) throw error;
+    campo.value = data;
+  } catch(e) {
+    // Fallback: gera localmente se a RPC falhar
+    campo.value = prefixo + '-' + String(Date.now()).slice(-5);
+  }
 }
 function closeModal(id){
   document.getElementById(id).classList.remove('open');
@@ -746,9 +836,14 @@ async function saveMP(){
   const un    = document.getElementById('mp-un').value;
   const emin  = parseFloat(document.getElementById('mp-emin').value)||0;
   const eatu  = parseFloat(document.getElementById('mp-eatu').value)||0;
-  if(!cod||!nome){toast('Preencha código e produto','error');return;}
+  if(!cod || cod.startsWith('⏳')){toast('Aguarde o código ser gerado','error');return;}
+  if(!nome){toast('Preencha o nome do produto','error');return;}
   const {error} = await sb.from('materiaprima_produtos').insert({codigo:cod,produto:nome,unidade:un,estoque_minimo:emin,estoque_atual:eatu});
-  if(error){toast('Erro: '+error.message,'error');return;}
+  if(error){
+    if(error.code==='23505') toast('Código já existe. Reabra o formulário.','error');
+    else toast('Erro: '+error.message,'error');
+    return;
+  }
   toast('Produto cadastrado!');closeModal('m-mp-p');loadMP();
 }
 
@@ -769,9 +864,8 @@ async function loadMPEnt(){
 }
 async function saveEnt(){
   const dt=document.getElementById('ent-dt').value;
-  const sel=document.getElementById('ent-prod');
-  const cod=sel.value;
-  const prod=sel.options[sel.selectedIndex].text.split('—')[1]?.trim()||'';
+  const cod=document.getElementById('ent-prod')?.value;
+  const prod=document.getElementById('ent-prod-search')?.value.trim()||'';
   const nf=document.getElementById('ent-nf').value.trim();
   const ser=document.getElementById('ent-ser').value.trim()||null;
   const cnpj=document.getElementById('ent-cnpj').value.trim()||null;
@@ -794,13 +888,11 @@ async function saveEnt(){
 
 // ===== MP SAÍDAS =====
 async function loadLotesFIFO(){
-  const cod=document.getElementById('sai-prod').value;if(!cod)return;
+  const cod=document.getElementById('sai-prod')?.value; if(!cod) return;
   const{data}=await sb.from('materiaprima_entradas').select('lote,nf_numero,nf_serie,saldo_fifo,data_validade,data_fabricacao,valor_unitario').eq('codigo_produto',cod).gt('saldo_fifo',0).order('data_entrada').order('created_at');
   const sel=document.getElementById('sai-lote');
-  if(!data?.length){sel.innerHTML='<option value="">Sem lotes disponíveis</option>';return;}
+  if(!data?.length){sel.innerHTML='<option value="">Sem lotes disponíveis para este produto</option>';return;}
   sel.innerHTML=data.map((l,i)=>`<option value="${l.lote}" data-nf="${l.nf_numero}" data-ser="${l.nf_serie||''}" data-sal="${l.saldo_fifo}" data-vu="${l.valor_unitario}">${i===0?'🥇 FIFO: ':''} ${l.lote} | Saldo: ${fmt(l.saldo_fifo)} | Val: ${fmtD(l.data_validade)}</option>`).join('');
-  sel.onchange=()=>{const o=sel.options[sel.selectedIndex];document.getElementById('sai-nf').value=o.dataset.nf||'';document.getElementById('sai-ser').value=o.dataset.ser||'';};
-  sel.dispatchEvent(new Event('change'));
 }
 async function loadMPSai(){
   const tb=document.getElementById('tb-mp-s');
@@ -811,7 +903,7 @@ async function loadMPSai(){
 }
 async function saveSai(){
   const dt=document.getElementById('sai-dt').value;
-  const cod=document.getElementById('sai-prod').value;
+  const cod=document.getElementById('sai-prod')?.value;
   const lsel=document.getElementById('sai-lote');
   const lote=lsel.value;
   const opt=lsel.options[lsel.selectedIndex];
@@ -890,9 +982,14 @@ async function savePA(){
   const un    = document.getElementById('pa-un').value;
   const emin  = parseFloat(document.getElementById('pa-emin').value)||0;
   const eatu  = parseFloat(document.getElementById('pa-eatu').value)||0;
-  if(!cod||!nome){toast('Preencha código e produto','error');return;}
+  if(!cod || cod.startsWith('⏳')){toast('Aguarde o código ser gerado','error');return;}
+  if(!nome){toast('Preencha o nome do produto','error');return;}
   const {error} = await sb.from('produto_acabado_cadastro').insert({codigo:cod,produto:nome,categoria:cat,unidade:un,estoque_minimo:emin,estoque_atual:eatu});
-  if(error){toast('Erro: '+error.message,'error');return;}
+  if(error){
+    if(error.code==='23505') toast('Código já existe. Reabra o formulário.','error');
+    else toast('Erro: '+error.message,'error');
+    return;
+  }
   toast('Produto acabado cadastrado!');closeModal('m-pa-p');loadPA();
 }
 
@@ -913,8 +1010,7 @@ async function loadPAProd(){
   }).join('');
 }
 async function savePAProd(){
-  const sel=document.getElementById('paprod-sel');
-  const cod=sel.value;
+  const cod=document.getElementById('paprod-sel')?.value;
   const dt=document.getElementById('paprod-dt').value;
   const lote=document.getElementById('paprod-lote').value.trim();
   const fab=document.getElementById('paprod-fab').value||null;
@@ -936,10 +1032,10 @@ async function savePAProd(){
 
 // ===== EXPEDIÇÃO =====
 async function loadLotesFIFO_PA(){
-  const cod=document.getElementById('exp-prod').value;if(!cod)return;
+  const cod=document.getElementById('exp-prod')?.value; if(!cod) return;
   const{data}=await sb.from('produto_acabado_producao').select('lote,saldo_fifo,data_validade').eq('codigo_produto',cod).gt('saldo_fifo',0).order('data_validade').order('data_producao');
   const sel=document.getElementById('exp-lote');
-  if(!data?.length){sel.innerHTML='<option>Sem lotes disponíveis</option>';return;}
+  if(!data?.length){sel.innerHTML='<option>Sem lotes disponíveis para este produto</option>';return;}
   sel.innerHTML=data.map((l,i)=>`<option value="${l.lote}" data-sal="${l.saldo_fifo}">${i===0?'🥇 FIFO: ':''} ${l.lote} | Saldo: ${fmt(l.saldo_fifo)} | Val: ${fmtD(l.data_validade)}</option>`).join('');
 }
 async function loadExpd(){
@@ -950,8 +1046,7 @@ async function loadExpd(){
   tb.innerHTML=data.map(e=>`<tr><td>${fmtD(e.data_saida)}</td><td><strong>${e.produto_acabado_cadastro?.produto||e.codigo_produto}</strong></td><td>${e.lote}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${e.destino||'—'}</td><td>${e.nf_venda||'—'}</td><td>${e.responsavel||'—'}</td><td>${e.transporte||'—'}</td><td><button class="del-btn" title="Excluir" onclick="delExpd('${e.id}')">🗑</button></td></tr>`).join('');
 }
 async function saveExpd(){
-  const sel=document.getElementById('exp-prod');
-  const cod=sel.value;
+  const cod=document.getElementById('exp-prod')?.value;
   const dt=document.getElementById('exp-dt').value;
   const lsel=document.getElementById('exp-lote');
   const lote=lsel.value;
@@ -1149,6 +1244,205 @@ function pdfLotes(){
   closeModal('m-etq');gerarPDF(lotes);
 }
 
+// ================================================================
+// ============== PRODUCT SEARCH AUTOCOMPLETE =====================
+// ================================================================
+
+// Cache de produtos por tipo para evitar chamadas repetidas
+const _psCache = {};
+
+async function psFetchAll(tipo) {
+  if (_psCache[tipo]) return _psCache[tipo];
+  let data = [];
+  if (tipo === 'mp') {
+    const r = await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual').order('produto');
+    data = r.data || [];
+  } else if (tipo === 'pa') {
+    const r = await sb.from('produto_acabado_cadastro').select('codigo,produto,unidade,estoque_atual,categoria').order('produto');
+    data = r.data || [];
+  } else if (tipo === 'ins') {
+    const r = await sb.from('insumos_produtos').select('codigo,produto,unidade,estoque_atual,categoria').order('produto');
+    data = r.data || [];
+  }
+  _psCache[tipo] = data;
+  return data;
+}
+
+// Invalida cache ao salvar novos produtos
+function psInvalidate(tipo) { delete _psCache[tipo]; }
+
+async function psSearch(inputEl, prefix, tipo) {
+  const q = inputEl.value.trim().toLowerCase();
+  const dd = document.getElementById('psd-' + prefix);
+  if (!dd) return;
+
+  const all = await psFetchAll(tipo);
+  const filtered = q
+    ? all.filter(p => p.produto.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q))
+    : all;
+
+  if (!filtered.length) {
+    dd.innerHTML = `<div class="prod-search-empty">Nenhum produto encontrado para "<strong>${q||'…'}</strong>"</div>`;
+    dd.classList.add('open');
+    return;
+  }
+
+  dd.innerHTML = filtered.slice(0, 40).map((p, i) => {
+    const info = [p.unidade, p.categoria, `Estoque: ${fmt(p.estoque_atual)}`].filter(Boolean).join(' · ');
+    return `<div class="prod-search-item" data-cod="${p.codigo}" data-nome="${p.produto}" data-idx="${i}"
+      onmousedown="psSelect('${prefix}','${p.codigo}','${p.produto.replace(/'/g,"\\'")}','${tipo}')"
+      onmouseover="psFocus('${prefix}',${i})">
+      <span class="psi-cod">${p.codigo}</span>
+      <div><div class="psi-nome">${p.produto}</div><div class="psi-info">${info}</div></div>
+    </div>`;
+  }).join('');
+  dd.classList.add('open');
+}
+
+function psFocus(prefix, idx) {
+  document.querySelectorAll(`#psd-${prefix} .prod-search-item`).forEach((el,i) => {
+    el.classList.toggle('focused', i === idx);
+  });
+}
+
+function psSelect(prefix, cod, nome, tipo) {
+  const inp = document.getElementById(prefix + '-prod-search') || document.getElementById(prefix + '-search');
+  const hid = document.getElementById(prefix + '-prod') || document.getElementById(prefix + '-sel');
+  const cod_display = document.getElementById('ps-cod-' + prefix);
+  const dd = document.getElementById('psd-' + prefix);
+
+  if (inp) { inp.value = nome; inp.classList.add('selected'); }
+  if (hid) hid.value = cod;
+  if (cod_display) cod_display.textContent = '📦 ' + cod;
+  if (dd) dd.classList.remove('open');
+
+  // Dispara carregamento de lotes FIFO quando aplicável
+  if (prefix === 'sai') loadLotesFIFO();
+  if (prefix === 'exp') loadLotesFIFO_PA();
+  if (prefix === 'sins') loadLotesFIFO_Ins();
+}
+
+function psClear(prefix) {
+  const inp = document.getElementById(prefix + '-prod-search') || document.getElementById(prefix + '-search');
+  const hid = document.getElementById(prefix + '-prod') || document.getElementById(prefix + '-sel');
+  const cod_display = document.getElementById('ps-cod-' + prefix);
+  const dd = document.getElementById('psd-' + prefix);
+
+  if (inp) { inp.value = ''; inp.classList.remove('selected'); inp.focus(); }
+  if (hid) hid.value = '';
+  if (cod_display) cod_display.textContent = '';
+  if (dd) dd.classList.remove('open');
+
+  // Reseta lotes FIFO
+  if (prefix === 'sai') document.getElementById('sai-lote').innerHTML = '<option value="">— Selecione o produto primeiro —</option>';
+  if (prefix === 'exp') document.getElementById('exp-lote').innerHTML = '<option value="">— Selecione o produto primeiro —</option>';
+  if (prefix === 'sins') document.getElementById('sins-lote').innerHTML = '<option value="">— Selecione o insumo primeiro —</option>';
+}
+
+function psKey(event, prefix) {
+  const dd = document.getElementById('psd-' + prefix);
+  if (!dd || !dd.classList.contains('open')) return;
+  const items = dd.querySelectorAll('.prod-search-item');
+  const focused = dd.querySelector('.prod-search-item.focused');
+  let idx = focused ? parseInt(focused.dataset.idx) : -1;
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    idx = Math.min(idx + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('focused', i === idx));
+    items[idx]?.scrollIntoView({ block: 'nearest' });
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    idx = Math.max(idx - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('focused', i === idx));
+    items[idx]?.scrollIntoView({ block: 'nearest' });
+  } else if (event.key === 'Enter') {
+    event.preventDefault();
+    if (focused) focused.dispatchEvent(new MouseEvent('mousedown'));
+  } else if (event.key === 'Escape') {
+    dd.classList.remove('open');
+  }
+}
+
+// Fecha dropdown ao clicar fora
+document.addEventListener('click', e => {
+  document.querySelectorAll('.prod-search-dropdown.open').forEach(dd => {
+    if (!dd.closest('.prod-search-wrap')?.contains(e.target)) dd.classList.remove('open');
+  });
+});
+
+// Reset dos campos de busca ao fechar modal
+const _origCloseModal = closeModal;
+function closeModal(id) {
+  _origCloseModal(id);
+  // Limpa todos os prod-search dentro deste modal
+  document.querySelectorAll(`#${id} .prod-search-input`).forEach(inp => {
+    inp.value = ''; inp.classList.remove('selected');
+  });
+  document.querySelectorAll(`#${id} .prod-search-cod-display`).forEach(el => el.textContent = '');
+  document.querySelectorAll(`#${id} input[type=hidden]`).forEach(el => el.value = '');
+  document.querySelectorAll(`#${id} .prod-search-dropdown`).forEach(dd => dd.classList.remove('open'));
+}
+
+// Invalida cache ao cadastrar novos produtos para que apareçam na busca
+const _origSaveMP = saveMP, _origSavePA = savePA, _origSaveIns = saveIns;
+async function saveMP() { await _origSaveMP(); psInvalidate('mp'); }
+async function savePA() { await _origSavePA(); psInvalidate('pa'); }
+async function saveIns() { await _origSaveIns(); psInvalidate('ins'); }
+
+// ================================================================
+// Fix: funções de entrada/saída agora leem o hidden input, não o select
+// ================================================================
+
+// Patch saveEnt para ler hidden input de produto
+const _origSaveEnt = saveEnt;
+async function saveEnt() {
+  const cod = document.getElementById('ent-prod')?.value;
+  if (!cod) { toast('Selecione um produto', 'error'); return; }
+  await _origSaveEnt();
+}
+
+// Patch saveSai para ler hidden input
+const _origSaveSai = saveSai;
+async function saveSai() {
+  const cod = document.getElementById('sai-prod')?.value;
+  if (!cod) { toast('Selecione um produto', 'error'); return; }
+  await _origSaveSai();
+}
+
+// Patch savePAProd para ler hidden input
+const _origSavePAProd = savePAProd;
+async function savePAProd() {
+  const cod = document.getElementById('paprod-sel')?.value;
+  if (!cod) { toast('Selecione um produto', 'error'); return; }
+  await _origSavePAProd();
+}
+
+// Patch saveExpd para ler hidden input
+const _origSaveExpd = saveExpd;
+async function saveExpd() {
+  const cod = document.getElementById('exp-prod')?.value;
+  if (!cod) { toast('Selecione um produto', 'error'); return; }
+  await _origSaveExpd();
+}
+
+// Patch saveInsEnt para ler hidden input
+const _origSaveInsEnt = saveInsEnt;
+async function saveInsEnt() {
+  const cod = document.getElementById('iens-prod')?.value;
+  if (!cod) { toast('Selecione um insumo', 'error'); return; }
+  await _origSaveInsEnt();
+}
+
+// Patch saveInsSai para ler hidden input
+const _origSaveInsSai = saveInsSai;
+async function saveInsSai() {
+  const cod = document.getElementById('sins-prod')?.value;
+  if (!cod) { toast('Selecione um insumo', 'error'); return; }
+  await _origSaveInsSai();
+}
+
+// ================================================================
 // Init
 loadDash();
 
@@ -1599,9 +1893,14 @@ async function saveIns() {
   const eatu  = parseFloat(document.getElementById('ins-eatu').value)||0;
   const preco = parseFloat(document.getElementById('ins-preco').value)||0;
   const medio = parseFloat(document.getElementById('ins-medio').value)||0;
-  if(!cod||!nome){toast('Preencha código e insumo','error');return;}
+  if(!cod || cod.startsWith('⏳')){toast('Aguarde o código ser gerado','error');return;}
+  if(!nome){toast('Preencha o nome do insumo','error');return;}
   const {error} = await sb.from('insumos_produtos').insert({codigo:cod,produto:nome,categoria:cat,unidade:un,estoque_minimo:emin,estoque_atual:eatu,preco_custo:preco,preco_medio:medio});
-  if(error){toast('Erro: '+error.message,'error');return;}
+  if(error){
+    if(error.code==='23505') toast('Código já existe. Reabra o formulário.','error');
+    else toast('Erro: '+error.message,'error');
+    return;
+  }
   toast('Insumo cadastrado!'); closeModal('m-ins-p'); loadIns();
 }
 
@@ -1669,9 +1968,8 @@ async function loadInsEnt() {
 
 async function saveInsEnt() {
   const dt   = document.getElementById('iens-dt').value;
-  const sel  = document.getElementById('iens-prod');
-  const cod  = sel.value;
-  const prod = sel.options[sel.selectedIndex].text.split('—')[1]?.trim()||'';
+  const cod  = document.getElementById('iens-prod')?.value;
+  const prod = document.getElementById('iens-prod-search')?.value.trim()||'';
   const nf   = document.getElementById('iens-nf').value.trim();
   const ser  = document.getElementById('iens-ser').value.trim()||null;
   const forn = document.getElementById('iens-forn').value.trim();
@@ -1711,10 +2009,10 @@ async function delInsEnt(id, lote) {
 
 // --- Saídas de Insumos ---
 async function loadLotesFIFO_Ins() {
-  const cod = document.getElementById('sins-prod').value; if(!cod) return;
+  const cod = document.getElementById('sins-prod')?.value; if(!cod) return;
   const {data} = await sb.from('insumos_entradas').select('lote,nf_numero,nf_serie,saldo_fifo,data_validade,valor_unitario').eq('codigo_produto',cod).gt('saldo_fifo',0).order('data_entrada').order('created_at');
   const sel = document.getElementById('sins-lote');
-  if(!data?.length){sel.innerHTML='<option value="">Sem lotes disponíveis</option>';return;}
+  if(!data?.length){sel.innerHTML='<option value="">Sem lotes disponíveis para este insumo</option>';return;}
   sel.innerHTML = data.map((l,i)=>`<option value="${l.lote}" data-sal="${l.saldo_fifo}" data-vu="${l.valor_unitario}">${i===0?'🥇 FIFO: ':''}${l.lote} | Saldo: ${fmt(l.saldo_fifo)} | Val: ${fmtD(l.data_validade)}</option>`).join('');
 }
 
@@ -1734,7 +2032,7 @@ async function loadInsSai() {
 
 async function saveInsSai() {
   const dt   = document.getElementById('sins-dt').value;
-  const cod  = document.getElementById('sins-prod').value;
+  const cod  = document.getElementById('sins-prod')?.value;
   const lsel = document.getElementById('sins-lote');
   const lote = lsel.value;
   const opt  = lsel.options[lsel.selectedIndex];
