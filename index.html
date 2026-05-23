@@ -200,7 +200,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="sh"><div><p class="st">Matéria-Prima — Cadastro</p><p class="sd">Produtos com Nº Lote, Fabricação e Vencimento</p></div>
   <div class="bg"><button class="btn btn-l" onclick="openEtqModal('mp')">🏷️ Etiquetas</button><button class="btn btn-p" onclick="openModal('m-mp-p')">+ Novo Produto</button></div></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-mp-p',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadMP()">↻</button></div>
-  <div class="tw"><table id="t-mp-p"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Nº Lote</th><th>Dt. Fabricação</th><th>Dt. Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
+  <div class="tw"><table id="t-mp-p"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
   <tbody id="tb-mp-p"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
@@ -237,7 +237,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="sh"><div><p class="st">Produto Acabado — Cadastro</p><p class="sd">Produtos com Nº Lote, Fabricação e Vencimento</p></div>
   <div class="bg"><button class="btn btn-l" onclick="openEtqModal('pa')">🏷️ Etiquetas</button><button class="btn btn-p" onclick="openModal('m-pa-p')">+ Novo Produto</button></div></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-pa-p',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadPA()">↻</button></div>
-  <div class="tw"><table id="t-pa-p"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Un.</th><th>Nº Lote</th><th>Dt. Fabricação</th><th>Dt. Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Preço Venda</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
+  <div class="tw"><table id="t-pa-p"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Un.</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Preço Venda</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
   <tbody id="tb-pa-p"><tr><td colspan="14"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
@@ -411,8 +411,8 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="sh"><div><p class="st">Insumos — Cadastro</p><p class="sd">Embalagens, descartáveis, produtos de limpeza e outros insumos</p></div>
   <div class="bg"><button class="btn btn-l" onclick="openEtqModal('ins')">🏷️ Etiquetas</button><button class="btn btn-p" onclick="openModal('m-ins-p')">+ Novo Insumo</button></div></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-ins-p',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadIns()">↻</button></div>
-  <div class="tw"><table id="t-ins-p"><thead><tr><th>Código</th><th>Insumo</th><th>Categoria</th><th>Un.</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
-  <tbody id="tb-ins-p"><tr><td colspan="13"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+  <div class="tw"><table id="t-ins-p"><thead><tr><th>Código</th><th>Insumo</th><th>Categoria</th><th>Un.</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
+  <tbody id="tb-ins-p"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
 <!-- INSUMOS ENTRADAS -->
@@ -858,17 +858,30 @@ async function loadDash(){
 // ===== MP =====
 async function loadMP(){
   const tb=document.getElementById('tb-mp-p');
-  tb.innerHTML='<tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr>';
+  tb.innerHTML='<tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr>';
   const{data,error}=await sb.from('materiaprima_produtos').select('*').order('codigo');
-  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="10"><div class="es"><p>${error?'Erro':'Nenhum produto'}</p></div></td></tr>`;return;}
+  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="9"><div class="es"><p>${error?'Erro':'Nenhum produto'}</p></div></td></tr>`;return;}
   tb.innerHTML=data.map(p=>{
     const st=gst(p.estoque_atual,p.estoque_minimo);
-    const pt=p.estoque_minimo>0?Math.min(100,(p.estoque_atual/p.estoque_minimo)*100):100;
-    const vc=vCls(p.data_vencimento);
     const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
-    const ed=JSON.stringify({nome:p.produto,codigo:p.codigo,lote:p.numero_lote||'',fab:p.data_fabricacao||'',venc:p.data_vencimento||''});
     const vEst=(p.estoque_atual||0)*(p.preco_medio||0);
-    return`<tr><td><code>${p.codigo}</code></td><td><strong>${p.produto}</strong></td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td class="preco-cell">${fmtR(p.preco_medio||0)}</td><td class="preco-cell val-pos">${fmtR(vEst)}</td><td><span class="sb ${sk}">${st}</span></td><td style="display:flex;gap:4px"><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button><button class="edit-btn" title="Editar" onclick='openEditMP(${JSON.stringify(p)})'>✏️</button><button class="del-btn" title="Excluir" onclick="delMP('${p.codigo}','${p.produto.replace(/'/g,'')}')">🗑</button></td></tr>`;
+    const etqData=JSON.stringify({nome:p.produto,codigo:p.codigo,lote:'',fab:'',venc:''});
+    const editData=JSON.stringify({codigo:p.codigo,produto:p.produto,unidade:p.unidade,estoque_minimo:p.estoque_minimo||0,estoque_atual:p.estoque_atual||0,preco_custo:p.preco_custo||0,preco_medio:p.preco_medio||0});
+    return`<tr>
+      <td><code>${p.codigo}</code></td>
+      <td><strong>${p.produto}</strong></td>
+      <td>${p.unidade}</td>
+      <td style="text-align:right">${fmt(p.estoque_minimo)}</td>
+      <td style="text-align:right"><strong>${fmt(p.estoque_atual)}</strong></td>
+      <td class="preco-cell" style="text-align:right">${fmtR(p.preco_medio||0)}</td>
+      <td class="preco-cell val-pos" style="text-align:right">${fmtR(vEst)}</td>
+      <td><span class="sb ${sk}">${st}</span></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-l btn-xs" onclick='etqUnica(${etqData})'>🏷️</button>
+        <button class="edit-btn" title="Editar" onclick='openEditMP(${editData})'>✏️</button>
+        <button class="del-btn" title="Excluir" onclick="delMP('${p.codigo}','${p.produto.replace(/'/g,"\\'")}')">🗑</button>
+      </td>
+    </tr>`;
   }).join('');
 }
 async function saveMP(){
@@ -1009,11 +1022,27 @@ async function loadPA(){
   if(error||!data?.length){tb.innerHTML=`<tr><td colspan="11"><div class="es"><p>${error?'Erro':'Nenhum produto'}</p></div></td></tr>`;return;}
   tb.innerHTML=data.map(p=>{
     const st=gst(p.estoque_atual,p.estoque_minimo);
-    const vc=vCls(p.data_vencimento);
     const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
-    const ed=JSON.stringify({nome:p.produto,codigo:p.codigo,lote:p.numero_lote||'',fab:p.data_fabricacao||'',venc:p.data_vencimento||''});
     const vEst=(p.estoque_atual||0)*(p.preco_medio||0);
-    return`<tr><td><code>${p.codigo}</code></td><td><strong>${p.produto}</strong></td><td>${p.categoria||'—'}</td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td class="preco-cell">${fmtR(p.preco_medio||0)}</td><td class="preco-cell">${fmtR(p.preco_venda||0)}</td><td class="preco-cell val-pos">${fmtR(vEst)}</td><td><span class="sb ${sk}">${st}</span></td><td style="display:flex;gap:4px"><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button><button class="edit-btn" title="Editar" onclick='openEditPA(${JSON.stringify(p)})'>✏️</button><button class="del-btn" title="Excluir" onclick="delPA('${p.codigo}','${p.produto.replace(/'/g,'')}')">🗑</button></td></tr>`;
+    const etqData=JSON.stringify({nome:p.produto,codigo:p.codigo,lote:'',fab:'',venc:''});
+    const editData=JSON.stringify({codigo:p.codigo,produto:p.produto,categoria:p.categoria||'',unidade:p.unidade,estoque_minimo:p.estoque_minimo||0,estoque_atual:p.estoque_atual||0,preco_custo:p.preco_custo||0,preco_medio:p.preco_medio||0,preco_venda:p.preco_venda||0});
+    return`<tr>
+      <td><code>${p.codigo}</code></td>
+      <td><strong>${p.produto}</strong></td>
+      <td>${p.categoria||'—'}</td>
+      <td>${p.unidade}</td>
+      <td style="text-align:right">${fmt(p.estoque_minimo)}</td>
+      <td style="text-align:right"><strong>${fmt(p.estoque_atual)}</strong></td>
+      <td class="preco-cell" style="text-align:right">${fmtR(p.preco_medio||0)}</td>
+      <td class="preco-cell" style="text-align:right">${fmtR(p.preco_venda||0)}</td>
+      <td class="preco-cell val-pos" style="text-align:right">${fmtR(vEst)}</td>
+      <td><span class="sb ${sk}">${st}</span></td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-l btn-xs" onclick='etqUnica(${etqData})'>🏷️</button>
+        <button class="edit-btn" title="Editar" onclick='openEditPA(${editData})'>✏️</button>
+        <button class="del-btn" title="Excluir" onclick="delPA('${p.codigo}','${p.produto.replace(/'/g,"\\'")}')">🗑</button>
+      </td>
+    </tr>`;
   }).join('');
 }
 async function savePA(){
@@ -1902,26 +1931,35 @@ async function fillSelIns(sid) {
 
 async function loadIns() {
   const tb = document.getElementById('tb-ins-p');
-  tb.innerHTML = '<tr><td colspan="13"><div class="ls"><div class="sp"></div></div></td></tr>';
+  tb.innerHTML = '<tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr>';
   const {data,error} = await sb.from('insumos_produtos').select('*').order('codigo');
-  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="13"><div class="es"><p>${error?'Erro ao carregar':'Nenhum insumo cadastrado'}</p></div></td></tr>`;return;}
+  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="10"><div class="es"><p>${error?'Erro ao carregar':'Nenhum insumo cadastrado'}</p></div></td></tr>`;return;}
   tb.innerHTML = data.map(p => {
-    const st  = gst(p.estoque_atual, p.estoque_minimo);
-    const vc  = vCls(p.data_vencimento);
-    const sk  = st.replace(/Í/g,'I').replace(/Ã/g,'A');
-    const vEst= (p.estoque_atual||0)*(p.preco_medio||0);
-    const ed  = JSON.stringify({nome:p.produto,codigo:p.codigo,lote:p.numero_lote||'',fab:p.data_fabricacao||'',venc:p.data_vencimento||''});
+    const st   = gst(p.estoque_atual, p.estoque_minimo);
+    const sk   = st.replace(/Í/g,'I').replace(/Ã/g,'A');
+    const vEst = (p.estoque_atual||0)*(p.preco_medio||0);
+    const etqData = JSON.stringify({nome:p.produto,codigo:p.codigo,lote:'',fab:'',venc:''});
+    const editData = JSON.stringify({
+      codigo:p.codigo, produto:p.produto, categoria:p.categoria||'',
+      unidade:p.unidade, estoque_minimo:p.estoque_minimo||0,
+      estoque_atual:p.estoque_atual||0, preco_custo:p.preco_custo||0, preco_medio:p.preco_medio||0
+    });
     return `<tr>
-      <td><code>${p.codigo}</code></td><td><strong>${p.produto}</strong></td><td>${p.categoria||'—'}</td><td>${p.unidade}</td>
-      <td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td>
-      <td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td>
-      <td class="preco-cell">${fmtR(p.preco_medio||0)}</td><td class="preco-cell val-pos">${fmtR(vEst)}</td>
+      <td><code>${p.codigo}</code></td>
+      <td><strong>${p.produto}</strong></td>
+      <td>${p.categoria||'—'}</td>
+      <td>${p.unidade}</td>
+      <td style="text-align:right">${fmt(p.estoque_minimo)}</td>
+      <td style="text-align:right"><strong>${fmt(p.estoque_atual)}</strong></td>
+      <td class="preco-cell" style="text-align:right">${fmtR(p.preco_medio||0)}</td>
+      <td class="preco-cell val-pos" style="text-align:right">${fmtR(vEst)}</td>
       <td><span class="sb ${sk}">${st}</span></td>
       <td style="display:flex;gap:4px">
-        <button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button>
-        <button class="edit-btn" title="Editar" onclick='openEditIns(${JSON.stringify(p)})'>✏️</button>
-        <button class="del-btn" title="Excluir" onclick="delIns('${p.codigo}','${p.produto.replace(/'/g,'')}')">🗑</button>
-      </td></tr>`;
+        <button class="btn btn-l btn-xs" onclick='etqUnica(${etqData})'>🏷️</button>
+        <button class="edit-btn" title="Editar" onclick='openEditIns(${editData})'>✏️</button>
+        <button class="del-btn" title="Excluir" onclick="delIns('${p.codigo}','${p.produto.replace(/'/g,"\\'")}')">🗑</button>
+      </td>
+    </tr>`;
   }).join('');
 }
 
