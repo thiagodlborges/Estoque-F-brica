@@ -1841,24 +1841,6 @@ function exportRelPDF() {
 
 // Update showSec to handle rel tab
 const _origShowSec = showSec;
-function showSec(id, btn){
-  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nt').forEach(t=>t.classList.remove('active'));
-  document.getElementById('sec-'+id).classList.add('active');
-  if(btn)btn.classList.add('active');
-  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd};
-  if(map[id])map[id]();
-  if(id==='rel'){
-    // init rel tab
-    document.getElementById('btn-exp-pdf').style.display='';
-    document.getElementById('flt-periodo').style.display='none';
-    document.getElementById('flt-produto-wrap').style.display='none';
-    document.getElementById('flt-tipo-wrap').style.display='none';
-    document.getElementById('flt-venc-wrap').style.display='none';
-    loadRelSit();
-  }
-}
-
 // ================================================================
 // ==================== EDIÇÃO DE CADASTROS =======================
 // ================================================================
