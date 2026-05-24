@@ -30,6 +30,8 @@ main{max-width:1400px;margin:0 auto;padding:28px 32px 48px}
 .kc{background:var(--br);border-radius:var(--rl);padding:20px;box-shadow:var(--ss);border:1px solid var(--mp);position:relative;overflow:hidden}
 .kc::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
 .kc.mar::before{background:linear-gradient(90deg,var(--m),var(--mc))}.kc.bor::before{background:linear-gradient(90deg,var(--b),var(--bc))}.kc.ver::before{background:linear-gradient(90deg,var(--gok),#7AAD7A)}.kc.cri::before{background:linear-gradient(90deg,var(--vc),#B03030)}
+.eg.cols4{grid-template-columns:repeat(4,1fr)}
+@media(max-width:1100px){.eg{grid-template-columns:1fr 1fr}.eg.cols4{grid-template-columns:1fr 1fr}}
 .kl{font-size:.78rem;font-weight:500;color:var(--tm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
 .kv{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--me);line-height:1;margin-bottom:4px}
 .kd{font-size:.78rem;color:var(--tm)}.ki{position:absolute;top:16px;right:16px;font-size:1.6rem;opacity:.18}
@@ -181,15 +183,42 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 
 <!-- DASHBOARD -->
 <div id="sec-dashboard" class="sec active">
-  <p class="dt">Painel de Controle</p><p class="ds">Visão geral em tempo real</p>
-  <div class="kg">
-    <div class="kc mar"><div class="kl">Matérias-Primas</div><div class="kv" id="kpi-mp">—</div><div class="kd">produtos cadastrados</div><div class="ki">🌾</div></div>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:6px">
+    <div><p class="dt">Painel de Controle</p><p class="ds">Visão geral consolidada em tempo real</p></div>
+    <button class="btn btn-l" onclick="gerarRelatorioDash()" style="align-self:center">⬇️ Relatório PDF</button>
+  </div>
+
+  <!-- KPIs de quantidade -->
+  <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tm);margin-bottom:8px;margin-top:4px">📊 Quantidade de Itens</div>
+  <div class="kg" style="margin-bottom:20px">
+    <div class="kc mar"><div class="kl">Matérias-Primas</div><div class="kv" id="kpi-mp">—</div><div class="kd">itens cadastrados</div><div class="ki">🌾</div></div>
+    <div class="kc" style="--kc-top:var(--mm)"><div class="kl">Insumos</div><div class="kv" id="kpi-ins">—</div><div class="kd">itens cadastrados</div><div class="ki">🧴</div></div>
+    <div class="kc ver"><div class="kl">Produtos Acabados</div><div class="kv" id="kpi-pa">—</div><div class="kd">itens cadastrados</div><div class="ki">🧊</div></div>
     <div class="kc bor"><div class="kl">Em Processo</div><div class="kv" id="kpi-pp">—</div><div class="kd">ordens abertas</div><div class="ki">⚙️</div></div>
-    <div class="kc ver"><div class="kl">Produtos Acabados</div><div class="kv" id="kpi-pa">—</div><div class="kd">produtos cadastrados</div><div class="ki">🧊</div></div>
     <div class="kc cri"><div class="kl">Alertas Críticos</div><div class="kv" id="kpi-cri">—</div><div class="kd">itens abaixo do mínimo</div><div class="ki">⚠️</div></div>
   </div>
-  <div class="eg">
+
+  <!-- KPIs de valor -->
+  <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tm);margin-bottom:8px">💰 Valor em Estoque</div>
+  <div class="kg" style="margin-bottom:24px">
+    <div class="kc mar"><div class="kl">Valor MP</div><div class="kv" id="kpi-vmp" style="font-size:1.25rem">—</div><div class="kd">matéria-prima</div><div class="ki">🌾</div></div>
+    <div class="kc" style="border-top:4px solid var(--mm)"><div class="kl">Valor Insumos</div><div class="kv" id="kpi-vins" style="font-size:1.25rem">—</div><div class="kd">insumos</div><div class="ki">🧴</div></div>
+    <div class="kc ver"><div class="kl">Valor PA (custo)</div><div class="kv" id="kpi-vpa" style="font-size:1.25rem">—</div><div class="kd">produto acabado</div><div class="ki">🧊</div></div>
+    <div class="kc ver"><div class="kl">Valor PA (venda)</div><div class="kv" id="kpi-vpa-venda" style="font-size:1.25rem">—</div><div class="kd">potencial de receita</div><div class="ki">💵</div></div>
+    <!-- TOTAL GERAL — card em destaque -->
+    <div class="kc" style="border-top:4px solid var(--me);background:linear-gradient(135deg,var(--me),var(--m));grid-column:span 1">
+      <div class="kl" style="color:var(--mp)">💰 VALOR TOTAL GERAL</div>
+      <div class="kv" id="kpi-vtotal" style="font-size:1.2rem;color:#fff">—</div>
+      <div class="kd" style="color:var(--mp)">MP + Insumos + PA (custo)</div>
+      <div class="ki">📦</div>
+    </div>
+  </div>
+
+  <!-- Colunas de estoque -->
+  <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tm);margin-bottom:8px">📦 Situação dos Estoques</div>
+  <div class="eg" style="grid-template-columns:1fr 1fr 1fr 1fr">
     <div class="ec"><div class="ch mp"><div class="ci">🌾</div><h3>Matéria-Prima</h3></div><div class="cb" id="d-mp"><div class="ls"><div class="sp"></div></div></div></div>
+    <div class="ec"><div class="ch" style="background:linear-gradient(135deg,var(--mm),#6B4525)"><div class="ci">🧴</div><h3 style="font-family:'Playfair Display',serif;color:var(--cr);font-size:1rem;font-weight:600">Insumos</h3></div><div class="cb" id="d-ins"><div class="ls"><div class="sp"></div></div></div></div>
     <div class="ec"><div class="ch pp"><div class="ci">⚙️</div><h3>Em Processo</h3></div><div class="cb" id="d-pp"><div class="ls"><div class="sp"></div></div></div></div>
     <div class="ec"><div class="ch pa"><div class="ci">🧊</div><h3>Produto Acabado</h3></div><div class="cb" id="d-pa"><div class="ls"><div class="sp"></div></div></div></div>
   </div>
@@ -834,25 +863,191 @@ document.getElementById('hdate').textContent=new Date().toLocaleDateString('pt-B
 
 // ===== DASHBOARD =====
 async function loadDash(){
-  const[mpR,ppR,paR]=await Promise.all([sb.from('materiaprima_produtos').select('*'),sb.from('processo_ordens').select('*').neq('status','FINALIZADO'),sb.from('produto_acabado_cadastro').select('*')]);
-  const mp=mpR.data||[],pp=ppR.data||[],pa=paR.data||[];
-  document.getElementById('kpi-mp').textContent=mp.length;
-  document.getElementById('kpi-pp').textContent=pp.length;
-  document.getElementById('kpi-pa').textContent=pa.length;
-  document.getElementById('kpi-cri').textContent=[...mp,...pa].filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
-  function rc(data,bid,isP){
-    const b=document.getElementById(bid);
+  const[mpR,ppR,paR,insR]=await Promise.all([
+    sb.from('materiaprima_produtos').select('*'),
+    sb.from('processo_ordens').select('*').neq('status','FINALIZADO'),
+    sb.from('produto_acabado_cadastro').select('*'),
+    sb.from('insumos_produtos').select('*'),
+  ]);
+  const mp=mpR.data||[], pp=ppR.data||[], pa=paR.data||[], ins=insR.data||[];
+
+  // ── Quantidade KPIs ──
+  document.getElementById('kpi-mp').textContent  = mp.length;
+  document.getElementById('kpi-ins').textContent = ins.length;
+  document.getElementById('kpi-pa').textContent  = pa.length;
+  document.getElementById('kpi-pp').textContent  = pp.length;
+  const criticos = [...mp,...ins,...pa].filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
+  document.getElementById('kpi-cri').textContent = criticos;
+
+  // ── Valor KPIs ──
+  const vMP   = mp.reduce((s,p)=>s+(p.estoque_atual||0)*(p.preco_medio||0),0);
+  const vIns  = ins.reduce((s,p)=>s+(p.estoque_atual||0)*(p.preco_medio||0),0);
+  const vPA   = pa.reduce((s,p)=>s+(p.estoque_atual||0)*(p.preco_medio||0),0);
+  const vPAv  = pa.reduce((s,p)=>s+(p.estoque_atual||0)*(p.preco_venda||0),0);
+  const vTot  = vMP + vIns + vPA;
+
+  document.getElementById('kpi-vmp').textContent       = fmtR(vMP);
+  document.getElementById('kpi-vins').textContent      = fmtR(vIns);
+  document.getElementById('kpi-vpa').textContent       = fmtR(vPA);
+  document.getElementById('kpi-vpa-venda').textContent = fmtR(vPAv);
+  document.getElementById('kpi-vtotal').textContent    = fmtR(vTot);
+
+  // ── Colunas de estoque ──
+  function rc(data, bid, isP) {
+    const b = document.getElementById(bid);
     if(!data.length){b.innerHTML='<div class="es"><div class="ei">📭</div><p>Nenhum item</p></div>';return;}
-    b.innerHTML=data.map(p=>{
-      const st=isP?p.status:gst(p.estoque_atual,p.estoque_minimo);
-      const pt=isP?(p.percentual_conclusao||0):(p.estoque_minimo>0?Math.min(100,(p.estoque_atual/p.estoque_minimo)*100):100);
-      const num=isP?`${pt}%`:`${fmt(p.estoque_atual)} ${p.unidade||''}`;
-      const sub=isP?`${p.ordem_producao}•${p.etapa_atual||'—'}`:(p.numero_lote?`Lote: ${p.numero_lote}`:p.codigo||'');
-      const sk=(st||'').replace(/\s+/g,'_').replace(/Í/g,'I').replace(/Ã/g,'A').replace(/É/g,'E');
+    b.innerHTML = data.map(p=>{
+      const st = isP ? p.status : gst(p.estoque_atual, p.estoque_minimo);
+      const pt = isP ? (p.percentual_conclusao||0) : (p.estoque_minimo>0 ? Math.min(100,(p.estoque_atual/p.estoque_minimo)*100) : 100);
+      const num= isP ? `${pt}%` : `${fmt(p.estoque_atual)} ${p.unidade||''}`;
+      const sub= isP ? `${p.ordem_producao}•${p.etapa_atual||'—'}` : (p.codigo||'');
+      const sk = (st||'').replace(/\s+/g,'_').replace(/Í/g,'I').replace(/Ã/g,'A').replace(/É/g,'E');
       return`<div class="pr"><div class="pi"><div class="pn">${p.produto||'—'}</div><div class="pc">${sub}</div><div class="pb" style="margin-top:6px;width:110px"><div class="pf ${st==='CRÍTICO'?'cri':st==='OK'||st==='FINALIZADO'?'ok':''}" style="width:${pt}%"></div></div></div><div class="ps"><div class="sn">${num}</div><span class="sb ${sk}">${st}</span></div></div>`;
     }).join('');
   }
-  rc(mp,'d-mp',false);rc(pp,'d-pp',true);rc(pa,'d-pa',false);
+  rc(mp, 'd-mp', false);
+  rc(ins,'d-ins',false);
+  rc(pp, 'd-pp', true);
+  rc(pa, 'd-pa', false);
+
+  // guarda para o relatório PDF
+  window._dashData = { mp, ins, pa, pp, vMP, vIns, vPA, vPAv, vTot, criticos };
+}
+
+async function gerarRelatorioDash() {
+  if(!window._dashData) { toast('Carregando dados…','error'); await loadDash(); }
+  const { mp, ins, pa, vMP, vIns, vPA, vPAv, vTot, criticos } = window._dashData;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'landscape' });
+  const W=297, M=14, hoje = new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+
+  // ── Cabeçalho ──
+  doc.setFillColor(62,32,16);
+  doc.rect(0,0,W,20,'F');
+  doc.setTextColor(245,235,216);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14);
+  doc.text('ESTOQUE FÁBRICA — PAINEL DE CONTROLE',M,13);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text(`Emitido em: ${hoje}`, W-M, 13, {align:'right'});
+
+  let y = 28;
+
+  // ── Bloco de KPIs de quantidade ──
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.setTextColor(92,51,23);
+  doc.text('QUANTIDADE DE ITENS', M, y); y+=5;
+
+  const kpiW = (W - M*2) / 5;
+  const kpiItems = [
+    { label:'Matéria-Prima', val: mp.length+' itens', cor:[107,58,31] },
+    { label:'Insumos',       val: ins.length+' itens', cor:[139,80,48] },
+    { label:'Prod. Acabado', val: pa.length+' itens',  cor:[90,138,90] },
+    { label:'Alertas Críticos', val: criticos+' itens', cor:[158,58,42] },
+    { label:'Total de Itens', val: (mp.length+ins.length+pa.length)+' itens', cor:[62,32,16] },
+  ];
+  kpiItems.forEach((k,i)=>{
+    const x = M + i*kpiW;
+    doc.setFillColor(...k.cor); doc.roundedRect(x,y,kpiW-3,16,2,2,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold'); doc.setFontSize(11);
+    doc.text(k.val, x+2, y+9);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5);
+    doc.text(k.label, x+2, y+14);
+  });
+  y += 22;
+
+  // ── Bloco de KPIs de valor ──
+  doc.setFont('helvetica','bold'); doc.setFontSize(8);
+  doc.setTextColor(92,51,23);
+  doc.text('VALOR EM ESTOQUE', M, y); y+=5;
+
+  const valW = (W - M*2) / 5;
+  const valItems = [
+    { label:'Valor MP',            val: fmtR(vMP),   cor:[107,58,31] },
+    { label:'Valor Insumos',       val: fmtR(vIns),  cor:[139,80,48] },
+    { label:'Valor PA (custo)',    val: fmtR(vPA),   cor:[90,138,90] },
+    { label:'Valor PA (venda)',    val: fmtR(vPAv),  cor:[74,110,63] },
+    { label:'💰 VALOR TOTAL GERAL',val: fmtR(vTot),  cor:[62,32,16] },
+  ];
+  valItems.forEach((k,i)=>{
+    const x = M + i*valW;
+    doc.setFillColor(...k.cor); doc.roundedRect(x,y,valW-3,16,2,2,'F');
+    doc.setTextColor(255,255,255);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9);
+    const shortVal = k.val.length>15 ? k.val.replace('R$\u00a0','R$ ') : k.val;
+    doc.text(shortVal, x+2, y+9);
+    doc.setFont('helvetica','normal'); doc.setFontSize(6);
+    doc.text(k.label, x+2, y+14);
+  });
+  y += 24;
+
+  // ── Tabelas de estoque ──
+  function drawTable(title, data, cols, getCols, startY) {
+    let ty = startY;
+    doc.setFont('helvetica','bold'); doc.setFontSize(8);
+    doc.setTextColor(62,32,16);
+    doc.text(title, M, ty); ty+=4;
+    doc.setDrawColor(196,149,106); doc.setLineWidth(0.3);
+    doc.line(M,ty,W-M,ty); ty+=3;
+
+    const colW = (W - M*2) / cols.length;
+    // Header
+    doc.setFillColor(240,232,222);
+    doc.rect(M, ty, W-M*2, 5, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(6);
+    doc.setTextColor(92,51,23);
+    cols.forEach((c,i) => doc.text(c, M+i*colW+1, ty+3.5));
+    ty += 6;
+
+    // Rows
+    doc.setFont('helvetica','normal'); doc.setFontSize(6);
+    data.forEach((p,ri) => {
+      if(ty > 195) { doc.addPage(); ty = M; }
+      if(ri%2===0){ doc.setFillColor(251,248,244); doc.rect(M,ty-1,W-M*2,5,'F'); }
+      doc.setTextColor(42,21,5);
+      getCols(p).forEach((v,i) => doc.text(String(v||'').substring(0,28), M+i*colW+1, ty+2.5));
+      ty += 4.5;
+    });
+    return ty + 4;
+  }
+
+  const stLabel = p => gst(p.estoque_atual, p.estoque_minimo);
+
+  // Matéria-Prima
+  y = drawTable('🌾 MATÉRIA-PRIMA', mp,
+    ['Código','Produto','Un.','Estq. Atual','Preço Médio','Valor Estoque','Status'],
+    p => [p.codigo, p.produto, p.unidade, fmt(p.estoque_atual), fmtR(p.preco_medio||0), fmtR((p.estoque_atual||0)*(p.preco_medio||0)), stLabel(p)],
+    y);
+
+  if(y > 165) { doc.addPage(); y = M+8; }
+
+  // Insumos
+  y = drawTable('🧴 INSUMOS', ins,
+    ['Código','Insumo','Categoria','Un.','Estq. Atual','Preço Médio','Valor Estoque','Status'],
+    p => [p.codigo, p.produto, p.categoria||'—', p.unidade, fmt(p.estoque_atual), fmtR(p.preco_medio||0), fmtR((p.estoque_atual||0)*(p.preco_medio||0)), stLabel(p)],
+    y);
+
+  if(y > 165) { doc.addPage(); y = M+8; }
+
+  // Produto Acabado
+  drawTable('🧊 PRODUTO ACABADO', pa,
+    ['Código','Produto','Un.','Estq. Atual','Preço Venda','Valor (venda)','Status'],
+    p => [p.codigo, p.produto, p.unidade, fmt(p.estoque_atual), fmtR(p.preco_venda||0), fmtR((p.estoque_atual||0)*(p.preco_venda||0)), stLabel(p)],
+    y);
+
+  // Rodapé em todas as páginas
+  const total_pages = doc.internal.getNumberOfPages();
+  for(let i=1;i<=total_pages;i++){
+    doc.setPage(i);
+    doc.setFillColor(62,32,16);
+    doc.rect(0,200,W,10,'F');
+    doc.setTextColor(196,149,106); doc.setFont('helvetica','normal'); doc.setFontSize(7);
+    doc.text(`Estoque Fábrica — Painel de Controle — ${hoje}`, M, 206);
+    doc.text(`Página ${i} de ${total_pages}`, W-M, 206, {align:'right'});
+  }
+
+  doc.save(`dashboard_estoque_${new Date().toISOString().slice(0,10)}.pdf`);
+  toast('Relatório PDF gerado!');
 }
 
 // ===== MP =====
