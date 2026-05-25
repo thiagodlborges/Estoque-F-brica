@@ -848,8 +848,16 @@ async function gerarCodigo(prefixo, campoId) {
   }
 }
 function closeModal(id){
-  document.getElementById(id).classList.remove('open');
-  document.querySelectorAll(`#${id} input:not([type=date]),#${id} textarea`).forEach(i=>i.value='');
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('open');
+  // Limpa inputs de texto e textarea (preserva dates e selects)
+  el.querySelectorAll('input:not([type=date]):not([type=hidden]),textarea').forEach(i => i.value='');
+  // Limpa widgets de busca de produto
+  el.querySelectorAll('.prod-search-input').forEach(inp => { inp.value=''; inp.classList.remove('selected'); });
+  el.querySelectorAll('.prod-search-cod-display').forEach(e => e.textContent='');
+  el.querySelectorAll('input[type=hidden]').forEach(e => e.value='');
+  el.querySelectorAll('.prod-search-dropdown').forEach(dd => dd.classList.remove('open'));
 }
 document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
@@ -1098,7 +1106,7 @@ async function saveMP(){
     else toast('Erro: '+error.message,'error');
     return;
   }
-  toast('Produto cadastrado!');closeModal('m-mp-p');loadMP();
+  toast('Produto cadastrado!');closeModal('m-mp-p');loadMP();psInvalidate('mp');
 }
 
 // ===== MP ENTRADAS =====
@@ -1273,7 +1281,7 @@ async function savePA(){
     else toast('Erro: '+error.message,'error');
     return;
   }
-  toast('Produto acabado cadastrado!');closeModal('m-pa-p');loadPA();
+  toast('Produto acabado cadastrado!');closeModal('m-pa-p');loadPA();psInvalidate('pa');
 }
 
 // ===== PA PRODUÇÃO =====
@@ -1654,76 +1662,8 @@ document.addEventListener('click', e => {
   });
 });
 
-// Reset dos campos de busca ao fechar modal
-const _origCloseModal = closeModal;
-function closeModal(id) {
-  _origCloseModal(id);
-  // Limpa todos os prod-search dentro deste modal
-  document.querySelectorAll(`#${id} .prod-search-input`).forEach(inp => {
-    inp.value = ''; inp.classList.remove('selected');
-  });
-  document.querySelectorAll(`#${id} .prod-search-cod-display`).forEach(el => el.textContent = '');
-  document.querySelectorAll(`#${id} input[type=hidden]`).forEach(el => el.value = '');
-  document.querySelectorAll(`#${id} .prod-search-dropdown`).forEach(dd => dd.classList.remove('open'));
-}
-
-// Invalida cache ao cadastrar novos produtos para que apareçam na busca
-const _origSaveMP = saveMP, _origSavePA = savePA, _origSaveIns = saveIns;
-async function saveMP() { await _origSaveMP(); psInvalidate('mp'); }
-async function savePA() { await _origSavePA(); psInvalidate('pa'); }
-async function saveIns() { await _origSaveIns(); psInvalidate('ins'); }
-
-// ================================================================
-// Fix: funções de entrada/saída agora leem o hidden input, não o select
-// ================================================================
-
-// Patch saveEnt para ler hidden input de produto
-const _origSaveEnt = saveEnt;
-async function saveEnt() {
-  const cod = document.getElementById('ent-prod')?.value;
-  if (!cod) { toast('Selecione um produto', 'error'); return; }
-  await _origSaveEnt();
-}
-
-// Patch saveSai para ler hidden input
-const _origSaveSai = saveSai;
-async function saveSai() {
-  const cod = document.getElementById('sai-prod')?.value;
-  if (!cod) { toast('Selecione um produto', 'error'); return; }
-  await _origSaveSai();
-}
-
-// Patch savePAProd para ler hidden input
-const _origSavePAProd = savePAProd;
-async function savePAProd() {
-  const cod = document.getElementById('paprod-sel')?.value;
-  if (!cod) { toast('Selecione um produto', 'error'); return; }
-  await _origSavePAProd();
-}
-
-// Patch saveExpd para ler hidden input
-const _origSaveExpd = saveExpd;
-async function saveExpd() {
-  const cod = document.getElementById('exp-prod')?.value;
-  if (!cod) { toast('Selecione um produto', 'error'); return; }
-  await _origSaveExpd();
-}
-
-// Patch saveInsEnt para ler hidden input
-const _origSaveInsEnt = saveInsEnt;
-async function saveInsEnt() {
-  const cod = document.getElementById('iens-prod')?.value;
-  if (!cod) { toast('Selecione um insumo', 'error'); return; }
-  await _origSaveInsEnt();
-}
-
-// Patch saveInsSai para ler hidden input
-const _origSaveInsSai = saveInsSai;
-async function saveInsSai() {
-  const cod = document.getElementById('sins-prod')?.value;
-  if (!cod) { toast('Selecione um insumo', 'error'); return; }
-  await _origSaveInsSai();
-}
+// Reset dos campos de busca ao fechar modal — já incorporado na closeModal unificada acima
+// Invalidação de cache — chamada diretamente nas funções de save originais
 
 // ================================================================
 // Init
@@ -2175,7 +2115,7 @@ async function saveIns() {
     else toast('Erro: '+error.message,'error');
     return;
   }
-  toast('Insumo cadastrado!'); closeModal('m-ins-p'); loadIns();
+  toast('Insumo cadastrado!'); closeModal('m-ins-p'); loadIns(); psInvalidate('ins');
 }
 
 function openEditIns(p) {
