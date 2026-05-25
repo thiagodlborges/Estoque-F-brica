@@ -537,8 +537,13 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>NF Origem</label><input id="sai-nf" type="text"></div>
     <div class="fgr"><label>Série NF Origem</label><input id="sai-ser" type="text"></div>
     <div class="fgr"><label>Quantidade *</label><input id="sai-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
-    <div class="fgr"><label>Ordem de Produção</label><input id="sai-op" type="text" placeholder="OP-001"></div>
-    <div class="fgr"><label>Destino</label><input id="sai-dest" type="text" placeholder="Ex: Linha 1"></div>
+    <div class="fgr"><label>Destino *</label>
+      <select id="sai-dest" style="font-weight:600" onchange="toggleSaiOP(this.value)">
+        <option value="Processo">⚙️ Processo — consumo em produção</option>
+        <option value="Perda">⚠️ Perda — descarte / quebra</option>
+      </select>
+    </div>
+    <div class="fgr" id="sai-op-wrap"><label>Ordem de Produção</label><input id="sai-op" type="text" placeholder="OP-001"></div>
     <div class="fgr"><label>Responsável</label><input id="sai-resp" type="text"></div>
     <div class="fgr full"><label>Observações</label><textarea id="sai-obs"></textarea></div>
   </div></div>
@@ -1148,8 +1153,20 @@ async function loadMPSai(){
   tb.innerHTML='<tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr>';
   const{data,error}=await sb.from('materiaprima_saidas').select('*').order('data_saida',{ascending:false});
   if(error||!data?.length){tb.innerHTML=`<tr><td colspan="9"><div class="es"><div class="ei">📤</div><p>${error?'Erro':'Nenhuma saída'}</p></div></td></tr>`;return;}
-  tb.innerHTML=data.map(s=>`<tr><td>${fmtD(s.data_saida)}</td><td><strong>${s.codigo_produto}</strong></td><td>${s.lote_origem}</td><td>${s.nf_numero_origem||'—'}</td><td>${fmt(s.quantidade)} ${s.unidade}</td><td>${s.destino||'—'}</td><td>${s.ordem_producao||'—'}</td><td>${s.responsavel||'—'}</td><td>${fmtR(s.custo_unitario*s.quantidade)}</td><td><button class="del-btn" title="Excluir" onclick="delMPSai('${s.id}')">🗑</button></td></tr>`).join('');
+  tb.innerHTML=data.map(s=>{
+    const destBadge = s.destino==='Perda'
+      ? `<span class="sb CRITICO" style="font-size:.65rem">⚠️ Perda</span>`
+      : `<span class="sb OK" style="font-size:.65rem">⚙️ Processo</span>`;
+    return`<tr><td>${fmtD(s.data_saida)}</td><td><strong>${s.codigo_produto}</strong></td><td>${s.lote_origem}</td><td>${s.nf_numero_origem||'—'}</td><td>${fmt(s.quantidade)} ${s.unidade}</td><td>${destBadge}</td><td>${s.ordem_producao||'—'}</td><td>${s.responsavel||'—'}</td><td>${fmtR(s.custo_unitario*s.quantidade)}</td><td><button class="del-btn" title="Excluir" onclick="delMPSai('${s.id}')">🗑</button></td></tr>`;
+  }).join('');
 }
+function toggleSaiOP(val) {
+  const wrap = document.getElementById('sai-op-wrap');
+  if(!wrap) return;
+  wrap.style.display = val === 'Processo' ? '' : 'none';
+  if(val !== 'Processo') document.getElementById('sai-op').value = '';
+}
+
 async function saveSai(){
   const dt=document.getElementById('sai-dt').value;
   const cod=document.getElementById('sai-prod')?.value;
@@ -1161,12 +1178,13 @@ async function saveSai(){
   const vu=parseFloat(opt?.dataset.vu||0);
   const nf=document.getElementById('sai-nf').value.trim()||null;
   const ser=document.getElementById('sai-ser').value.trim()||null;
-  const op=document.getElementById('sai-op').value.trim()||null;
-  const dest=document.getElementById('sai-dest').value.trim()||null;
+  const dest=document.getElementById('sai-dest').value; // 'Processo' ou 'Perda'
+  const op=dest==='Processo' ? (document.getElementById('sai-op').value.trim()||null) : null;
   const resp=document.getElementById('sai-resp').value.trim()||null;
   const obs=document.getElementById('sai-obs').value.trim()||null;
   if(!dt||!cod||!lote||!qtd){toast('Preencha campos obrigatórios','error');return;}
   if(qtd>sal){toast(`Saldo insuficiente. Disponível: ${fmt(sal)}`,'error');return;}
+  if(!['Processo','Perda'].includes(dest)){toast('Selecione um destino válido','error');return;}
   const{data:pd}=await sb.from('materiaprima_produtos').select('unidade').eq('codigo',cod).single();
   const un=pd?.unidade||'Un';
   const{error}=await sb.from('materiaprima_saidas').insert({data_saida:dt,codigo_produto:cod,nf_numero_origem:nf,nf_serie_origem:ser,quantidade:qtd,unidade:un,destino:dest,ordem_producao:op,lote_origem:lote,responsavel:resp,custo_unitario:vu,observacoes:obs});
