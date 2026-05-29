@@ -1190,18 +1190,21 @@ async function saveSai(){
   const op=dest==='Processo' ? (document.getElementById('sai-op').value.trim()||null) : null;
   const resp=document.getElementById('sai-resp').value.trim()||null;
   const obs=document.getElementById('sai-obs').value.trim()||null;
-  if(!dt||!cod||!lote||!qtd){toast('Preencha campos obrigatórios','error');return;}
-  if(qtd>sal){toast(`Saldo insuficiente. Disponível: ${fmt(sal)}`,'error');return;}
+  if(!dt||!cod||!qtd){toast('Preencha data, produto e quantidade','error');return;}
+  if(lote && qtd>sal){toast(`Saldo insuficiente no lote. Disponível: ${fmt(sal)}`,'error');return;}
   if(!['Processo','Perda'].includes(dest)){toast('Selecione um destino válido','error');return;}
   const{data:pd}=await sb.from('materiaprima_produtos').select('unidade').eq('codigo',cod).single();
   const un=pd?.unidade||'Un';
-  const{error}=await sb.from('materiaprima_saidas').insert({data_saida:dt,codigo_produto:cod,nf_numero_origem:nf,nf_serie_origem:ser,quantidade:qtd,unidade:un,destino:dest,ordem_producao:op,lote_origem:lote,responsavel:resp,custo_unitario:vu,observacoes:obs});
+  const{error}=await sb.from('materiaprima_saidas').insert({data_saida:dt,codigo_produto:cod,nf_numero_origem:nf,nf_serie_origem:ser,quantidade:qtd,unidade:un,destino:dest,ordem_producao:op,lote_origem:lote||null,responsavel:resp,custo_unitario:vu,observacoes:obs});
   if(error){toast('Erro: '+error.message,'error');return;}
-  const{data:la}=await sb.from('materiaprima_entradas').select('saldo_fifo').eq('lote',lote).eq('codigo_produto',cod).order('data_entrada').limit(1).single();
-  await sb.from('materiaprima_entradas').update({saldo_fifo:Math.max(0,(la?.saldo_fifo||0)-qtd)}).eq('lote',lote).eq('codigo_produto',cod);
+  // Só atualiza saldo FIFO do lote se um lote foi informado
+  if(lote){
+    const{data:la}=await sb.from('materiaprima_entradas').select('saldo_fifo').eq('lote',lote).eq('codigo_produto',cod).order('data_entrada').limit(1).single();
+    await sb.from('materiaprima_entradas').update({saldo_fifo:Math.max(0,(la?.saldo_fifo||0)-qtd)}).eq('lote',lote).eq('codigo_produto',cod);
+  }
   const{data:pa}=await sb.from('materiaprima_produtos').select('estoque_atual').eq('codigo',cod).single();
   await sb.from('materiaprima_produtos').update({estoque_atual:Math.max(0,(pa?.estoque_atual||0)-qtd),updated_at:new Date().toISOString()}).eq('codigo',cod);
-  toast('Saída FIFO registrada!');closeModal('m-mp-s');loadMPSai();
+  toast(lote?'Saída FIFO registrada!':'Saída registrada (sem lote)!');closeModal('m-mp-s');loadMPSai();
 }
 
 // ===== PROCESSO =====
@@ -1350,15 +1353,17 @@ async function saveExpd(){
   const obs=document.getElementById('exp-obs').value.trim()||null;
   const{data:pd}=await sb.from('produto_acabado_cadastro').select('unidade').eq('codigo',cod).single();
   const un=pd?.unidade||'Un';
-  if(!dt||!lote||!qtd){toast('Preencha campos obrigatórios','error');return;}
-  if(qtd>sal){toast(`Saldo insuficiente. Disponível: ${fmt(sal)}`,'error');return;}
-  const{error}=await sb.from('produto_acabado_expedicao').insert({codigo_produto:cod,data_saida:dt,lote,quantidade:qtd,unidade:un,destino:dest,nf_venda:nf,responsavel:resp,transporte:transp,observacoes:obs});
+  if(!dt||!qtd){toast('Preencha data e quantidade','error');return;}
+  if(lote && qtd>sal){toast(`Saldo insuficiente no lote. Disponível: ${fmt(sal)}`,'error');return;}
+  const{error}=await sb.from('produto_acabado_expedicao').insert({codigo_produto:cod,data_saida:dt,lote:lote||null,quantidade:qtd,unidade:un,destino:dest,nf_venda:nf,responsavel:resp,transporte:transp,observacoes:obs});
   if(error){toast('Erro: '+error.message,'error');return;}
-  const{data:la}=await sb.from('produto_acabado_producao').select('saldo_fifo').eq('lote',lote).eq('codigo_produto',cod).order('data_producao').limit(1).single();
-  await sb.from('produto_acabado_producao').update({saldo_fifo:Math.max(0,(la?.saldo_fifo||0)-qtd)}).eq('lote',lote).eq('codigo_produto',cod);
+  if(lote){
+    const{data:la}=await sb.from('produto_acabado_producao').select('saldo_fifo').eq('lote',lote).eq('codigo_produto',cod).order('data_producao').limit(1).single();
+    await sb.from('produto_acabado_producao').update({saldo_fifo:Math.max(0,(la?.saldo_fifo||0)-qtd)}).eq('lote',lote).eq('codigo_produto',cod);
+  }
   const{data:cur}=await sb.from('produto_acabado_cadastro').select('estoque_atual').eq('codigo',cod).single();
   await sb.from('produto_acabado_cadastro').update({estoque_atual:Math.max(0,(cur?.estoque_atual||0)-qtd),updated_at:new Date().toISOString()}).eq('codigo',cod);
-  toast('Expedição registrada!');closeModal('m-expd');loadExpd();
+  toast(lote?'Expedição registrada!':'Expedição registrada (sem lote)!');closeModal('m-expd');loadExpd();
 }
 
 // ================================================================
@@ -1764,13 +1769,13 @@ function showRelTab(tab, btn) {
   if(btn) btn.classList.add('active');
   document.getElementById('rel-'+tab).classList.add('active');
 
-  // Show/hide filter controls per tab
-  document.getElementById('flt-periodo').style.display = tab==='sit' ? 'none' : 'flex';
-  document.getElementById('flt-produto-wrap').style.display = (tab==='sit'||tab==='val') ? 'none' : '';
-  document.getElementById('flt-tipo-wrap').style.display = tab==='mov-mp' ? '' : 'none';
-  document.getElementById('flt-venc-wrap').style.display = tab==='val' ? '' : 'none';
-  document.getElementById('btn-exp-pdf').style.display = '';
+  document.getElementById('flt-periodo').style.display      = (tab==='sit'||tab==='inv') ? 'none' : 'flex';
+  document.getElementById('flt-produto-wrap').style.display = (tab==='sit'||tab==='val'||tab==='inv') ? 'none' : '';
+  document.getElementById('flt-tipo-wrap').style.display    = tab==='mov-mp' ? '' : 'none';
+  document.getElementById('flt-venc-wrap').style.display    = tab==='val' ? '' : 'none';
+  document.getElementById('btn-exp-pdf').style.display      = '';
 
+  if(tab==='inv') { loadRelInv(); return; }
   applyRelFilter();
 }
 
@@ -1797,36 +1802,7 @@ async function applyRelFilter() {
 }
 
 // --- Situação dos Estoques ---
-async function loadRelSit() {
-  const [mpR, paR] = await Promise.all([
-    sb.from('materiaprima_produtos').select('*').order('codigo'),
-    sb.from('produto_acabado_cadastro').select('*').order('codigo')
-  ]);
-  const mp = mpR.data||[], pa = paR.data||[];
-
-  // KPIs
-  const mpCri = mp.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
-  const paCri = pa.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
-  document.getElementById('rel-sit-kpis').innerHTML = `
-    <div class="rel-kpi"><div class="rv">${mp.length}</div><div class="rl">Matérias-Primas</div></div>
-    <div class="rel-kpi"><div class="rv">${pa.length}</div><div class="rl">Produtos Acabados</div></div>
-    <div class="rel-kpi ${mpCri+paCri>0?'neg':'pos'}"><div class="rv">${mpCri+paCri}</div><div class="rl">Itens Críticos</div></div>
-    <div class="rel-kpi"><div class="rv">${mp.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='OK').length+pa.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='OK').length}</div><div class="rl">Itens OK</div></div>`;
-
-  // MP table
-  document.getElementById('trel-mp-body').innerHTML = mp.length
-    ? mp.map(p=>{const st=gst(p.estoque_atual,p.estoque_minimo);const vc=vCls(p.data_vencimento);const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
-        return`<tr><td><code>${p.codigo}</code></td><td>${p.produto}</td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td><span class="sb ${sk}">${st}</span></td></tr>`;
-      }).join('')
-    : '<tr><td colspan="9"><div class="es"><p>Sem dados</p></div></td></tr>';
-
-  // PA table
-  document.getElementById('trel-pa-body').innerHTML = pa.length
-    ? pa.map(p=>{const st=gst(p.estoque_atual,p.estoque_minimo);const vc=vCls(p.data_vencimento);const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
-        return`<tr><td><code>${p.codigo}</code></td><td>${p.produto}</td><td>${p.categoria||'—'}</td><td>${p.unidade}</td><td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td><td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td><td><span class="sb ${sk}">${st}</span></td></tr>`;
-      }).join('')
-    : '<tr><td colspan="10"><div class="es"><p>Sem dados</p></div></td></tr>';
-}
+// loadRelSit completo (com insumos e valores) está definido abaixo junto ao inventário
 
 // --- Movimentações MP ---
 async function loadRelMovMP(ini, fim, prod, tipo) {
@@ -1993,7 +1969,6 @@ function exportRelPDF() {
 }
 
 // Update showSec to handle rel tab
-const _origShowSec = showSec;
 // ================================================================
 // ==================== EDIÇÃO DE CADASTROS =======================
 // ================================================================
@@ -2260,16 +2235,17 @@ async function saveInsSai() {
   const obs  = document.getElementById('sins-obs').value.trim()||null;
   const {data:pd} = await sb.from('insumos_produtos').select('unidade').eq('codigo',cod).single();
   const un = pd?.unidade||'Un';
-  if(!dt||!cod||!lote||!qtd){toast('Preencha campos obrigatórios','error');return;}
-  if(qtd>sal){toast(`Saldo insuficiente. Disponível: ${fmt(sal)}`,'error');return;}
-  const {error} = await sb.from('insumos_saidas').insert({data_saida:dt,codigo_produto:cod,nf_numero_origem:nf,quantidade:qtd,unidade:un,destino:dest,ordem_producao:op,lote_origem:lote,responsavel:resp,custo_unitario:vu,observacoes:obs});
+  if(!dt||!cod||!qtd){toast('Preencha data, insumo e quantidade','error');return;}
+  if(lote && qtd>sal){toast(`Saldo insuficiente no lote. Disponível: ${fmt(sal)}`,'error');return;}
+  const {error} = await sb.from('insumos_saidas').insert({data_saida:dt,codigo_produto:cod,nf_numero_origem:nf,quantidade:qtd,unidade:un,destino:dest,ordem_producao:op,lote_origem:lote||null,responsavel:resp,custo_unitario:vu,observacoes:obs});
   if(error){toast('Erro: '+error.message,'error');return;}
-  // Atualiza saldo FIFO da entrada
-  const {data:la} = await sb.from('insumos_entradas').select('saldo_fifo').eq('lote',lote).eq('codigo_produto',cod).order('data_entrada').limit(1).single();
-  await sb.from('insumos_entradas').update({saldo_fifo:Math.max(0,(la?.saldo_fifo||0)-qtd)}).eq('lote',lote).eq('codigo_produto',cod);
+  if(lote){
+    const {data:la} = await sb.from('insumos_entradas').select('saldo_fifo').eq('lote',lote).eq('codigo_produto',cod).order('data_entrada').limit(1).single();
+    await sb.from('insumos_entradas').update({saldo_fifo:Math.max(0,(la?.saldo_fifo||0)-qtd)}).eq('lote',lote).eq('codigo_produto',cod);
+  }
   const {data:cur} = await sb.from('insumos_produtos').select('estoque_atual').eq('codigo',cod).single();
   await sb.from('insumos_produtos').update({estoque_atual:Math.max(0,(cur?.estoque_atual||0)-qtd),updated_at:new Date().toISOString()}).eq('codigo',cod);
-  toast('Saída FIFO registrada!'); closeModal('m-ins-s'); loadInsSai();
+  toast(lote?'Saída FIFO registrada!':'Saída registrada (sem lote)!'); closeModal('m-ins-s'); loadInsSai();
 }
 
 async function delInsSai(id) {
@@ -2291,7 +2267,6 @@ async function delInsSai(id) {
 // ================================================================
 
 // Patch loadRelSit to include value columns and insumos
-const _origLoadRelSit = loadRelSit;
 async function loadRelSit() {
   const [mpR, paR, insR] = await Promise.all([
     sb.from('materiaprima_produtos').select('*').order('codigo'),
@@ -2554,24 +2529,8 @@ async function loadRelInv() {
     </tr>`;
 }
 
-// Patch showRelTab to handle 'inv'
-const _origShowRelTab = showRelTab;
-function showRelTab(tab, btn) {
-  _relTab = tab;
-  document.querySelectorAll('.rel-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.rel-content').forEach(c => c.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  document.getElementById('rel-'+tab).classList.add('active');
-
-  document.getElementById('flt-periodo').style.display       = (tab==='sit'||tab==='inv') ? 'none' : 'flex';
-  document.getElementById('flt-produto-wrap').style.display  = (tab==='sit'||tab==='val'||tab==='inv') ? 'none' : '';
-  document.getElementById('flt-tipo-wrap').style.display     = tab==='mov-mp' ? '' : 'none';
-  document.getElementById('flt-venc-wrap').style.display     = tab==='val' ? '' : 'none';
-  document.getElementById('btn-exp-pdf').style.display       = '';
-
-  if(tab==='inv') { loadRelInv(); return; }
-  applyRelFilter();
-}
+// Init
+loadDash();
 </script>
 </body>
 </html>
