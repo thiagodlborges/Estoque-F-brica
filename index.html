@@ -257,7 +257,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="sh"><div><p class="st">Produção em Processo</p><p class="sd">Ordens de produção em andamento</p></div>
   <button class="btn btn-p" onclick="openModal('m-proc')">+ Nova Ordem</button></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-proc',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadProc()">↻</button></div>
-  <div class="tw"><table id="t-proc"><thead><tr><th>Ordem</th><th>Data Início</th><th>Produto</th><th>Qtd</th><th>Etapa</th><th>Conclusão</th><th>Responsável</th><th>Prev. Término</th><th>Custo MP</th><th>Status</th><th></th></tr></thead>
+  <div class="tw"><table id="t-proc"><thead><tr><th>Ordem</th><th>Data Início</th><th>Produto</th><th>Qtd</th><th>Etapa</th><th>Conclusão</th><th>Responsável</th><th>Prev. Término</th><th>Custo MP</th><th>Status</th><th>MPs Vinculadas</th><th></th></tr></thead>
   <tbody id="tb-proc"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
@@ -543,7 +543,14 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
         <option value="Perda">⚠️ Perda — descarte / quebra</option>
       </select>
     </div>
-    <div class="fgr" id="sai-op-wrap"><label>Ordem de Produção</label><input id="sai-op" type="text" placeholder="OP-001"></div>
+    <div class="fgr" id="sai-op-wrap">
+      <label>Ordem de Produção</label>
+      <select id="sai-op" style="font-weight:500">
+        <option value="">⚡ Gerar nova OP automaticamente</option>
+      </select>
+      <div style="font-size:.72rem;color:var(--tm);margin-top:3px">Selecione uma OP existente ou deixe em branco para gerar automaticamente</div>
+    </div>
+    <div class="fgr"><label>Produto em Processo</label><input id="sai-prod-proc" type="text" placeholder="Ex: Gelato Chocolate (para nova OP)"></div>
     <div class="fgr"><label>Responsável</label><input id="sai-resp" type="text"></div>
     <div class="fgr full"><label>Observações</label><textarea id="sai-obs"></textarea></div>
   </div></div>
@@ -832,6 +839,8 @@ function openModal(id){
   if(id==='m-mp-p')  gerarCodigo('MP','mp-cod');
   if(id==='m-pa-p')  gerarCodigo('PF','pa-cod');
   if(id==='m-ins-p') gerarCodigo('IN','ins-cod');
+  // Carrega OPs abertas ao abrir saída MP
+  if(id==='m-mp-s')  carregarOPsAbertas();
 }
 
 async function gerarCodigo(prefixo, campoId) {
@@ -1168,54 +1177,190 @@ async function loadMPSai(){
     return`<tr><td>${fmtD(s.data_saida)}</td><td><strong>${s.codigo_produto}</strong></td><td>${s.lote_origem}</td><td>${s.nf_numero_origem||'—'}</td><td>${fmt(s.quantidade)} ${s.unidade}</td><td>${destBadge}</td><td>${s.ordem_producao||'—'}</td><td>${s.responsavel||'—'}</td><td>${fmtR(s.custo_unitario*s.quantidade)}</td><td><button class="del-btn" title="Excluir" onclick="delMPSai('${s.id}')">🗑</button></td></tr>`;
   }).join('');
 }
+async function carregarOPsAbertas() {
+  const sel = document.getElementById('sai-op');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">⚡ Gerar nova OP automaticamente</option>';
+  const {data} = await sb.from('processo_ordens')
+    .select('ordem_producao,produto,data_inicio')
+    .in('status',['EM PROCESSO','AGUARDANDO'])
+    .order('data_inicio',{ascending:false});
+  if(data?.length){
+    const optGroup = data.map(o=>
+      `<option value="${o.ordem_producao}">${o.ordem_producao} — ${o.produto} (${fmtD(o.data_inicio)})</option>`
+    ).join('');
+    sel.innerHTML += optGroup;
+  }
+}
+
 function toggleSaiOP(val) {
   const wrap = document.getElementById('sai-op-wrap');
+  const prodWrap = document.getElementById('sai-prod-proc')?.closest('.fgr');
   if(!wrap) return;
-  wrap.style.display = val === 'Processo' ? '' : 'none';
-  if(val !== 'Processo') document.getElementById('sai-op').value = '';
+  const isProcesso = val === 'Processo';
+  wrap.style.display = isProcesso ? '' : 'none';
+  if(prodWrap) prodWrap.style.display = isProcesso ? '' : 'none';
+  if(!isProcesso) {
+    document.getElementById('sai-op').value = '';
+    const pp = document.getElementById('sai-prod-proc');
+    if(pp) pp.value = '';
+  }
 }
 
 async function saveSai(){
-  const dt=document.getElementById('sai-dt').value;
-  const cod=document.getElementById('sai-prod')?.value;
-  const lsel=document.getElementById('sai-lote');
-  const lote=lsel.value;
-  const opt=lsel.options[lsel.selectedIndex];
-  const qtd=parseFloat(document.getElementById('sai-qtd').value);
-  const sal=parseFloat(opt?.dataset.sal||0);
-  const vu=parseFloat(opt?.dataset.vu||0);
-  const nf=document.getElementById('sai-nf').value.trim()||null;
-  const ser=document.getElementById('sai-ser').value.trim()||null;
-  const dest=document.getElementById('sai-dest').value; // 'Processo' ou 'Perda'
-  const op=dest==='Processo' ? (document.getElementById('sai-op').value.trim()||null) : null;
-  const resp=document.getElementById('sai-resp').value.trim()||null;
-  const obs=document.getElementById('sai-obs').value.trim()||null;
+  const dt   = document.getElementById('sai-dt').value;
+  const cod  = document.getElementById('sai-prod')?.value;
+  const lsel = document.getElementById('sai-lote');
+  const lote = lsel.value;
+  const opt  = lsel.options[lsel.selectedIndex];
+  const qtd  = parseFloat(document.getElementById('sai-qtd').value);
+  const sal  = parseFloat(opt?.dataset.sal||0);
+  const vu   = parseFloat(opt?.dataset.vu||0);
+  const nf   = document.getElementById('sai-nf').value.trim()||null;
+  const ser  = document.getElementById('sai-ser').value.trim()||null;
+  const dest = document.getElementById('sai-dest').value; // 'Processo' ou 'Perda'
+  const opSel= dest==='Processo' ? document.getElementById('sai-op').value.trim() : null;
+  const prodProc = document.getElementById('sai-prod-proc')?.value.trim()||null;
+  const resp = document.getElementById('sai-resp').value.trim()||null;
+  const obs  = document.getElementById('sai-obs').value.trim()||null;
+
   if(!dt||!cod||!qtd){toast('Preencha data, produto e quantidade','error');return;}
   if(lote && qtd>sal){toast(`Saldo insuficiente no lote. Disponível: ${fmt(sal)}`,'error');return;}
   if(!['Processo','Perda'].includes(dest)){toast('Selecione um destino válido','error');return;}
-  const{data:pd}=await sb.from('materiaprima_produtos').select('unidade').eq('codigo',cod).single();
+
+  const{data:pd}=await sb.from('materiaprima_produtos').select('produto,unidade').eq('codigo',cod).single();
   const un=pd?.unidade||'Un';
-  const{error}=await sb.from('materiaprima_saidas').insert({data_saida:dt,codigo_produto:cod,nf_numero_origem:nf,nf_serie_origem:ser,quantidade:qtd,unidade:un,destino:dest,ordem_producao:op,lote_origem:lote||null,responsavel:resp,custo_unitario:vu,observacoes:obs});
-  if(error){toast('Erro: '+error.message,'error');return;}
-  // Só atualiza saldo FIFO do lote se um lote foi informado
-  if(lote){
-    const{data:la}=await sb.from('materiaprima_entradas').select('saldo_fifo').eq('lote',lote).eq('codigo_produto',cod).order('data_entrada').limit(1).single();
-    await sb.from('materiaprima_entradas').update({saldo_fifo:Math.max(0,(la?.saldo_fifo||0)-qtd)}).eq('lote',lote).eq('codigo_produto',cod);
+  const nomeProd=pd?.produto||cod;
+  const custoTotal=(qtd*vu)||0;
+
+  // ── 1. Determina o número da OP ──────────────────────────────
+  let opNum = opSel || null;
+  if(dest==='Processo' && !opNum){
+    // Gera OP nova automaticamente via função do banco
+    const{data:nextOp}=await sb.rpc('next_op');
+    opNum = nextOp;
   }
-  const{data:pa}=await sb.from('materiaprima_produtos').select('estoque_atual').eq('codigo',cod).single();
-  await sb.from('materiaprima_produtos').update({estoque_atual:Math.max(0,(pa?.estoque_atual||0)-qtd),updated_at:new Date().toISOString()}).eq('codigo',cod);
-  toast(lote?'Saída FIFO registrada!':'Saída registrada (sem lote)!');closeModal('m-mp-s');loadMPSai();
+
+  // ── 2. Registra saída de MP ──────────────────────────────────
+  const{error}=await sb.from('materiaprima_saidas').insert({
+    data_saida:dt, codigo_produto:cod, nf_numero_origem:nf, nf_serie_origem:ser,
+    quantidade:qtd, unidade:un, destino:dest, ordem_producao:opNum,
+    lote_origem:lote||null, responsavel:resp, custo_unitario:vu, observacoes:obs
+  });
+  if(error){toast('Erro: '+error.message,'error');return;}
+
+  // ── 3. Atualiza saldo FIFO do lote (se lote informado) ───────
+  if(lote){
+    const{data:la}=await sb.from('materiaprima_entradas').select('saldo_fifo')
+      .eq('lote',lote).eq('codigo_produto',cod).order('data_entrada').limit(1).single();
+    await sb.from('materiaprima_entradas')
+      .update({saldo_fifo:Math.max(0,(la?.saldo_fifo||0)-qtd)})
+      .eq('lote',lote).eq('codigo_produto',cod);
+  }
+
+  // ── 4. Baixa estoque de MP ───────────────────────────────────
+  const{data:mpAtual}=await sb.from('materiaprima_produtos').select('estoque_atual').eq('codigo',cod).single();
+  await sb.from('materiaprima_produtos')
+    .update({estoque_atual:Math.max(0,(mpAtual?.estoque_atual||0)-qtd), updated_at:new Date().toISOString()})
+    .eq('codigo',cod);
+
+  // ── 5. Se destino = Processo: cria/atualiza OP ──────────────
+  if(dest==='Processo' && opNum){
+    const{data:opExist}=await sb.from('processo_ordens')
+      .select('id,custo_mp,quantidade')
+      .eq('ordem_producao',opNum)
+      .maybeSingle();
+
+    if(opExist){
+      // OP já existe → acumula custo de MP
+      await sb.from('processo_ordens')
+        .update({
+          custo_mp:(opExist.custo_mp||0)+custoTotal,
+          status:'EM PROCESSO',
+          updated_at:new Date().toISOString()
+        })
+        .eq('ordem_producao',opNum);
+    } else {
+      // OP nova → cria registro no processo
+      await sb.from('processo_ordens').insert({
+        ordem_producao: opNum,
+        data_inicio:    dt,
+        codigo_produto: 'MP',
+        produto:        prodProc || `Processo iniciado em ${dt}`,
+        quantidade:     qtd,
+        unidade:        un,
+        etapa_atual:    'Aguardando produção',
+        percentual_conclusao: 0,
+        responsavel:    resp,
+        custo_mp:       custoTotal,
+        status:         'EM PROCESSO',
+        observacoes:    obs
+      });
+    }
+
+    // Registra o item de MP usado nesta OP
+    await sb.from('processo_mp_items').insert({
+      ordem_producao: opNum,
+      codigo_mp:      cod,
+      produto_mp:     nomeProd,
+      quantidade:     qtd,
+      unidade:        un,
+      custo_unitario: vu,
+      data_saida:     dt,
+      lote_origem:    lote||null
+    });
+  }
+
+  const msg = dest==='Processo'
+    ? `Saída registrada → OP ${opNum} ${opSel?'atualizada':'criada'} em Processo!`
+    : 'Saída registrada como Perda.';
+  toast(msg);
+  closeModal('m-mp-s');
+  loadMPSai();
+  // Atualiza dashboard e processo se estiverem visíveis
+  if(document.getElementById('sec-proc')?.classList.contains('active')) loadProc();
+  if(document.getElementById('sec-dashboard')?.classList.contains('active')) loadDash();
 }
 
 // ===== PROCESSO =====
 async function loadProc(){
   const tb=document.getElementById('tb-proc');
-  tb.innerHTML='<tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr>';
+  tb.innerHTML='<tr><td colspan="11"><div class="ls"><div class="sp"></div></div></td></tr>';
   const{data,error}=await sb.from('processo_ordens').select('*').order('data_inicio',{ascending:false});
-  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="10"><div class="es"><div class="ei">⚙️</div><p>${error?'Erro':'Nenhuma ordem'}</p></div></td></tr>`;return;}
+  if(error||!data?.length){tb.innerHTML=`<tr><td colspan="11"><div class="es"><div class="ei">⚙️</div><p>${error?'Erro':'Nenhuma ordem em processo'}</p></div></td></tr>`;return;}
+
+  // Carrega itens de MP por OP
+  const ops = data.map(o=>o.ordem_producao);
+  const{data:mpItems}=await sb.from('processo_mp_items').select('*').in('ordem_producao',ops);
+  const mpByOp={};
+  (mpItems||[]).forEach(item=>{
+    if(!mpByOp[item.ordem_producao]) mpByOp[item.ordem_producao]=[];
+    mpByOp[item.ordem_producao].push(item);
+  });
+
   tb.innerHTML=data.map(o=>{
     const sk=(o.status||'').replace(/\s+/g,'_').replace(/Í/g,'I');
-    return`<tr><td><strong>${o.ordem_producao}</strong></td><td>${fmtD(o.data_inicio)}</td><td>${o.produto}<br><small style="color:var(--tm)">${o.codigo_produto}</small></td><td>${fmt(o.quantidade)} ${o.unidade}</td><td>${o.etapa_atual||'—'}</td><td><div class="pb" style="width:80px;display:inline-block"><div class="pf ok" style="width:${o.percentual_conclusao||0}%"></div></div> <small>${o.percentual_conclusao||0}%</small></td><td>${o.responsavel||'—'}</td><td>${fmtD(o.previsao_termino)}</td><td>${fmtR(o.custo_mp)}</td><td><span class="sb ${sk}">${o.status}</span></td><td><button class="del-btn" title="Excluir" onclick="delProc('${o.id}','${o.ordem_producao}')">🗑</button></td></tr>`;
+    const items=mpByOp[o.ordem_producao]||[];
+    const mpList=items.length
+      ? `<details style="margin-top:4px"><summary style="font-size:.7rem;color:var(--tm);cursor:pointer">📦 ${items.length} MP(s) — ${fmtR(o.custo_mp||0)}</summary>
+          <div style="padding:4px 0 0 8px;font-size:.7rem;color:var(--tm)">
+            ${items.map(i=>`• ${i.produto_mp} — ${fmt(i.quantidade)} ${i.unidade} — ${fmtR(i.custo_total||0)}`).join('<br>')}
+          </div></details>`
+      : `<span style="font-size:.7rem;color:var(--tm)">Sem MP vinculada</span>`;
+    return`<tr>
+      <td><strong>${o.ordem_producao}</strong></td>
+      <td>${fmtD(o.data_inicio)}</td>
+      <td>${o.produto}<br><small style="color:var(--tm)">${o.codigo_produto}</small></td>
+      <td>${fmt(o.quantidade)} ${o.unidade}</td>
+      <td>${o.etapa_atual||'—'}</td>
+      <td><div class="pb" style="width:80px;display:inline-block"><div class="pf ok" style="width:${o.percentual_conclusao||0}%"></div></div> <small>${o.percentual_conclusao||0}%</small></td>
+      <td>${o.responsavel||'—'}</td>
+      <td>${fmtD(o.previsao_termino)}</td>
+      <td>${fmtR(o.custo_mp||0)}</td>
+      <td><span class="sb ${sk}">${o.status}</span></td>
+      <td style="min-width:160px">${mpList}</td>
+      <td><button class="del-btn" title="Excluir" onclick="delProc('${o.id}','${o.ordem_producao}')">🗑</button></td>
+    </tr>`;
   }).join('');
 }
 async function saveProc(){
