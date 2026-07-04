@@ -163,7 +163,14 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 </style>
 </head>
 <body>
-<header><div class="hi"><div class="logo"><div class="li">🏭</div><div class="lt">Estoque <span>Fábrica</span></div></div><div class="hd" id="hdate"></div></div></header>
+<div id="appRoot" style="display:none">
+<header><div class="hi"><div class="logo"><div class="li">🏭</div><div class="lt">Estoque <span>Fábrica</span></div></div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <a href="https://thiagodlborges.github.io/sistema-luna/" style="color:var(--cr);font-size:.8rem;text-decoration:none;opacity:.9">← Sistema Luna</a>
+    <div class="hd" id="hdate"></div>
+    <button class="btn btn-o" style="border-color:var(--mp);color:var(--cr)" onclick="sairApp()">Sair</button>
+  </div>
+</div></header>
 <nav><div class="ni">
   <button class="nt active" onclick="showSec('dashboard',this)">📊 Dashboard</button>
   <button class="nt" onclick="showSec('mp-p',this)">🌾 Matéria-Prima</button>
@@ -796,6 +803,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 </div>
 
 <div class="tct" id="tct"></div>
+</div><!-- /appRoot -->
 
 <script>
 const SB_URL='https://pbuhwpcpdcnaheaywmdv.supabase.co';
@@ -1816,10 +1824,6 @@ document.addEventListener('click', e => {
 // Invalidação de cache — chamada diretamente nas funções de save originais
 
 // ================================================================
-// Init
-loadDash();
-
-// ================================================================
 // ======================== EXCLUSÕES =============================
 // ================================================================
 
@@ -2674,8 +2678,31 @@ async function loadRelInv() {
     </tr>`;
 }
 
+// ── Portão de acesso: sem sessão válida ou sem permissão, volta pro portal ──
+const PORTAL_URL = 'https://thiagodlborges.github.io/sistema-luna/';
+
+async function sairApp(){
+  await sb.auth.signOut();
+  window.location.href = PORTAL_URL;
+}
+
+async function verificarAcessoEIniciar(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = PORTAL_URL; return; }
+
+  const { data: ok, error } = await sb.rpc('tem_acesso', { p_slug: 'estoque_fabrica' });
+  if (error || !ok) {
+    await sb.auth.signOut();
+    window.location.href = PORTAL_URL;
+    return;
+  }
+
+  document.getElementById('appRoot').style.display = 'block';
+  loadDash();
+}
+
 // Init
-loadDash();
+verificarAcessoEIniciar();
 </script>
 </body>
 </html>
