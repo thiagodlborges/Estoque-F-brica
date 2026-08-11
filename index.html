@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root{--me:#3E2010;--m:#6B3A1F;--mm:#8B5030;--mc:#C4956A;--mp:#E8C9A8;--cr:#F5EBD8;--cc:#FBF5EC;--b:#6B1F2E;--bm:#8B2A3E;--bc:#C4607A;--bp:#E8B4BF;--bs:#F5D8DC;--te:#2A1505;--tm:#5C3317;--cs:#F0E8DE;--br:#FFFCF8;--gok:#5A8A5A;--gc:#D4E8D4;--ya:#A07020;--yc:#F0E0B0;--vc:#8B2020;--vl:#F0D0D0;--ss:0 2px 12px rgba(62,32,16,.08);--sm:0 4px 20px rgba(62,32,16,.14);--sf:0 8px 32px rgba(62,32,16,.18);--r:12px;--rl:18px;--rs:8px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -329,7 +330,8 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 <!-- RELATÓRIOS -->
 <div id="sec-rel" class="sec">
   <div class="sh"><div><p class="st">Relatórios</p><p class="sd">Situação atual dos estoques e movimentações por período</p></div>
-  <button class="btn btn-l" onclick="exportRelPDF()" id="btn-exp-pdf" style="display:none">⬇️ Exportar PDF</button></div>
+  <button class="btn btn-l" onclick="exportRelPDF()" id="btn-exp-pdf" style="display:none">⬇️ Exportar PDF</button>
+  <button class="btn btn-l" onclick="exportRelExcel()" id="btn-exp-xls" style="display:none">📊 Exportar Excel</button></div>
 
   <!-- Sub-abas -->
   <div class="rel-tabs">
@@ -639,8 +641,8 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Categoria</label><input id="pa-cat" type="text" placeholder="Gelato, Sorvete, Picolé..."></div>
     <div class="fgr full"><label>Produto *</label><input id="pa-nome" type="text" placeholder="Nome do produto"></div>
     <div class="fgr"><label>Unidade *</label><select id="pa-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option></select></div>
-    <div class="fgr"><label>Estoque Mínimo *</label><input id="pa-emin" type="number" min="0" step="1" placeholder="0"></div>
-    <div class="fgr"><label>Estoque Atual</label><input id="pa-eatu" type="number" min="0" step="1" placeholder="0"></div>
+    <div class="fgr"><label>Estoque Mínimo *</label><input id="pa-emin" type="number" min="0" step="0.001" placeholder="0"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="pa-eatu" type="number" min="0" step="0.001" placeholder="0"></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-pa-p')">Cancelar</button><button class="btn btn-p" onclick="savePA()">Salvar</button></div></div>
 </div>
@@ -667,7 +669,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Data de Validade *</label><input id="paprod-val" type="date"></div>
     <div class="fgr"><label>Data de Produção *</label><input id="paprod-dt" type="date"></div>
     <hr class="fdiv">
-    <div class="fgr"><label>Quantidade *</label><input id="paprod-qtd" type="number" min="1" step="1" placeholder="0"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="paprod-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
     <div class="fgr"><label>Custo Total (R$)</label><input id="paprod-ct" type="number" min="0" step="0.01" placeholder="0.00"></div>
     <div class="fgr"><label>Custo Unitário (R$)</label><input id="paprod-cu" type="number" min="0" step="0.0001" placeholder="0.00"></div>
     <div class="fgr full"><label>Observações</label><textarea id="paprod-obs"></textarea></div>
@@ -695,7 +697,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
       <label>Lotes disponíveis (consumo FIFO automático — mais antigo primeiro)</label>
       <div id="exp-lotes-preview" style="font-size:.82rem;color:var(--tm);padding:8px 10px;background:var(--bg2,#F7F3EE);border-radius:8px">Selecione o produto primeiro</div>
     </div>
-    <div class="fgr"><label>Quantidade *</label><input id="exp-qtd" type="number" min="1" step="1" placeholder="0" oninput="atualizarPreviewLotesPA()"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="exp-qtd" type="number" min="0.001" step="0.001" placeholder="0" oninput="atualizarPreviewLotesPA()"></div>
     <div class="fgr"><label>NF de Venda</label><input id="exp-nf" type="text" placeholder="000001"></div>
     <div class="fgr"><label>Destino</label><input id="exp-dest" type="text" placeholder="Nome do cliente"></div>
     <div class="fgr"><label>Responsável</label><input id="exp-resp" type="text"></div>
@@ -765,8 +767,8 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr full"><label>Produto *</label><input id="pae-nome" type="text"></div>
     <div class="ftit">💰 Preços e Estoque</div>
     <div class="fgr"><label>Unidade</label><select id="pae-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option></select></div>
-    <div class="fgr"><label>Estoque Mínimo</label><input id="pae-emin" type="number" min="0" step="1"></div>
-    <div class="fgr"><label>Estoque Atual</label><input id="pae-eatu" type="number" min="0" step="1"></div>
+    <div class="fgr"><label>Estoque Mínimo</label><input id="pae-emin" type="number" min="0" step="0.001"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="pae-eatu" type="number" min="0" step="0.001"></div>
     <div class="fgr"><label>Preço de Custo (R$)</label><input id="pae-preco" type="number" min="0" step="0.0001"></div>
     <div class="fgr"><label>Preço Médio (R$)</label><input id="pae-medio" type="number" min="0" step="0.0001"></div>
     <div class="fgr"><label>Preço de Venda (R$)</label><input id="pae-venda" type="number" min="0" step="0.0001"></div>
@@ -902,6 +904,7 @@ function showSec(id,btn){
   if(map[id])map[id]();
   if(id==='rel'){
     document.getElementById('btn-exp-pdf').style.display='';
+    document.getElementById('btn-exp-xls').style.display='';
     document.getElementById('flt-periodo').style.display='none';
     document.getElementById('flt-produto-wrap').style.display='none';
     document.getElementById('flt-tipo-wrap').style.display='none';
@@ -2147,6 +2150,7 @@ function showRelTab(tab, btn) {
   document.getElementById('flt-tipo-wrap').style.display    = tab==='mov-mp' ? '' : 'none';
   document.getElementById('flt-venc-wrap').style.display    = tab==='val' ? '' : 'none';
   document.getElementById('btn-exp-pdf').style.display      = '';
+  document.getElementById('btn-exp-xls').style.display      = '';
 
   if(tab==='inv') { loadRelInv(); return; }
   applyRelFilter();
@@ -2284,7 +2288,7 @@ function exportRelPDF() {
   const doc = new jsPDF({unit:'mm',format:'a4',orientation:'landscape'});
   const W=297, margin=14;
   let y=margin;
-  const titles={'sit':'Situação dos Estoques','mov-mp':'Movimentações de Matéria-Prima','mov-pa':'Movimentações de Produto Acabado','val':'Relatório de Vencimentos'};
+  const titles={'sit':'Situação dos Estoques','mov-mp':'Movimentações de Matéria-Prima','mov-pa':'Movimentações de Produto Acabado','val':'Relatório de Vencimentos','inv':'Inventário por Estoque'};
   const ini=document.getElementById('flt-ini').value;
   const fim=document.getElementById('flt-fim').value;
   const periodo = ini||fim ? `Período: ${ini?fmtD(ini):'início'} a ${fim?fmtD(fim):'hoje'}` : `Gerado em: ${new Date().toLocaleDateString('pt-BR')}`;
@@ -2339,6 +2343,41 @@ function exportRelPDF() {
 
   doc.save(`relatorio_${_relTab}_${new Date().toISOString().slice(0,10)}.pdf`);
   toast('PDF do relatório gerado!');
+}
+
+// --- Exportar relatório como Excel (.xlsx real, uma coluna do Excel por coluna da tabela) ---
+function exportRelExcel() {
+  const titles={'sit':'Situação dos Estoques','mov-mp':'Movimentações de Matéria-Prima','mov-pa':'Movimentações de Produto Acabado','val':'Relatório de Vencimentos','inv':'Inventário por Estoque'};
+  const aoa = [];
+  const tables = document.querySelectorAll(`#rel-${_relTab} table`);
+  const secTitles = document.querySelectorAll(`#rel-${_relTab} .rel-section-title`);
+  let maxCols = 1;
+
+  tables.forEach((tbl,ti)=>{
+    const heads = [...tbl.querySelectorAll('thead th')].map(th=>th.textContent.trim()).filter(Boolean);
+    if(!heads.length) return;
+
+    if(secTitles[ti]){
+      if(aoa.length) aoa.push([]); // linha em branco separando seções
+      aoa.push([secTitles[ti].textContent.trim()]);
+    }
+    aoa.push(heads);
+    maxCols = Math.max(maxCols, heads.length);
+
+    const rows = [...tbl.querySelectorAll('tbody tr')]
+      .map(tr => [...tr.querySelectorAll('td')].map(td => td.textContent.trim()))
+      .filter(r => r.length === heads.length); // descarta linhas de "nenhum item" (colspan)
+    rows.forEach(r => aoa.push(r));
+  });
+
+  if(!aoa.length){ toast('Nada para exportar nesta aba.','error'); return; }
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = Array(maxCols).fill({ wch: 20 });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, (titles[_relTab]||'Relatório').substring(0,31));
+  XLSX.writeFile(wb, `relatorio_${_relTab}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('Excel do relatório gerado!');
 }
 
 // Update showSec to handle rel tab
