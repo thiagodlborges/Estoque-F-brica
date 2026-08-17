@@ -13,17 +13,37 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{overflow-x:hidden;max-width:100vw}
 body{font-family:'DM Sans',sans-serif;background:var(--cc);color:var(--te);min-height:100vh;background-image:radial-gradient(ellipse at 0 0,rgba(107,63,31,.06),transparent 60%),radial-gradient(ellipse at 100% 100%,rgba(107,31,46,.05),transparent 60%)}
-header{background:linear-gradient(135deg,var(--me),var(--m) 50%,var(--b));padding:0 32px;box-shadow:var(--sf);position:sticky;top:0;z-index:100}
-.hi{max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:68px;flex-wrap:wrap;gap:8px}
+/* ===== SIDEBAR LAYOUT ===== */
+.app-shell{display:flex;align-items:stretch;min-height:100vh}
+.sidebar{width:246px;flex-shrink:0;background:linear-gradient(180deg,var(--me),var(--m) 55%,var(--b));display:flex;flex-direction:column;position:sticky;top:0;height:100vh;z-index:150;box-shadow:var(--sf)}
+header{padding:22px 20px 16px;flex-shrink:0}
+.hi{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
 .logo{display:flex;align-items:center;gap:12px}
-.li{width:38px;height:38px;background:linear-gradient(135deg,var(--mp),var(--cr));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.lt{font-family:'Playfair Display',serif;color:var(--cr);font-size:1.25rem;font-weight:600}.lt span{color:var(--mp);font-weight:400}
-.hd{color:var(--mp);font-size:.82rem}
-nav{background:var(--br);border-bottom:1px solid var(--mp);position:sticky;top:68px;z-index:90;box-shadow:0 2px 8px rgba(62,32,16,.06)}
-.ni{max-width:1400px;margin:0 auto;display:flex;padding:0 32px;overflow-x:auto}
-.nt{display:flex;align-items:center;gap:7px;padding:13px 16px;font-size:.84rem;font-weight:500;color:var(--tm);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .2s;background:none;border-left:none;border-right:none;border-top:none;font-family:'DM Sans',sans-serif}
-.nt:hover{color:var(--m);background:var(--cr)}.nt.active{color:var(--b);border-bottom-color:var(--b);font-weight:600;background:var(--bs)}
+.li{width:38px;height:38px;background:linear-gradient(135deg,var(--mp),var(--cr));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.lt{font-family:'Playfair Display',serif;color:var(--cr);font-size:1.15rem;font-weight:600}.lt span{color:var(--mp);font-weight:400}
+.hd{color:var(--mp);font-size:.76rem}
+.sidebar-close{display:none}
+nav{flex:1;overflow-y:auto;padding-bottom:12px}
+.ni{display:flex;flex-direction:column;padding:4px 12px;gap:2px}
+.nt{display:flex;align-items:center;gap:10px;padding:11px 14px;font-size:.85rem;font-weight:500;color:var(--mp);cursor:pointer;white-space:nowrap;transition:all .2s;background:none;border:none;border-left:3px solid transparent;border-radius:8px;font-family:'DM Sans',sans-serif;text-align:left;width:100%}
+.nt:hover{color:var(--cr);background:rgba(255,255,255,.08)}
+.nt.active{color:var(--cr);font-weight:600;background:rgba(255,255,255,.14);border-left-color:var(--cr)}
+.side-foot{padding:14px 20px 20px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.12)}
+.side-foot .btn-o{border-color:var(--mp);color:var(--cr);width:100%;justify-content:center}
+.mobile-topbar{display:none}
+.content-wrap{flex:1;min-width:0}
 main{max-width:1400px;margin:0 auto;padding:28px 32px 48px}
+@media(max-width:900px){
+  .app-shell{display:block}
+  .sidebar{position:fixed;left:-260px;top:0;height:100vh;transition:left .25s ease;width:250px}
+  .sidebar.open{left:0}
+  .sidebar-close{display:flex;align-items:center;justify-content:center;position:absolute;top:16px;right:14px;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.12);color:var(--cr);border:none;cursor:pointer;font-size:1rem}
+  .mobile-topbar{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,var(--me),var(--m));padding:0 16px;height:56px;position:sticky;top:0;z-index:120;box-shadow:var(--sf)}
+  .mobile-topbar .hamb{background:rgba(255,255,255,.12);border:none;color:var(--cr);width:36px;height:36px;border-radius:8px;font-size:1.1rem;cursor:pointer;flex-shrink:0}
+  .mobile-topbar .lt{font-size:1.05rem}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(20,10,5,.5);z-index:140}
+  .sidebar-overlay.open{display:block}
+}
 .sec{display:none}.sec.active{display:block;animation:fu .3s ease}
 @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .dt{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--me);margin-bottom:6px}
@@ -166,19 +186,26 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 </head>
 <body>
 <div id="appRoot" style="display:none">
+<div class="mobile-topbar">
+  <button class="hamb" onclick="toggleSidebar(true)">☰</button>
+  <div class="logo"><div class="li" style="width:30px;height:30px;font-size:16px">🏭</div><div class="lt">Estoque <span>Fábrica</span></div></div>
+</div>
+<div class="sidebar-overlay" onclick="toggleSidebar(false)"></div>
+<div class="app-shell">
+<aside class="sidebar" id="sidebar">
+<button class="sidebar-close" onclick="toggleSidebar(false)">✕</button>
 <header><div class="hi"><div class="logo"><div class="li">🏭</div><div class="lt">Estoque <span>Fábrica</span></div></div>
-  <div style="display:flex;align-items:center;gap:14px">
-    <a href="https://thiagodlborges.github.io/Sistema-Luna/" style="color:var(--cr);font-size:.8rem;text-decoration:none;opacity:.9">← Sistema Luna</a>
+    <a href="https://thiagodlborges.github.io/Sistema-Luna/" style="color:var(--cr);font-size:.78rem;text-decoration:none;opacity:.9">← Sistema Luna</a>
     <div class="hd" id="hdate"></div>
-    <button class="btn btn-o" style="border-color:var(--mp);color:var(--cr)" onclick="sairApp()">Sair</button>
-  </div>
 </div></header>
 <nav><div class="ni">
   <button class="nt active" onclick="showSec('dashboard',this)">📊 Dashboard</button>
   <button class="nt" onclick="showSec('mp-p',this)">🌾 Matéria-Prima</button>
   <button class="nt" onclick="showSec('mp-e',this)">📥 Entradas MP</button>
   <button class="nt" onclick="showSec('mp-s',this)">📤 Saídas MP</button>
-  <button class="nt" onclick="showSec('proc',this)">⚙️ Em Processo</button>
+  <button class="nt" onclick="showSec('op-rec',this)">📋 Receitas (OP)</button>
+  <button class="nt" onclick="showSec('op-exec',this)">🏭 Execução de OP</button>
+  <button class="nt" onclick="showSec('proc',this)">⚙️ Em Processo (manual)</button>
   <button class="nt" onclick="showSec('pa-p',this)">🧊 Prod. Acabado</button>
   <button class="nt" onclick="showSec('pa-prod',this)">✅ Produção PA</button>
   <button class="nt" onclick="showSec('expd',this)">🚚 Expedição</button>
@@ -189,6 +216,9 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <button class="nt" onclick="showSec('rel',this)">📋 Relatórios</button>
   <button class="nt" onclick="showSec('compras',this)">🛒 Compras</button>
 </div></nav>
+<div class="side-foot"><button class="btn btn-o" onclick="sairApp()">Sair</button></div>
+</aside>
+<div class="content-wrap">
 <main>
 
 <!-- DASHBOARD -->
@@ -512,7 +542,32 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <tbody id="tb-ins-s"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
+<!-- RECEITAS (CADASTRO DE OP) -->
+<div id="sec-op-rec" class="sec">
+  <div class="sh"><div><p class="st">Receitas Cadastradas (Ordens de Produção)</p><p class="sd">Ficha técnica: ingredientes de matéria-prima vinculados por percentual, roteiro de preparo/envase</p></div>
+  <button class="btn btn-p" onclick="abrirNovaReceita()">+ Nova Receita</button></div>
+  <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-op-rec',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadReceitas()">↻</button></div>
+  <div class="tw"><table id="t-op-rec"><thead><tr><th>Código</th><th>Produto</th><th>Base</th><th>Ingredientes</th><th>Embalagens</th><th>Status</th><th></th></tr></thead>
+  <tbody id="tb-op-rec"><tr><td colspan="7"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+</div>
+
+<!-- EXECUÇÃO DE OP -->
+<div id="sec-op-exec" class="sec">
+  <div class="sh"><div><p class="st">Execução de Ordens de Produção</p><p class="sd">Iniciar separa a matéria-prima do estoque disponível; finalizar dá baixa automática (FIFO)</p></div>
+  <button class="btn btn-p" onclick="abrirNovaOP()">+ Nova Ordem de Produção</button></div>
+  <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-op-exec',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadExecOP()">↻</button></div>
+  <div class="tw"><table id="t-op-exec"><thead><tr><th>Nº OP</th><th>Produto</th><th>Qtd. Planejada</th><th>Embalagem</th><th>Responsável</th><th>Status</th><th>Custo MP</th><th>Matéria-Prima</th><th>Ações</th></tr></thead>
+  <tbody id="tb-op-exec"><tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+
+  <div class="sh" style="margin-top:32px"><div><p class="st">Ajustes Manuais de Sobra / Perda</p><p class="sd">Lançamentos avulsos de matéria-prima, vinculados ou não a uma OP</p></div>
+  <button class="btn btn-b" onclick="abrirAjuste()">+ Lançar Sobra/Perda</button></div>
+  <div class="tc"><div class="tw"><table id="t-op-ajustes"><thead><tr><th>Data</th><th>Tipo</th><th>Matéria-Prima</th><th>Quantidade</th><th>OP Vinculada</th><th>Motivo</th><th>Responsável</th><th></th></tr></thead>
+  <tbody id="tb-op-ajustes"><tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+</div>
+
 </main>
+</div><!-- /content-wrap -->
+</div><!-- /app-shell -->
 
 <!-- ============ MODAIS ============ -->
 
@@ -631,6 +686,82 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr full"><label>Observações</label><textarea id="pr-obs"></textarea></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-proc')">Cancelar</button><button class="btn btn-p" onclick="saveProc()">Salvar Ordem</button></div></div>
+</div>
+
+<!-- Receita (cadastro de OP) -->
+<div class="mo" id="m-op-rec">
+  <div class="md md-lg"><div class="mh"><span class="mt" id="op-rec-title">Nova Receita (Ordem de Produção)</span><button class="mc" onclick="closeModal('m-op-rec')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <input type="hidden" id="rec-id">
+    <div class="fgr"><label>Código <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="rec-cod" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
+    <div class="fgr"><label>Tipo de Ordem</label><input id="rec-tipo" type="text" placeholder="Ex: Merengue"></div>
+    <div class="fgr full"><label>Nome do Produto *</label><input id="rec-nome" type="text" placeholder="Ex: Merengue"></div>
+    <div class="fgr"><label>Quantidade Base *</label><input id="rec-qtdbase" type="number" min="0.001" step="0.001" value="1"></div>
+    <div class="fgr"><label>Unidade Base</label><select id="rec-unbase"><option>Kg</option><option>L</option><option>Un</option></select></div>
+    <div class="fgr full"><label>Embalagens (uma por linha)</label><textarea id="rec-emb" placeholder="Potes de 360 g&#10;Potes de 150 g&#10;Caixas de 6 kg" style="min-height:60px"></textarea></div>
+    <hr class="fdiv">
+    <div class="ftit">🌾 Ingredientes (% sobre a quantidade base)</div>
+    <div class="full" id="rec-itens-wrap" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="full"><button type="button" class="btn btn-o btn-sm" onclick="addRecItemRow()">+ Adicionar ingrediente</button></div>
+    <hr class="fdiv">
+    <div class="fgr full"><label>Roteiro (preparo + envase)</label><textarea id="rec-roteiro" placeholder="1. Pesar...&#10;2. Misturar..." style="min-height:120px"></textarea></div>
+    <div class="fgr full"><label>Observações</label><textarea id="rec-obs"></textarea></div>
+  </div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-rec')">Cancelar</button><button class="btn btn-p" onclick="saveReceita()">Salvar Receita</button></div></div>
+</div>
+
+<!-- Nova OP (execução) -->
+<div class="mo" id="m-op-nova">
+  <div class="md"><div class="mh"><span class="mt">Nova Ordem de Produção</span><button class="mc" onclick="closeModal('m-op-nova')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <div class="fgr"><label>Nº OP <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="opx-numero" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
+    <div class="fgr"><label>Receita *</label><select id="opx-receita" onchange="onReceitaSelecionada()"><option value="">— Selecione —</option></select></div>
+    <div class="fgr"><label>Quantidade a Produzir *</label><input id="opx-qtd" type="number" min="0.001" step="0.001" oninput="previewReceitaConsumo()"></div>
+    <div class="fgr"><label>Unidade</label><input id="opx-un" type="text" disabled></div>
+    <div class="fgr"><label>Embalagem</label><select id="opx-embalagem"><option value="">—</option></select></div>
+    <div class="fgr"><label>Data</label><input id="opx-data" type="date"></div>
+    <div class="fgr"><label>Responsável</label><input id="opx-resp" type="text"></div>
+    <div class="fgr full"><label>Observações</label><textarea id="opx-obs"></textarea></div>
+    <div class="fgr full" id="opx-preview" style="font-size:.8rem;color:var(--tm)"></div>
+  </div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-nova')">Cancelar</button><button class="btn btn-p" onclick="saveNovaOP()">Cadastrar OP</button></div></div>
+</div>
+
+<!-- Finalizar OP (baixa automática) -->
+<div class="mo" id="m-op-final">
+  <div class="md"><div class="mh"><span class="mt">Finalizar OP — Baixa de Matéria-Prima</span><button class="mc" onclick="closeModal('m-op-final')">✕</button></div>
+  <div class="mb">
+    <p style="font-size:.82rem;color:var(--tm);margin-bottom:12px">Confira/ajuste as quantidades realmente consumidas. A baixa é feita pelo FIFO (lotes mais antigos primeiro) e reflete nas Saídas de MP.</p>
+    <input type="hidden" id="opf-ordem-id">
+    <div id="opf-itens-wrap" style="display:flex;flex-direction:column;gap:10px"></div>
+  </div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-final')">Cancelar</button><button class="btn btn-b" onclick="confirmarFinalizarOP()">Confirmar Baixa</button></div></div>
+</div>
+
+<!-- Ajuste manual: sobra / perda -->
+<div class="mo" id="m-op-ajuste">
+  <div class="md"><div class="mh"><span class="mt">Lançar Sobra / Perda de Matéria-Prima</span><button class="mc" onclick="closeModal('m-op-ajuste')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <div class="fgr"><label>Tipo *</label><select id="adj-tipo"><option value="sobra">↩️ Sobra — devolve ao estoque</option><option value="perda">⚠️ Perda — baixa do estoque</option></select></div>
+    <div class="fgr"><label>OP Vinculada (opcional)</label><select id="adj-op"><option value="">— Nenhuma —</option></select></div>
+    <div class="fgr full"><label>Matéria-Prima *</label>
+      <div class="prod-search-wrap" id="psw-adj">
+        <span class="prod-search-icon">🔍</span>
+        <input class="prod-search-input" id="adj-prod-search" type="text" placeholder="Digite o nome da matéria-prima..." autocomplete="off"
+          oninput="psSearch(this,'adj','mp')" onfocus="psSearch(this,'adj','mp')" onkeydown="psKey(event,'adj')">
+        <button class="prod-search-clear" onclick="psClear('adj')" tabindex="-1" title="Limpar">✕</button>
+        <div class="prod-search-dropdown" id="psd-adj"></div>
+      </div>
+      <div class="prod-search-cod-display" id="ps-cod-adj"></div>
+      <input type="hidden" id="adj-prod">
+    </div>
+    <div class="fgr"><label>Quantidade *</label><input id="adj-qtd" type="number" min="0.001" step="0.001"></div>
+    <div class="fgr"><label>Data</label><input id="adj-data" type="date"></div>
+    <div class="fgr"><label>Motivo</label><input id="adj-motivo" type="text" placeholder="Ex: Sobrou da OP, embalagem rasgada..."></div>
+    <div class="fgr"><label>Responsável</label><input id="adj-resp" type="text"></div>
+    <div class="fgr full"><label>Observações</label><textarea id="adj-obs"></textarea></div>
+  </div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-ajuste')">Cancelar</button><button class="btn btn-p" onclick="saveAjuste()">Registrar</button></div></div>
 </div>
 
 <!-- PA Produto -->
@@ -895,12 +1026,21 @@ function toast(msg,type='success'){
   document.getElementById('tct').appendChild(el);setTimeout(()=>el.remove(),3500);
 }
 
+function toggleSidebar(open){
+  const sb=document.getElementById('sidebar');
+  const ov=document.querySelector('.sidebar-overlay');
+  if(!sb)return;
+  sb.classList.toggle('open',open);
+  if(ov)ov.classList.toggle('open',open);
+}
 function showSec(id,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('active'));
   document.getElementById('sec-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
-  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd,'ins-p':loadIns,'ins-e':loadInsEnt,'ins-s':loadInsSai};
+  toggleSidebar(false);
+  window.scrollTo(0,0);
+  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd,'ins-p':loadIns,'ins-e':loadInsEnt,'ins-s':loadInsSai,'op-rec':loadReceitas,'op-exec':loadExecOP};
   if(map[id])map[id]();
   if(id==='rel'){
     document.getElementById('btn-exp-pdf').style.display='';
@@ -926,6 +1066,18 @@ function openModal(id){
   if(id==='m-ins-p') gerarCodigo('IN','ins-cod');
   // Carrega OPs abertas ao abrir saída MP
   if(id==='m-mp-s')  carregarOPsAbertas();
+  if(id==='m-op-rec' && !document.getElementById('rec-id').value){
+    gerarCodigo('REC','rec-cod');
+    document.getElementById('rec-itens-wrap').innerHTML='';
+    addRecItemRow();
+  }
+  if(id==='m-op-nova'){
+    gerarCodigo('OP','opx-numero');
+    popularSelectReceitas();
+  }
+  if(id==='m-op-ajuste'){
+    popularSelectOPsAjuste();
+  }
 }
 
 async function gerarCodigo(prefixo, campoId) {
@@ -1688,7 +1840,7 @@ function pdfEtqManual(){
 }
 
 function etqUnica(d){
-  document.querySelectorAll('.nt')[8].click();
+  showSec('etq', document.querySelector(".nt[onclick*='etq']"));
   document.getElementById('eq-nome').value=d.nome||'';
   document.getElementById('eq-cod').value=d.codigo||'';
   document.getElementById('eq-lote').value=d.lote||'';
@@ -1740,7 +1892,7 @@ function previewEtqLotes(){
   const lotes=getSelLotes();
   if(!lotes.length){toast('Selecione ao menos um lote','error');return;}
   closeModal('m-etq');
-  document.querySelectorAll('.nt')[8].click();
+  showSec('etq', document.querySelector(".nt[onclick*='etq']"));
   setTimeout(()=>{
     const grid=document.getElementById('etq-grid');
     grid.innerHTML=lotes.map(l=>htmlEtq(l)).join('');
@@ -2939,6 +3091,396 @@ async function loadRelInv() {
       </td>
       <td style="border-top:3px solid var(--mc);background:var(--me)"></td>
     </tr>`;
+}
+
+// ===================================================================
+// ===== RECEITAS (CADASTRO DE ORDENS DE PRODUÇÃO) =====
+// ===================================================================
+let _recItemSeq = 0;
+
+function addRecItemRow(codigo='', nome='', pct='', un=''){
+  const wrap = document.getElementById('rec-itens-wrap');
+  const n = ++_recItemSeq;
+  const prefix = 'reci' + n;
+  const row = document.createElement('div');
+  row.className = 'rec-item-row';
+  row.dataset.rowid = prefix;
+  row.style.cssText = 'display:grid;grid-template-columns:2fr 100px 90px 32px;gap:8px;align-items:start';
+  row.innerHTML = `
+    <div>
+      <div class="prod-search-wrap" id="psw-${prefix}">
+        <span class="prod-search-icon">🔍</span>
+        <input class="prod-search-input${codigo?' selected':''}" id="${prefix}-prod-search" type="text" placeholder="Matéria-prima..." autocomplete="off" value="${nome}"
+          oninput="psSearch(this,'${prefix}','mp')" onfocus="psSearch(this,'${prefix}','mp')" onkeydown="psKey(event,'${prefix}')">
+        <div class="prod-search-dropdown" id="psd-${prefix}"></div>
+      </div>
+      <div class="prod-search-cod-display" id="ps-cod-${prefix}">${codigo?'📦 '+codigo:''}</div>
+      <input type="hidden" id="${prefix}-prod" value="${codigo}">
+    </div>
+    <input type="number" min="0.001" step="0.001" placeholder="% (ex: 0.667)" value="${pct}" class="rec-item-pct">
+    <select class="rec-item-un"><option${un==='Kg'?' selected':''}>Kg</option><option${un==='L'?' selected':''}>L</option><option${un==='Un'?' selected':''}>Un</option></select>
+    <button type="button" class="del-btn" title="Remover" onclick="this.closest('.rec-item-row').remove()">🗑</button>`;
+  wrap.appendChild(row);
+}
+
+async function loadReceitas(){
+  const tb = document.getElementById('tb-op-rec');
+  tb.innerHTML = '<tr><td colspan="7"><div class="ls"><div class="sp"></div></div></td></tr>';
+  const { data: recs, error } = await sb.from('producao_receitas').select('*').order('nome_produto');
+  if(error){ tb.innerHTML = `<tr><td colspan="7"><div class="es"><div class="ei">📋</div><p>Erro: ${error.message}</p></div></td></tr>`; return; }
+  if(!recs?.length){ tb.innerHTML = '<tr><td colspan="7"><div class="es"><div class="ei">📋</div><p>Nenhuma receita cadastrada</p></div></td></tr>'; return; }
+  const ids = recs.map(r=>r.id);
+  const { data: itens } = await sb.from('producao_receita_itens').select('*').in('receita_id', ids).order('ordem');
+  const byRec = {};
+  (itens||[]).forEach(i=>{ (byRec[i.receita_id] ||= []).push(i); });
+  tb.innerHTML = recs.map(r=>{
+    const its = byRec[r.id]||[];
+    const ingList = its.map(i=>`${i.produto_mp} (${(i.percentual*100).toFixed(1)}%)`).join(', ') || '—';
+    const embs = (r.embalagens||[]).join(', ') || '—';
+    return `<tr>
+      <td><strong>${r.codigo}</strong></td>
+      <td>${r.nome_produto}<br><small style="color:var(--tm)">${r.tipo_ordem||''}</small></td>
+      <td>${fmt(r.quantidade_base)} ${r.unidade_base}</td>
+      <td style="max-width:280px;white-space:normal">${ingList}</td>
+      <td style="max-width:180px;white-space:normal">${embs}</td>
+      <td><span class="sb ${r.ativo?'OK':'ATRASADO'}">${r.ativo?'ATIVA':'INATIVA'}</span></td>
+      <td><div class="bg">
+        <button class="edit-btn" title="Editar" onclick="editReceita('${r.id}')">✏️</button>
+        <button class="del-btn" title="Excluir" onclick="delReceita('${r.id}','${r.nome_produto.replace(/'/g,"\\'")}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function abrirNovaReceita(){
+  document.getElementById('op-rec-title').textContent = 'Nova Receita (Ordem de Produção)';
+  document.getElementById('rec-id').value = '';
+  document.getElementById('rec-cod').value = '';
+  document.getElementById('rec-tipo').value = '';
+  document.getElementById('rec-nome').value = '';
+  document.getElementById('rec-qtdbase').value = '1';
+  document.getElementById('rec-unbase').value = 'Kg';
+  document.getElementById('rec-emb').value = '';
+  document.getElementById('rec-roteiro').value = '';
+  document.getElementById('rec-obs').value = '';
+  openModal('m-op-rec');
+}
+
+async function editReceita(id){
+  const { data: r, error } = await sb.from('producao_receitas').select('*').eq('id', id).single();
+  if(error){ toast('Erro ao carregar receita: '+error.message,'error'); return; }
+  const { data: itens } = await sb.from('producao_receita_itens').select('*').eq('receita_id', id).order('ordem');
+  document.getElementById('op-rec-title').textContent = 'Editar Receita — ' + r.nome_produto;
+  document.getElementById('rec-id').value = r.id;
+  document.getElementById('rec-cod').value = r.codigo;
+  document.getElementById('rec-tipo').value = r.tipo_ordem || '';
+  document.getElementById('rec-nome').value = r.nome_produto;
+  document.getElementById('rec-qtdbase').value = r.quantidade_base;
+  document.getElementById('rec-unbase').value = r.unidade_base;
+  document.getElementById('rec-emb').value = (r.embalagens||[]).join('\n');
+  document.getElementById('rec-roteiro').value = r.roteiro || '';
+  document.getElementById('rec-obs').value = r.observacoes || '';
+  document.getElementById('rec-itens-wrap').innerHTML = '';
+  (itens||[]).forEach(i=>addRecItemRow(i.codigo_mp, i.produto_mp, i.percentual, i.unidade));
+  if(!itens?.length) addRecItemRow();
+  openModal('m-op-rec');
+}
+
+async function delReceita(id, nome){
+  if(!confirm(`Excluir a receita "${nome}"? Isso não afeta OPs já executadas.`)) return;
+  const { error } = await sb.from('producao_receitas').delete().eq('id', id);
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast('Receita excluída.');
+  loadReceitas();
+}
+
+async function saveReceita(){
+  const id = document.getElementById('rec-id').value;
+  const cod = document.getElementById('rec-cod').value.trim();
+  const tipo = document.getElementById('rec-tipo').value.trim()||null;
+  const nome = document.getElementById('rec-nome').value.trim();
+  const qtdbase = parseFloat(document.getElementById('rec-qtdbase').value);
+  const unbase = document.getElementById('rec-unbase').value;
+  const emb = document.getElementById('rec-emb').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const roteiro = document.getElementById('rec-roteiro').value.trim()||null;
+  const obs = document.getElementById('rec-obs').value.trim()||null;
+
+  const rows = [...document.querySelectorAll('#rec-itens-wrap .rec-item-row')];
+  const itens = rows.map(row=>({
+    codigo_mp: row.querySelector('input[type=hidden]').value,
+    produto_mp: row.querySelector('.prod-search-input').value.trim(),
+    percentual: parseFloat(row.querySelector('.rec-item-pct').value),
+    unidade: row.querySelector('.rec-item-un').value
+  }));
+
+  if(!cod||!nome||!qtdbase){ toast('Preencha código, nome do produto e quantidade base','error'); return; }
+  if(!itens.length || itens.some(i=>!i.codigo_mp || !i.percentual)){ toast('Todo ingrediente precisa de matéria-prima selecionada e percentual','error'); return; }
+
+  let receitaId = id;
+  if(id){
+    const { error } = await sb.from('producao_receitas').update({
+      tipo_ordem: tipo, nome_produto: nome, unidade_base: unbase, quantidade_base: qtdbase,
+      embalagens: emb, roteiro, observacoes: obs, updated_at: new Date().toISOString()
+    }).eq('id', id);
+    if(error){ toast('Erro: '+error.message,'error'); return; }
+    await sb.from('producao_receita_itens').delete().eq('receita_id', id);
+  } else {
+    const { data, error } = await sb.from('producao_receitas').insert({
+      codigo: cod, tipo_ordem: tipo, nome_produto: nome, unidade_base: unbase, quantidade_base: qtdbase,
+      embalagens: emb, roteiro, observacoes: obs
+    }).select('id').single();
+    if(error){ toast('Erro: '+error.message,'error'); return; }
+    receitaId = data.id;
+  }
+
+  const { error: errItens } = await sb.from('producao_receita_itens').insert(
+    itens.map((i,idx)=>({ receita_id: receitaId, codigo_mp: i.codigo_mp, produto_mp: i.produto_mp, percentual: i.percentual, unidade: i.unidade, ordem: idx }))
+  );
+  if(errItens){ toast('Erro ao salvar ingredientes: '+errItens.message,'error'); return; }
+
+  toast(id?'Receita atualizada!':'Receita cadastrada!');
+  closeModal('m-op-rec');
+  loadReceitas();
+}
+
+// ===================================================================
+// ===== EXECUÇÃO DE OP =====
+// ===================================================================
+let _receitasCache = [];
+
+async function popularSelectReceitas(){
+  const { data } = await sb.from('producao_receitas').select('*').eq('ativo', true).order('nome_produto');
+  _receitasCache = data||[];
+  const sel = document.getElementById('opx-receita');
+  sel.innerHTML = '<option value="">— Selecione —</option>' +
+    _receitasCache.map(r=>`<option value="${r.id}">${r.nome_produto} (${r.codigo})</option>`).join('');
+  document.getElementById('opx-un').value = '';
+  document.getElementById('opx-embalagem').innerHTML = '<option value="">—</option>';
+  document.getElementById('opx-preview').innerHTML = '';
+}
+
+function onReceitaSelecionada(){
+  const id = document.getElementById('opx-receita').value;
+  const r = _receitasCache.find(x=>x.id===id);
+  document.getElementById('opx-un').value = r?.unidade_base || '';
+  const embSel = document.getElementById('opx-embalagem');
+  embSel.innerHTML = '<option value="">—</option>' + (r?.embalagens||[]).map(e=>`<option>${e}</option>`).join('');
+  if(!document.getElementById('opx-qtd').value && r) document.getElementById('opx-qtd').value = r.quantidade_base;
+  previewReceitaConsumo();
+}
+
+async function previewReceitaConsumo(){
+  const prev = document.getElementById('opx-preview');
+  const id = document.getElementById('opx-receita').value;
+  const r = _receitasCache.find(x=>x.id===id);
+  const qtd = parseFloat(document.getElementById('opx-qtd').value);
+  if(!r || !qtd){ prev.innerHTML=''; return; }
+  const { data: itens } = await sb.from('producao_receita_itens').select('*').eq('receita_id', id).order('ordem');
+  const fator = qtd / r.quantidade_base;
+  const codes = (itens||[]).map(i=>i.codigo_mp);
+  const { data: estoques } = await sb.from('materiaprima_produtos').select('codigo,estoque_atual,estoque_reservado').in('codigo', codes);
+  const estMap = {}; (estoques||[]).forEach(e=>estMap[e.codigo]=e);
+  prev.innerHTML = '<strong>Consumo previsto:</strong><br>' + (itens||[]).map(i=>{
+    const q = i.percentual * fator;
+    const e = estMap[i.codigo_mp];
+    const disp = e ? (e.estoque_atual - e.estoque_reservado) : 0;
+    const falta = disp < q;
+    return `• ${i.produto_mp}: ${fmt(q)} ${i.unidade} ${falta?`<span style="color:var(--vc);font-weight:600">— disponível apenas ${fmt(disp)}</span>`:`<span style="color:var(--gok)">(disponível: ${fmt(disp)})</span>`}`;
+  }).join('<br>');
+}
+
+function abrirNovaOP(){
+  document.getElementById('opx-qtd').value = '';
+  document.getElementById('opx-resp').value = '';
+  document.getElementById('opx-obs').value = '';
+  document.getElementById('opx-embalagem').innerHTML = '<option value="">—</option>';
+  document.getElementById('opx-un').value = '';
+  document.getElementById('opx-preview').innerHTML = '';
+  openModal('m-op-nova');
+}
+
+async function saveNovaOP(){
+  const numero = document.getElementById('opx-numero').value;
+  const receitaId = document.getElementById('opx-receita').value;
+  const qtd = parseFloat(document.getElementById('opx-qtd').value);
+  const un = document.getElementById('opx-un').value;
+  const embalagem = document.getElementById('opx-embalagem').value || null;
+  const data_criacao = document.getElementById('opx-data').value || today();
+  const resp = document.getElementById('opx-resp').value.trim()||null;
+  const obs = document.getElementById('opx-obs').value.trim()||null;
+
+  if(!receitaId||!qtd){ toast('Selecione a receita e a quantidade a produzir','error'); return; }
+  const r = _receitasCache.find(x=>x.id===receitaId);
+  const { data: itens } = await sb.from('producao_receita_itens').select('*').eq('receita_id', receitaId).order('ordem');
+  const fator = qtd / r.quantidade_base;
+
+  const { data: ordem, error } = await sb.from('producao_ordens').insert({
+    numero_op: numero, receita_id: receitaId, produto: r.nome_produto, quantidade_planejada: qtd,
+    unidade: un, embalagem, data_criacao, responsavel: resp, observacoes: obs, status: 'CADASTRADA'
+  }).select('id').single();
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+
+  const { error: errItens } = await sb.from('producao_ordem_itens').insert(
+    (itens||[]).map(i=>({ ordem_id: ordem.id, codigo_mp: i.codigo_mp, produto_mp: i.produto_mp, unidade: i.unidade, quantidade_planejada: i.percentual * fator }))
+  );
+  if(errItens){ toast('Erro ao gravar itens da OP: '+errItens.message,'error'); return; }
+
+  toast('OP '+numero+' cadastrada!');
+  closeModal('m-op-nova');
+  loadExecOP();
+}
+
+async function loadExecOP(){
+  const tb = document.getElementById('tb-op-exec');
+  tb.innerHTML = '<tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr>';
+  const { data: ops, error } = await sb.from('producao_ordens').select('*').order('created_at',{ascending:false});
+  if(error){ tb.innerHTML = `<tr><td colspan="9"><div class="es"><div class="ei">🏭</div><p>Erro: ${error.message}</p></div></td></tr>`; loadAjustes(); return; }
+  if(!ops?.length){ tb.innerHTML = '<tr><td colspan="9"><div class="es"><div class="ei">🏭</div><p>Nenhuma OP cadastrada</p></div></td></tr>'; loadAjustes(); return; }
+  const ids = ops.map(o=>o.id);
+  const { data: itens } = await sb.from('producao_ordem_itens').select('*').in('ordem_id', ids);
+  const byOp = {}; (itens||[]).forEach(i=>{ (byOp[i.ordem_id] ||= []).push(i); });
+
+  tb.innerHTML = ops.map(o=>{
+    const its = byOp[o.id]||[];
+    const mpList = its.length ? `<details><summary style="font-size:.7rem;color:var(--tm);cursor:pointer">📦 ${its.length} MP(s)</summary>
+        <div style="padding:4px 0 0 8px;font-size:.7rem;color:var(--tm)">
+          ${its.map(i=>`• ${i.produto_mp} — plan.: ${fmt(i.quantidade_planejada)} ${i.unidade}${i.quantidade_baixada>0?` | baixado: ${fmt(i.quantidade_baixada)}`:''}`).join('<br>')}
+        </div></details>` : '—';
+    const sk = o.status;
+    let acoes = '';
+    if(o.status==='CADASTRADA') acoes += `<button class="btn btn-p btn-xs" onclick="separarOP('${o.id}')">Separar MP</button> `;
+    if(o.status==='SEPARADA') acoes += `<button class="btn btn-b btn-xs" onclick="abrirFinalizarOP('${o.id}')">Finalizar (baixa)</button> `;
+    if(['CADASTRADA','SEPARADA'].includes(o.status)) acoes += `<button class="btn btn-o btn-xs" onclick="cancelarOP('${o.id}')">Cancelar</button> `;
+    if(['CADASTRADA','CANCELADA'].includes(o.status)) acoes += `<button class="del-btn" title="Excluir" onclick="delOP('${o.id}','${o.numero_op}')">🗑</button>`;
+    return `<tr>
+      <td><strong>${o.numero_op}</strong><br><small style="color:var(--tm)">${fmtD(o.data_criacao)}</small></td>
+      <td>${o.produto}</td>
+      <td>${fmt(o.quantidade_planejada)} ${o.unidade}</td>
+      <td>${o.embalagem||'—'}</td>
+      <td>${o.responsavel||'—'}</td>
+      <td><span class="sb ${sk==='FINALIZADA'?'OK':sk==='CANCELADA'?'CRITICO':sk==='SEPARADA'?'ATENCAO':'EM_PROCESSO'}">${sk}</span></td>
+      <td>${fmtR(o.custo_mp_total)}</td>
+      <td style="min-width:160px">${mpList}</td>
+      <td><div class="bg" style="flex-wrap:wrap">${acoes}</div></td>
+    </tr>`;
+  }).join('');
+  loadAjustes();
+}
+
+async function separarOP(id){
+  if(!confirm('Separar a matéria-prima desta OP? O sistema vai reservar as quantidades calculadas pela receita.')) return;
+  const { error } = await sb.rpc('producao_separar_op', { p_ordem_id: id });
+  if(error){ toast('Não foi possível separar: '+error.message,'error'); return; }
+  toast('Matéria-prima separada!');
+  loadExecOP();
+  if(document.getElementById('sec-mp-p')?.classList.contains('active')) loadMP();
+  if(document.getElementById('sec-dashboard')?.classList.contains('active')) loadDash();
+}
+
+async function abrirFinalizarOP(id){
+  const { data: itens, error } = await sb.from('producao_ordem_itens').select('*').eq('ordem_id', id);
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  document.getElementById('opf-ordem-id').value = id;
+  document.getElementById('opf-itens-wrap').innerHTML = (itens||[]).map(i=>`
+    <div class="fgr" data-codigo="${i.codigo_mp}">
+      <label>${i.produto_mp} — separado: ${fmt(i.quantidade_separada)} ${i.unidade}</label>
+      <input type="number" min="0" step="0.001" class="opf-qtd-input" value="${i.quantidade_separada}">
+    </div>`).join('');
+  openModal('m-op-final');
+}
+
+async function confirmarFinalizarOP(){
+  const id = document.getElementById('opf-ordem-id').value;
+  const rows = [...document.querySelectorAll('#opf-itens-wrap [data-codigo]')];
+  const itens = rows.map(row=>({
+    codigo_mp: row.dataset.codigo,
+    quantidade: parseFloat(row.querySelector('.opf-qtd-input').value)||0
+  }));
+  const resp = prompt('Responsável pela finalização (opcional):','') || null;
+  const { error } = await sb.rpc('producao_finalizar_op', { p_ordem_id: id, p_itens: itens, p_responsavel: resp });
+  if(error){ toast('Erro ao finalizar: '+error.message,'error'); return; }
+  toast('OP finalizada — baixa de matéria-prima registrada!');
+  closeModal('m-op-final');
+  loadExecOP();
+  loadMPSai();
+  if(document.getElementById('sec-mp-p')?.classList.contains('active')) loadMP();
+  if(document.getElementById('sec-dashboard')?.classList.contains('active')) loadDash();
+}
+
+async function cancelarOP(id){
+  if(!confirm('Cancelar esta OP? Se já houver matéria-prima separada, a reserva será liberada de volta ao estoque disponível.')) return;
+  const { error } = await sb.rpc('producao_cancelar_op', { p_ordem_id: id });
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast('OP cancelada.');
+  loadExecOP();
+  if(document.getElementById('sec-mp-p')?.classList.contains('active')) loadMP();
+}
+
+async function delOP(id, numero){
+  if(!confirm(`Excluir definitivamente a OP ${numero}?`)) return;
+  const { error } = await sb.from('producao_ordens').delete().eq('id', id);
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast('OP excluída.');
+  loadExecOP();
+}
+
+// ===== Ajustes manuais (sobra/perda) =====
+async function popularSelectOPsAjuste(){
+  const { data } = await sb.from('producao_ordens').select('id,numero_op,produto').in('status',['CADASTRADA','SEPARADA','FINALIZADA']).order('created_at',{ascending:false});
+  const sel = document.getElementById('adj-op');
+  sel.innerHTML = '<option value="">— Nenhuma —</option>' + (data||[]).map(o=>`<option value="${o.id}">${o.numero_op} — ${o.produto}</option>`).join('');
+}
+
+function abrirAjuste(){
+  document.getElementById('adj-tipo').value = 'sobra';
+  document.getElementById('adj-data').value = today();
+  document.getElementById('adj-motivo').value = '';
+  document.getElementById('adj-resp').value = '';
+  document.getElementById('adj-obs').value = '';
+  psClear('adj');
+  openModal('m-op-ajuste');
+}
+
+async function saveAjuste(){
+  const tipo = document.getElementById('adj-tipo').value;
+  const ordemId = document.getElementById('adj-op').value || null;
+  const cod = document.getElementById('adj-prod').value;
+  const qtd = parseFloat(document.getElementById('adj-qtd').value);
+  const data_ajuste = document.getElementById('adj-data').value || today();
+  const motivo = document.getElementById('adj-motivo').value.trim()||null;
+  const resp = document.getElementById('adj-resp').value.trim()||null;
+  const obs = document.getElementById('adj-obs').value.trim()||null;
+
+  if(!cod||!qtd){ toast('Selecione a matéria-prima e a quantidade','error'); return; }
+
+  const { error } = await sb.rpc('producao_lancar_ajuste', {
+    p_ordem_id: ordemId, p_tipo: tipo, p_codigo_mp: cod, p_quantidade: qtd,
+    p_motivo: motivo, p_responsavel: resp, p_data: data_ajuste, p_observacoes: obs
+  });
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast(tipo==='sobra'?'Sobra registrada e devolvida ao estoque!':'Perda registrada e baixada do estoque!');
+  closeModal('m-op-ajuste');
+  loadAjustes();
+  if(document.getElementById('sec-mp-p')?.classList.contains('active')) loadMP();
+  loadMPSai();
+}
+
+async function loadAjustes(){
+  const tb = document.getElementById('tb-op-ajustes');
+  if(!tb) return;
+  const { data, error } = await sb.from('producao_ajustes').select('*').order('data_ajuste',{ascending:false}).order('created_at',{ascending:false});
+  if(error){ tb.innerHTML = `<tr><td colspan="8"><div class="es"><div class="ei">↩️</div><p>Erro: ${error.message}</p></div></td></tr>`; return; }
+  if(!data?.length){ tb.innerHTML = '<tr><td colspan="8"><div class="es"><div class="ei">↩️</div><p>Nenhum ajuste lançado</p></div></td></tr>'; return; }
+  tb.innerHTML = data.map(a=>`<tr>
+    <td>${fmtD(a.data_ajuste)}</td>
+    <td><span class="sb ${a.tipo==='sobra'?'OK':'CRITICO'}">${a.tipo==='sobra'?'↩️ SOBRA':'⚠️ PERDA'}</span></td>
+    <td>${a.produto_mp}</td>
+    <td>${fmt(a.quantidade)} ${a.unidade}</td>
+    <td>${a.numero_op_ref||'—'}</td>
+    <td>${a.motivo||'—'}</td>
+    <td>${a.responsavel||'—'}</td>
+    <td></td>
+  </tr>`).join('');
 }
 
 // ── Portão de acesso: sem sessão válida ou sem permissão, volta pro portal ──
