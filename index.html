@@ -304,7 +304,8 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 <!-- PA CADASTRO -->
 <div id="sec-pa-p" class="sec">
   <div class="sh"><div><p class="st">Produto Acabado — Cadastro</p><p class="sd">Produtos com Nº Lote, Fabricação e Vencimento</p></div>
-  <div class="bg"><button class="btn btn-l" onclick="openEtqModal('pa')">🏷️ Etiquetas</button><button class="btn btn-p" onclick="openModal('m-pa-p')">+ Novo Produto</button></div></div>
+  <div class="bg"><button class="btn btn-l" onclick="openEtqModal('pa')">🏷️ Etiquetas</button><button class="btn btn-p" onclick="abrirSyncPA()">🔗 Sincronizar da Precificação</button></div></div>
+  <div class="fib">🔗 <div>O cadastro de Produto Acabado agora vem sempre de <strong>Precificação Fábrica</strong> — nome e categoria não são mais digitados aqui, só sincronizados de lá. Renomear um produto? Faça isso em Precificação.</div></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-pa-p',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadPA()">↻</button></div>
   <div class="tw"><table id="t-pa-p"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Un.</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Preço Venda</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
   <tbody id="tb-pa-p"><tr><td colspan="14"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
@@ -766,16 +767,13 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 
 <!-- PA Produto -->
 <div class="mo" id="m-pa-p">
-  <div class="md"><div class="mh"><span class="mt">Cadastrar Produto Acabado</span><button class="mc" onclick="closeModal('m-pa-p')">✕</button></div>
-  <div class="mb"><div class="fg">
-    <div class="fgr"><label>Código <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="pa-cod" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
-    <div class="fgr"><label>Categoria</label><input id="pa-cat" type="text" placeholder="Gelato, Sorvete, Picolé..."></div>
-    <div class="fgr full"><label>Produto *</label><input id="pa-nome" type="text" placeholder="Nome do produto"></div>
-    <div class="fgr"><label>Unidade *</label><select id="pa-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option></select></div>
-    <div class="fgr"><label>Estoque Mínimo *</label><input id="pa-emin" type="number" min="0" step="0.001" placeholder="0"></div>
-    <div class="fgr"><label>Estoque Atual</label><input id="pa-eatu" type="number" min="0" step="0.001" placeholder="0"></div>
-  </div></div>
-  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-pa-p')">Cancelar</button><button class="btn btn-p" onclick="savePA()">Salvar</button></div></div>
+  <div class="md md-lg"><div class="mh"><span class="mt">Sincronizar Produto Acabado de Precificação</span><button class="mc" onclick="closeModal('m-pa-p')">✕</button></div>
+  <div class="mb">
+    <p style="font-size:.82rem;color:var(--tm);margin-bottom:12px">Só aparecem aqui os itens de <strong>Precificação Fábrica</strong> que ainda não têm controle de estoque. Escolha um, defina unidade e estoque mínimo, e ele passa a ser rastreado.</p>
+    <div class="ts" style="margin-bottom:12px">🔍<input type="text" id="sync-pa-busca" placeholder="Buscar produto da Precificação..." oninput="filtSyncPA(this.value)"></div>
+    <div id="sync-pa-lista" style="display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto"><div class="ls"><div class="sp"></div></div></div>
+  </div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-pa-p')">Fechar</button></div></div>
 </div>
 
 <!-- PA Produção -->
@@ -894,8 +892,8 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="md"><div class="mh"><span class="mt">✏️ Editar Produto Acabado</span><button class="mc" onclick="closeModal('m-pa-edit')">✕</button></div>
   <div class="mb"><div class="fg">
     <div class="fgr"><label>Código</label><input id="pae-cod" type="text" disabled style="opacity:.6"></div>
-    <div class="fgr"><label>Categoria</label><input id="pae-cat" type="text"></div>
-    <div class="fgr full"><label>Produto *</label><input id="pae-nome" type="text"></div>
+    <div class="fgr"><label>Categoria <span style="color:var(--gok);font-size:.7rem;font-weight:400">(via Precificação)</span></label><input id="pae-cat" type="text" disabled style="background:var(--cs);opacity:.8"></div>
+    <div class="fgr full"><label>Produto <span style="color:var(--gok);font-size:.7rem;font-weight:400">(renomeie em Precificação Fábrica)</span></label><input id="pae-nome" type="text" disabled style="background:var(--cs);opacity:.8"></div>
     <div class="ftit">💰 Preços e Estoque</div>
     <div class="fgr"><label>Unidade</label><select id="pae-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option></select></div>
     <div class="fgr"><label>Estoque Mínimo</label><input id="pae-emin" type="number" min="0" step="0.001"></div>
@@ -1062,7 +1060,6 @@ function openModal(id){
   document.querySelectorAll(`#${id} input[type=date]`).forEach(f=>{if(!f.value)f.value=today();});
   // Gera código sequencial ao abrir modal de cadastro
   if(id==='m-mp-p')  gerarCodigo('MP','mp-cod');
-  if(id==='m-pa-p')  gerarCodigo('PF','pa-cod');
   if(id==='m-ins-p') gerarCodigo('IN','ins-cod');
   // Carrega OPs abertas ao abrir saída MP
   if(id==='m-mp-s')  carregarOPsAbertas();
@@ -1579,18 +1576,23 @@ async function saveProc(){
 async function loadPA(){
   const tb=document.getElementById('tb-pa-p');
   tb.innerHTML='<tr><td colspan="11"><div class="ls"><div class="sp"></div></div></td></tr>';
-  const{data,error}=await sb.from('produto_acabado_cadastro').select('*').order('codigo');
+  const{data,error}=await sb.from('produto_acabado_cadastro').select('*, precificacao_produtos(nome,categoria,ativo,disponivel_pedido_loja)').order('codigo');
   if(error||!data?.length){tb.innerHTML=`<tr><td colspan="11"><div class="es"><p>${error?'Erro':'Nenhum produto'}</p></div></td></tr>`;return;}
   tb.innerHTML=data.map(p=>{
     const st=gst(p.estoque_atual,p.estoque_minimo);
     const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
     const vEst=(p.estoque_atual||0)*(p.preco_medio||0);
-    const etqData=JSON.stringify({nome:p.produto,codigo:p.codigo,lote:'',fab:'',venc:''});
-    const editData=JSON.stringify({codigo:p.codigo,produto:p.produto,categoria:p.categoria||'',unidade:p.unidade,estoque_minimo:p.estoque_minimo||0,estoque_atual:p.estoque_atual||0,preco_custo:p.preco_custo||0,preco_medio:p.preco_medio||0,preco_venda:p.preco_venda||0});
+    // nome/categoria vêm sempre de Precificação Fábrica (fonte única) quando o vínculo existe
+    const nomeAtual = p.precificacao_produtos?.nome || p.produto;
+    const catAtual = p.precificacao_produtos?.categoria || p.categoria || '—';
+    const semVinculo = !p.precificacao_produto_id;
+    const precifInativa = p.precificacao_produtos && p.precificacao_produtos.ativo===false;
+    const etqData=JSON.stringify({nome:nomeAtual,codigo:p.codigo,lote:'',fab:'',venc:''});
+    const editData=JSON.stringify({codigo:p.codigo,produto:nomeAtual,categoria:catAtual,unidade:p.unidade,estoque_minimo:p.estoque_minimo||0,estoque_atual:p.estoque_atual||0,preco_custo:p.preco_custo||0,preco_medio:p.preco_medio||0,preco_venda:p.preco_venda||0});
     return`<tr>
       <td><code>${p.codigo}</code></td>
-      <td><strong>${p.produto}</strong></td>
-      <td>${p.categoria||'—'}</td>
+      <td><strong>${nomeAtual}</strong>${semVinculo?' <span class="sb ATENCAO" title="Sem vínculo com Precificação Fábrica">⚠️ sem vínculo</span>':''}${precifInativa?' <span class="sb CRITICO" title="Inativo em Precificação Fábrica">inativo em Precif.</span>':''}</td>
+      <td>${catAtual}</td>
       <td>${p.unidade}</td>
       <td style="text-align:right">${fmt(p.estoque_minimo)}</td>
       <td style="text-align:right"><strong>${fmt(p.estoque_atual)}</strong></td>
@@ -1599,13 +1601,60 @@ async function loadPA(){
       <td class="preco-cell val-pos" style="text-align:right">${fmtR(vEst)}</td>
       <td><span class="sb ${sk}">${st}</span></td>
       <td style="display:flex;gap:4px">
-        <button class="btn btn-o btn-xs" title="Ver lotes em estoque" onclick="verLotesPA('${p.codigo}','${p.produto.replace(/'/g,"\\'")}')">📦 Lotes</button>
+        <button class="btn btn-o btn-xs" title="Ver lotes em estoque" onclick="verLotesPA('${p.codigo}','${nomeAtual.replace(/'/g,"\\'")}')">📦 Lotes</button>
         <button class="btn btn-l btn-xs" onclick='etqUnica(${etqData})'>🏷️</button>
         <button class="edit-btn" title="Editar" onclick='openEditPA(${editData})'>✏️</button>
-        <button class="del-btn" title="Excluir" onclick="delPA('${p.codigo}','${p.produto.replace(/'/g,"\\'")}')">🗑</button>
+        <button class="del-btn" title="Excluir" onclick="delPA('${p.codigo}','${nomeAtual.replace(/'/g,"\\'")}')">🗑</button>
       </td>
     </tr>`;
   }).join('');
+}
+
+// ===== Sincronização de Produto Acabado a partir de Precificação Fábrica =====
+let _syncPACache = [];
+async function abrirSyncPA(){
+  openModal('m-pa-p');
+  document.getElementById('sync-pa-busca').value='';
+  const lista=document.getElementById('sync-pa-lista');
+  lista.innerHTML='<div class="ls"><div class="sp"></div></div>';
+  const { data: pend, error } = await sb.from('precificacao_produtos')
+    .select('id,nome,categoria,codigo,ativo')
+    .in('origem',['fabrica','fabrica_insumo','revenda'])
+    .not('codigo','is',null)
+    .order('categoria').order('nome');
+  if(error){ lista.innerHTML=`<div class="es"><p>Erro: ${error.message}</p></div>`; return; }
+  const { data: jaEstoque } = await sb.from('produto_acabado_cadastro').select('precificacao_produto_id').not('precificacao_produto_id','is',null);
+  const jaIds = new Set((jaEstoque||[]).map(x=>x.precificacao_produto_id));
+  _syncPACache = (pend||[]).filter(p=>!jaIds.has(p.id));
+  renderSyncPA(_syncPACache);
+}
+function filtSyncPA(q){
+  const n = (q||'').toLowerCase();
+  renderSyncPA(_syncPACache.filter(p=>p.nome.toLowerCase().includes(n) || (p.categoria||'').toLowerCase().includes(n)));
+}
+function renderSyncPA(items){
+  const lista=document.getElementById('sync-pa-lista');
+  if(!items.length){ lista.innerHTML='<div class="es"><div class="ei">✅</div><p>Todos os itens de Precificação Fábrica já estão sincronizados com o Estoque.</p></div>'; return; }
+  lista.innerHTML = items.map((p,i)=>`
+    <div style="display:grid;grid-template-columns:2fr 90px 110px 100px;gap:8px;align-items:center;padding:10px;background:var(--br);border-radius:8px;border:1px solid var(--mp)">
+      <div><strong>${p.nome}</strong>${!p.ativo?' <span class="sb CRITICO" style="font-size:.65rem">inativo</span>':''}<br><small style="color:var(--tm)">${p.categoria} · ${p.codigo}</small></div>
+      <select id="sync-un-${i}"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option></select>
+      <input id="sync-emin-${i}" type="number" min="0" step="0.001" placeholder="Estq. mín." value="0">
+      <button class="btn btn-p btn-xs" onclick='confirmarSyncPA(${JSON.stringify(p)},${i})'>+ Adicionar</button>
+    </div>`).join('');
+}
+async function confirmarSyncPA(p, i){
+  const un = document.getElementById(`sync-un-${i}`).value;
+  const emin = parseFloat(document.getElementById(`sync-emin-${i}`).value)||0;
+  const { error } = await sb.from('produto_acabado_cadastro').insert({
+    codigo: p.codigo, produto: p.nome, categoria: p.categoria, unidade: un,
+    estoque_minimo: emin, estoque_atual: 0, precificacao_produto_id: p.id
+  });
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast(p.nome+' sincronizado ao Estoque!');
+  psInvalidate('pa');
+  abrirSyncPA();
+  loadPA();
 }
 async function verLotesPA(cod, nome){
   document.getElementById('m-lotes-pa-title').textContent = 'Lotes em Estoque — ' + nome;
@@ -1620,36 +1669,18 @@ async function verLotesPA(cod, nome){
     return `<tr>${i===0?'<td><span class="fb">FIFO ▶</span></td>':'<td></td>'}<td><strong>${l.lote}</strong></td><td>${fmtD(l.data_producao)}</td><td class="${vc}">${fmtD(l.data_validade)}</td><td><strong>${fmt(l.saldo_fifo)}</strong></td></tr>`;
   }).join('');
 }
-async function savePA(){
-  const cod   = document.getElementById('pa-cod').value.trim();
-  const nome  = document.getElementById('pa-nome').value.trim();
-  const cat   = document.getElementById('pa-cat').value.trim()||null;
-  const un    = document.getElementById('pa-un').value;
-  const emin  = parseFloat(document.getElementById('pa-emin').value)||0;
-  const eatu  = parseFloat(document.getElementById('pa-eatu').value)||0;
-  if(!cod || cod.startsWith('⏳')){toast('Aguarde o código ser gerado','error');return;}
-  if(!nome){toast('Preencha o nome do produto','error');return;}
-  const {error} = await sb.from('produto_acabado_cadastro').insert({codigo:cod,produto:nome,categoria:cat,unidade:un,estoque_minimo:emin,estoque_atual:eatu});
-  if(error){
-    if(error.code==='23505') toast('Código já existe. Reabra o formulário.','error');
-    else toast('Erro: '+error.message,'error');
-    return;
-  }
-  toast('Produto acabado cadastrado!');closeModal('m-pa-p');loadPA();psInvalidate('pa');
-}
-
 // ===== PA PRODUÇÃO =====
 async function loadPAProd(){
   const tb=document.getElementById('tb-pa-prod');
   tb.innerHTML='<tr><td colspan="11"><div class="ls"><div class="sp"></div></div></td></tr>';
-  const{data,error}=await sb.from('produto_acabado_producao').select('*,produto_acabado_cadastro(produto)').order('data_validade').order('data_producao');
+  const{data,error}=await sb.from('produto_acabado_producao').select('*,produto_acabado_cadastro(produto,precificacao_produtos(nome))').order('data_validade').order('data_producao');
   if(error||!data?.length){tb.innerHTML=`<tr><td colspan="11"><div class="es"><p>${error?'Erro':'Nenhum registro'}</p></div></td></tr>`;return;}
   let fi={};
   tb.innerHTML=data.map(p=>{
     if(!fi[p.codigo_produto])fi[p.codigo_produto]=0;fi[p.codigo_produto]++;
     const isF=fi[p.codigo_produto]===1&&p.saldo_fifo>0;
     const vc=vCls(p.data_validade);
-    const nom=p.produto_acabado_cadastro?.produto||p.codigo_produto;
+    const nom=p.produto_acabado_cadastro?.precificacao_produtos?.nome||p.produto_acabado_cadastro?.produto||p.codigo_produto;
     const ed=JSON.stringify({nome:nom,codigo:p.codigo_produto,lote:p.lote||'',fab:p.data_fabricacao||'',venc:p.data_validade||''});
     return`<tr><td>${fmtD(p.data_producao)}</td><td>${isF?'<span class="fb">FIFO ▶</span>':'—'}</td><td><strong>${nom}</strong></td><td>${p.lote}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_validade)}</td><td>${fmt(p.quantidade)} ${p.unidade}</td><td>${fmtR(p.custo_unitario)}</td><td>${fmtR(p.custo_total)}</td><td><strong>${fmt(p.saldo_fifo)}</strong></td><td style="display:flex;gap:4px"><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button><button class="del-btn" title="Excluir" onclick="delPAProd('${p.id}','${(p.lote||'').replace(/'/g,'')}')">🗑</button></td></tr>`;
   }).join('');
@@ -1703,9 +1734,9 @@ function atualizarPreviewLotesPA(){
 async function loadExpd(){
   const tb=document.getElementById('tb-expd');
   tb.innerHTML='<tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr>';
-  const{data,error}=await sb.from('produto_acabado_expedicao').select('*,produto_acabado_cadastro(produto)').order('data_saida',{ascending:false});
+  const{data,error}=await sb.from('produto_acabado_expedicao').select('*,produto_acabado_cadastro(produto,precificacao_produtos(nome))').order('data_saida',{ascending:false});
   if(error||!data?.length){tb.innerHTML=`<tr><td colspan="8"><div class="es"><div class="ei">🚚</div><p>${error?'Erro':'Nenhuma expedição'}</p></div></td></tr>`;return;}
-  tb.innerHTML=data.map(e=>`<tr><td>${fmtD(e.data_saida)}</td><td><strong>${e.produto_acabado_cadastro?.produto||e.codigo_produto}</strong></td><td>${e.lote}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${e.destino||'—'}</td><td>${e.nf_venda||'—'}</td><td>${e.responsavel||'—'}</td><td>${e.transporte||'—'}</td><td><button class="del-btn" title="Excluir" onclick="delExpd('${e.id}')">🗑</button></td></tr>`).join('');
+  tb.innerHTML=data.map(e=>`<tr><td>${fmtD(e.data_saida)}</td><td><strong>${e.produto_acabado_cadastro?.precificacao_produtos?.nome||e.produto_acabado_cadastro?.produto||e.codigo_produto}</strong></td><td>${e.lote}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${e.destino||'—'}</td><td>${e.nf_venda||'—'}</td><td>${e.responsavel||'—'}</td><td>${e.transporte||'—'}</td><td><button class="del-btn" title="Excluir" onclick="delExpd('${e.id}')">🗑</button></td></tr>`).join('');
 }
 async function saveExpd(){
   const cod=document.getElementById('exp-prod')?.value;
@@ -1922,8 +1953,13 @@ async function psFetchAll(tipo) {
     const r = await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual').order('produto');
     data = r.data || [];
   } else if (tipo === 'pa') {
-    const r = await sb.from('produto_acabado_cadastro').select('codigo,produto,unidade,estoque_atual,categoria').order('produto');
-    data = r.data || [];
+    const r = await sb.from('produto_acabado_cadastro').select('codigo,produto,unidade,estoque_atual,categoria,precificacao_produtos(nome,categoria)').order('produto');
+    data = (r.data || []).map(p => ({
+      codigo: p.codigo,
+      produto: p.precificacao_produtos?.nome || p.produto,
+      unidade: p.unidade, estoque_atual: p.estoque_atual,
+      categoria: p.precificacao_produtos?.categoria || p.categoria
+    }));
   } else if (tipo === 'ins') {
     const r = await sb.from('insumos_produtos').select('codigo,produto,unidade,estoque_atual,categoria').order('produto');
     data = r.data || [];
@@ -2578,8 +2614,7 @@ function openEditPA(p) {
 async function saveEditPA() {
   const cod = document.getElementById('pae-cod').value;
   const upd = {
-    produto:        document.getElementById('pae-nome').value.trim(),
-    categoria:      document.getElementById('pae-cat').value.trim()||null,
+    // produto/categoria não são mais editáveis aqui — vêm sempre de Precificação Fábrica
     unidade:        document.getElementById('pae-un').value,
     estoque_minimo: parseFloat(document.getElementById('pae-emin').value)||0,
     estoque_atual:  parseFloat(document.getElementById('pae-eatu').value)||0,
