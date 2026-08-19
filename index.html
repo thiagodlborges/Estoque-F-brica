@@ -32,7 +32,7 @@ nav{flex:1;overflow-y:auto;padding-bottom:12px}
 .side-foot .btn-o{border-color:var(--mp);color:var(--cr);width:100%;justify-content:center}
 .mobile-topbar{display:none}
 .content-wrap{flex:1;min-width:0}
-main{max-width:1400px;margin:0 auto;padding:28px 32px 48px}
+main{max-width:1400px;margin:0 auto;padding:36px 32px 48px}
 @media(max-width:900px){
   .app-shell{display:block}
   .sidebar{position:fixed;left:-260px;top:0;height:100vh;transition:left .25s ease;width:250px}
@@ -67,8 +67,8 @@ main{max-width:1400px;margin:0 auto;padding:28px 32px 48px}
 .ps{display:flex;flex-direction:column;align-items:flex-end;gap:4px}.sn{font-size:1rem;font-weight:700;color:var(--me);font-family:'Playfair Display',serif}
 .sb{font-size:.68rem;font-weight:600;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;display:inline-block}
 .sb.CRITICO,.sb.CRÍTICO{background:var(--vl);color:var(--vc)}.sb.ATENCAO,.sb.ATENÇÃO,.sb.ATEN{background:var(--yc);color:var(--ya)}.sb.OK{background:var(--gc);color:var(--gok)}.sb.VENCIDO{background:#F0D0D0;color:#8B0000}.sb.ATRASADO{background:var(--yc);color:var(--ya)}.sb.EM_PROCESSO,.sb.EM{background:rgba(107,58,31,.12);color:var(--m)}.sb.FINALIZADO{background:var(--gc);color:var(--gok)}.sb.AGUARDANDO{background:var(--yc);color:var(--ya)}
-.sh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:16px;flex-wrap:wrap}
-.st{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--me);margin-bottom:4px}.sd{font-size:.84rem;color:var(--tm)}
+.sh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:20px;flex-wrap:wrap;row-gap:14px}
+.st{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--me);margin-bottom:6px;line-height:1.3}.sd{font-size:.84rem;color:var(--tm);line-height:1.5;max-width:640px}
 .btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:var(--rs);font-size:.85rem;font-weight:600;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .2s;white-space:nowrap}
 .btn-p{background:linear-gradient(135deg,var(--m),var(--mm));color:var(--cr);box-shadow:0 2px 8px rgba(107,58,31,.3)}.btn-p:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(107,58,31,.4)}
 .btn-b{background:linear-gradient(135deg,var(--b),var(--bm));color:var(--cr);box-shadow:0 2px 8px rgba(107,31,46,.3)}.btn-b:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(107,31,46,.4)}
@@ -3714,41 +3714,63 @@ async function loadPrevProdutos(){
 }
 
 async function calcularPrevisaoProducao(){
+  const btn = document.querySelector('#sec-op-prev .btn-p');
   const linhas = [...document.querySelectorAll('.prev-qtd-input')].map(inp=>({
     receita_id: inp.dataset.receitaId, nome: inp.dataset.nome, kg: parseFloat(inp.value)||0
   })).filter(l=>l.kg>0);
 
   if(!linhas.length){ toast('Informe ao menos uma previsão de produção (kg) para calcular.','error'); return; }
+  const semReceitaId = linhas.filter(l=>!l.receita_id);
+  if(semReceitaId.length){
+    toast('Lista desatualizada — clique em "Atualizar Lista" e preencha de novo.','error');
+    return;
+  }
 
-  const receitaIds = linhas.map(l=>l.receita_id);
-  const { data: itensData, error } = await sb.from('producao_receita_itens')
-    .select('receita_id,codigo_mp,produto_mp,percentual,unidade').in('receita_id', receitaIds);
-  if(error){ toast('Erro ao buscar receita em Ordens de Produção: '+error.message,'error'); return; }
+  const txtOriginal = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Calculando...'; }
 
-  const codigosMP = [...new Set((itensData||[]).map(i=>i.codigo_mp))];
-  const { data: mpData, error: errMp } = codigosMP.length
-    ? await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual,estoque_minimo').in('codigo', codigosMP)
-    : { data: [] };
-  if(errMp){ toast('Erro ao buscar estoque de matéria-prima: '+errMp.message,'error'); return; }
-  const mpByCodigo = {}; (mpData||[]).forEach(m=>mpByCodigo[m.codigo]=m);
+  try {
+    const receitaIds = linhas.map(l=>l.receita_id);
+    const { data: itensData, error } = await sb.from('producao_receita_itens')
+      .select('receita_id,codigo_mp,produto_mp,percentual,unidade').in('receita_id', receitaIds);
+    if(error) throw new Error('Erro ao buscar receita em Ordens de Produção: '+error.message);
 
-  const acc = {}; const warnings = [];
+    const codigosMP = [...new Set((itensData||[]).map(i=>i.codigo_mp))];
+    const { data: mpData, error: errMp } = codigosMP.length
+      ? await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual,estoque_minimo').in('codigo', codigosMP)
+      : { data: [] };
+    if(errMp) throw new Error('Erro ao buscar estoque de matéria-prima: '+errMp.message);
+    const mpByCodigo = {}; (mpData||[]).forEach(m=>mpByCodigo[m.codigo]=m);
 
-  linhas.forEach(linha=>{
-    const itens = (itensData||[]).filter(i=>i.receita_id===linha.receita_id);
-    if(!itens.length){ warnings.push({produto:linha.nome, insumo:'—', motivo:'Receita sem itens cadastrados em Ordens de Produção'}); return; }
-    itens.forEach(it=>{
-      const mp = mpByCodigo[it.codigo_mp];
-      if(!mp){ warnings.push({produto:linha.nome, insumo:it.produto_mp, motivo:'Matéria-prima '+it.codigo_mp+' não encontrada no Estoque Fábrica'}); return; }
-      const qtyNeeded = linha.kg * Number(it.percentual||0);
-      if(!acc[mp.codigo]) acc[mp.codigo] = { codigo:mp.codigo, produto:mp.produto, unidade:mp.unidade, estoque_atual:Number(mp.estoque_atual)||0, estoque_minimo:Number(mp.estoque_minimo)||0, necessario:0, origens:new Set() };
-      acc[mp.codigo].necessario += qtyNeeded;
-      acc[mp.codigo].origens.add(linha.nome);
+    const acc = {}; const warnings = [];
+
+    linhas.forEach(linha=>{
+      const itens = (itensData||[]).filter(i=>i.receita_id===linha.receita_id);
+      if(!itens.length){ warnings.push({produto:linha.nome, insumo:'—', motivo:'Receita sem itens cadastrados em Ordens de Produção'}); return; }
+      itens.forEach(it=>{
+        const mp = mpByCodigo[it.codigo_mp];
+        if(!mp){ warnings.push({produto:linha.nome, insumo:it.produto_mp, motivo:'Matéria-prima '+it.codigo_mp+' não encontrada no Estoque Fábrica'}); return; }
+        const qtyNeeded = linha.kg * Number(it.percentual||0);
+        if(!acc[mp.codigo]) acc[mp.codigo] = { codigo:mp.codigo, produto:mp.produto, unidade:mp.unidade, estoque_atual:Number(mp.estoque_atual)||0, estoque_minimo:Number(mp.estoque_minimo)||0, necessario:0, origens:new Set() };
+        acc[mp.codigo].necessario += qtyNeeded;
+        acc[mp.codigo].origens.add(linha.nome);
+      });
     });
-  });
 
-  _prevResultado = { acc, warnings, detalhePorProduto: linhas };
-  renderPrevisaoResultado();
+    if(!Object.keys(acc).length && !warnings.length){
+      toast('Nenhuma matéria-prima encontrada para os sabores informados.','error');
+      return;
+    }
+
+    _prevResultado = { acc, warnings, detalhePorProduto: linhas };
+    renderPrevisaoResultado();
+    document.getElementById('prev-resultado-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+  } catch(err) {
+    console.error('Erro em calcularPrevisaoProducao:', err);
+    toast('Erro ao calcular: '+(err.message||err), 'error');
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = txtOriginal; }
+  }
 }
 
 function renderPrevisaoResultado(){
