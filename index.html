@@ -582,16 +582,16 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 
 <!-- PREVISÃO DE PRODUÇÃO -->
 <div id="sec-op-prev" class="sec">
-  <div class="sh"><div><p class="st">Previsão de Produção</p><p class="sd">Informe quantos kg pretende produzir de cada item — a composição cadastrada em Precificação (por 1kg de produto) calcula a matéria-prima necessária e cruza com o estoque atual da Fábrica</p></div>
+  <div class="sh"><div><p class="st">Previsão de Produção</p><p class="sd">Informe quantos kg pretende produzir de cada sabor — a receita cadastrada em Ordens de Produção calcula a matéria-prima necessária e cruza com o estoque atual da Fábrica. Só sabores com receita ativa aparecem aqui.</p></div>
   <div class="bg">
     <button class="btn btn-o btn-sm" onclick="loadPrevProdutos()">↻ Atualizar Lista</button>
     <button class="btn btn-p" onclick="calcularPrevisaoProducao()">📐 Calcular Necessidade</button>
   </div></div>
 
-  <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar produto..." oninput="filt('t-prev-prod',this.value)"></div>
+  <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar sabor..." oninput="filt('t-prev-prod',this.value)"></div>
   <span style="font-size:.78rem;color:var(--tm)">Preencha a previsão (kg) só dos itens que serão produzidos</span></div>
-  <div class="tw"><table id="t-prev-prod"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Un.</th><th>Estoque Atual</th><th style="width:160px">Previsão de Produção (kg)</th></tr></thead>
-  <tbody id="tb-prev-prod"><tr><td colspan="6"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+  <div class="tw"><table id="t-prev-prod"><thead><tr><th>Receita</th><th>Sabor</th><th>Estoque Atual (PA)</th><th style="width:160px">Previsão de Produção (kg)</th></tr></thead>
+  <tbody id="tb-prev-prod"><tr><td colspan="4"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 
   <div id="prev-resultado-wrap" style="display:none;margin-top:28px">
     <div class="sh"><div><p class="st">Necessidade de Matéria-Prima</p><p class="sd" id="prev-resumo-sub"></p></div>
@@ -3686,86 +3686,64 @@ let _prevResultado = null;
 async function loadPrevProdutos(){
   const tb = document.getElementById('tb-prev-prod');
   if(!tb) return;
-  tb.innerHTML = '<tr><td colspan="6"><div class="ls"><div class="sp"></div></div></td></tr>';
-  const { data, error } = await sb.from('produto_acabado_cadastro').select('*').order('categoria').order('produto');
-  if(error){ tb.innerHTML = `<tr><td colspan="6"><div class="es"><div class="ei">📐</div><p>Erro: ${error.message}</p></div></td></tr>`; return; }
-  if(!data?.length){ tb.innerHTML = '<tr><td colspan="6"><div class="es"><div class="ei">📐</div><p>Nenhum produto sincronizado da Precificação ainda</p></div></td></tr>'; return; }
-  tb.innerHTML = data.map(p=>`<tr>
-    <td><code>${p.codigo}</code></td>
-    <td><strong>${p.produto}</strong></td>
-    <td>${p.categoria||'—'}</td>
-    <td>${p.unidade}</td>
-    <td style="text-align:right">${fmt(p.estoque_atual)}</td>
+  tb.innerHTML = '<tr><td colspan="4"><div class="ls"><div class="sp"></div></div></td></tr>';
+  const [recR, pacR] = await Promise.all([
+    sb.from('producao_receitas').select('id,codigo,nome_produto,unidade_base').eq('ativo', true).order('nome_produto'),
+    sb.from('produto_acabado_cadastro').select('produto,estoque_atual,unidade'),
+  ]);
+  if(recR.error){ tb.innerHTML = `<tr><td colspan="4"><div class="es"><div class="ei">📐</div><p>Erro: ${recR.error.message}</p></div></td></tr>`; return; }
+  if(!recR.data?.length){ tb.innerHTML = '<tr><td colspan="4"><div class="es"><div class="ei">📐</div><p>Nenhuma receita ativa cadastrada em Ordens de Produção ainda</p></div></td></tr>'; return; }
+
+  const estoqueByNome = {};
+  (pacR.data||[]).forEach(p=>{ estoqueByNome[(p.produto||'').trim().toLowerCase()] = p; });
+
+  tb.innerHTML = recR.data.map(r=>{
+    const pac = estoqueByNome[(r.nome_produto||'').trim().toLowerCase()];
+    const estoqueTxt = pac ? `${fmt(pac.estoque_atual)} ${pac.unidade||''}` : '—';
+    return `<tr>
+    <td><code>${r.codigo}</code></td>
+    <td><strong>${r.nome_produto}</strong></td>
+    <td style="text-align:right">${estoqueTxt}</td>
     <td><input type="number" class="prev-qtd-input" min="0" step="0.001" placeholder="0" style="width:130px"
-      data-produto-id="${p.precificacao_produto_id||''}" data-nome="${(p.produto||'').replace(/"/g,'&quot;')}" data-categoria="${(p.categoria||'').replace(/"/g,'&quot;')}"></td>
-  </tr>`).join('');
+      data-receita-id="${r.id}" data-nome="${(r.nome_produto||'').replace(/"/g,'&quot;')}"></td>
+  </tr>`;
+  }).join('');
   const wrap = document.getElementById('prev-resultado-wrap');
   if(wrap) wrap.style.display = 'none';
   _prevResultado = null;
 }
 
-async function _prevBuildInsumoIndex(){
-  const [insR, compR, mpR] = await Promise.all([
-    sb.from('precificacao_insumos').select('id,nome,unidade,materiaprima_id,composto'),
-    sb.from('precificacao_insumo_componentes').select('insumo_id,componente_insumo_id,quantidade'),
-    sb.from('materiaprima_produtos').select('id,codigo,produto,unidade,estoque_atual,estoque_minimo'),
-  ]);
-  const insumoById = {}; (insR.data||[]).forEach(i=>insumoById[i.id]=i);
-  const compByInsumo = {}; (compR.data||[]).forEach(c=>{ (compByInsumo[c.insumo_id] = compByInsumo[c.insumo_id]||[]).push(c); });
-  const mpById = {}; (mpR.data||[]).forEach(m=>mpById[m.id]=m);
-  return { insumoById, compByInsumo, mpById };
-}
-
-// Resolve recursivamente um insumo até matéria-prima, acumulando em `acc` (por código de MP)
-function _prevExplodeInsumo(insumoId, qtyNeeded, idx, produtoNome, acc, warnings, depth){
-  depth = depth||0;
-  if(depth>6){ warnings.push({produto:produtoNome, insumo:'(composição)', motivo:'Profundidade máxima de composição excedida — verifique se há referência circular'}); return; }
-  const ins = idx.insumoById[insumoId];
-  if(!ins){ warnings.push({produto:produtoNome, insumo:'(desconhecido)', motivo:'Insumo referenciado não encontrado no cadastro de Precificação'}); return; }
-
-  if(ins.materiaprima_id){
-    const mp = idx.mpById[ins.materiaprima_id];
-    if(!mp){ warnings.push({produto:produtoNome, insumo:ins.nome, motivo:'Matéria-prima vinculada não encontrada no Estoque Fábrica'}); return; }
-    if(!acc[mp.codigo]) acc[mp.codigo] = { codigo:mp.codigo, produto:mp.produto, unidade:mp.unidade, estoque_atual:Number(mp.estoque_atual)||0, estoque_minimo:Number(mp.estoque_minimo)||0, necessario:0, origens:new Set() };
-    acc[mp.codigo].necessario += qtyNeeded;
-    acc[mp.codigo].origens.add(produtoNome);
-    return;
-  }
-
-  if(ins.composto){
-    const comps = idx.compByInsumo[insumoId]||[];
-    if(!comps.length){ warnings.push({produto:produtoNome, insumo:ins.nome, motivo:'Insumo composto sem componentes cadastrados em Precificação'}); return; }
-    comps.forEach(c=>_prevExplodeInsumo(c.componente_insumo_id, qtyNeeded*Number(c.quantidade||0), idx, produtoNome, acc, warnings, depth+1));
-    return;
-  }
-
-  warnings.push({produto:produtoNome, insumo:ins.nome, motivo:'Sem matéria-prima vinculada nem composição cadastrada — não é possível calcular o consumo'});
-}
-
 async function calcularPrevisaoProducao(){
   const linhas = [...document.querySelectorAll('.prev-qtd-input')].map(inp=>({
-    produto_id: inp.dataset.produtoId, nome: inp.dataset.nome, categoria: inp.dataset.categoria, kg: parseFloat(inp.value)||0
+    receita_id: inp.dataset.receitaId, nome: inp.dataset.nome, kg: parseFloat(inp.value)||0
   })).filter(l=>l.kg>0);
 
   if(!linhas.length){ toast('Informe ao menos uma previsão de produção (kg) para calcular.','error'); return; }
-  const semVinculo = linhas.filter(l=>!l.produto_id);
 
-  const idx = await _prevBuildInsumoIndex();
-  const idsValidos = linhas.filter(l=>l.produto_id).map(l=>l.produto_id);
-  const { data: piData, error } = idsValidos.length
-    ? await sb.from('precificacao_produto_insumos').select('produto_id,insumo_id,quantidade').in('produto_id', idsValidos)
+  const receitaIds = linhas.map(l=>l.receita_id);
+  const { data: itensData, error } = await sb.from('producao_receita_itens')
+    .select('receita_id,codigo_mp,produto_mp,percentual,unidade').in('receita_id', receitaIds);
+  if(error){ toast('Erro ao buscar receita em Ordens de Produção: '+error.message,'error'); return; }
+
+  const codigosMP = [...new Set((itensData||[]).map(i=>i.codigo_mp))];
+  const { data: mpData, error: errMp } = codigosMP.length
+    ? await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual,estoque_minimo').in('codigo', codigosMP)
     : { data: [] };
-  if(error){ toast('Erro ao buscar composição em Precificação: '+error.message,'error'); return; }
+  if(errMp){ toast('Erro ao buscar estoque de matéria-prima: '+errMp.message,'error'); return; }
+  const mpByCodigo = {}; (mpData||[]).forEach(m=>mpByCodigo[m.codigo]=m);
 
   const acc = {}; const warnings = [];
-  semVinculo.forEach(l=>warnings.push({produto:l.nome, insumo:'—', motivo:'Produto sem vínculo com Precificação (precificacao_produto_id ausente)'}));
 
-  linhas.filter(l=>l.produto_id).forEach(linha=>{
-    const itens = (piData||[]).filter(pi=>pi.produto_id===linha.produto_id);
-    if(!itens.length){ warnings.push({produto:linha.nome, insumo:'—', motivo:'Produto sem composição cadastrada em Precificação — não é possível calcular'}); return; }
-    itens.forEach(pi=>{
-      const qtyNeeded = linha.kg * Number(pi.quantidade||0);
-      _prevExplodeInsumo(pi.insumo_id, qtyNeeded, idx, linha.nome, acc, warnings);
+  linhas.forEach(linha=>{
+    const itens = (itensData||[]).filter(i=>i.receita_id===linha.receita_id);
+    if(!itens.length){ warnings.push({produto:linha.nome, insumo:'—', motivo:'Receita sem itens cadastrados em Ordens de Produção'}); return; }
+    itens.forEach(it=>{
+      const mp = mpByCodigo[it.codigo_mp];
+      if(!mp){ warnings.push({produto:linha.nome, insumo:it.produto_mp, motivo:'Matéria-prima '+it.codigo_mp+' não encontrada no Estoque Fábrica'}); return; }
+      const qtyNeeded = linha.kg * Number(it.percentual||0);
+      if(!acc[mp.codigo]) acc[mp.codigo] = { codigo:mp.codigo, produto:mp.produto, unidade:mp.unidade, estoque_atual:Number(mp.estoque_atual)||0, estoque_minimo:Number(mp.estoque_minimo)||0, necessario:0, origens:new Set() };
+      acc[mp.codigo].necessario += qtyNeeded;
+      acc[mp.codigo].origens.add(linha.nome);
     });
   });
 
@@ -3838,9 +3816,9 @@ function exportPrevisaoExcel(){
   const wsMP = XLSX.utils.aoa_to_sheet(aoaMP); wsMP['!cols']=Array(9).fill({wch:22});
   XLSX.utils.book_append_sheet(wb, wsMP, 'Necessidade de MP');
 
-  const aoaDet = [['Produto','Categoria','Previsão de Produção (kg)']];
-  _prevResultado.detalhePorProduto.forEach(l=>aoaDet.push([l.nome, l.categoria||'—', fmt(l.kg)]));
-  const wsDet = XLSX.utils.aoa_to_sheet(aoaDet); wsDet['!cols']=Array(3).fill({wch:28});
+  const aoaDet = [['Sabor (Receita OP)','Previsão de Produção (kg)']];
+  _prevResultado.detalhePorProduto.forEach(l=>aoaDet.push([l.nome, fmt(l.kg)]));
+  const wsDet = XLSX.utils.aoa_to_sheet(aoaDet); wsDet['!cols']=Array(2).fill({wch:28});
   XLSX.utils.book_append_sheet(wb, wsDet, 'Previsão por Produto');
 
   if(_prevResultado.warnings.length){
