@@ -205,6 +205,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <button class="nt" onclick="showSec('mp-s',this)">📤 Saídas MP</button>
   <button class="nt" onclick="showSec('op-rec',this)">📋 Receitas (OP)</button>
   <button class="nt" onclick="showSec('op-exec',this)">🏭 Execução de OP</button>
+  <button class="nt" onclick="showSec('op-prev',this)">📐 Previsão de Produção</button>
   <button class="nt" onclick="showSec('proc',this)">⚙️ Em Processo (manual)</button>
   <button class="nt" onclick="showSec('pa-p',this)">🧊 Prod. Acabado</button>
   <button class="nt" onclick="showSec('pa-prod',this)">✅ Produção PA</button>
@@ -382,8 +383,21 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div id="flt-produto-wrap"><label>Produto</label><select id="flt-produto"><option value="">Todos</option></select></div>
     <div id="flt-tipo-wrap"><label>Tipo</label><select id="flt-tipo"><option value="">Todos</option><option value="entrada">Entradas</option><option value="saida">Saídas</option></select></div>
     <div id="flt-venc-wrap" style="display:none"><label>Vence em até</label><select id="flt-dias"><option value="30">30 dias</option><option value="60">60 dias</option><option value="90">90 dias</option><option value="180">180 dias</option><option value="0">Vencidos</option></select></div>
+    <div id="flt-cutoff-wrap" style="display:none;gap:14px;flex-wrap:wrap">
+      <div><label>Posição do Estoque</label>
+        <select id="cutoff-modo" onchange="onCutoffModoChange()">
+          <option value="atual">Atual (hoje)</option>
+          <option value="mes">Último dia de um mês</option>
+        </select>
+      </div>
+      <div id="cutoff-mes-wrap" style="display:none"><label>Mês de Referência</label><input type="month" id="cutoff-mes"></div>
+    </div>
     <button class="btn btn-p btn-sm" onclick="applyRelFilter()">🔍 Filtrar</button>
     <button class="btn btn-o btn-sm" onclick="clearRelFilter()">✕ Limpar</button>
+  </div>
+  <div id="cutoff-aviso" style="display:none;background:var(--yc);border:1px solid var(--ya);border-radius:var(--r);padding:12px 16px;margin-bottom:18px;font-size:.8rem;color:var(--te);line-height:1.5">
+    ⚠️ <strong>Posição reconstruída — atenção:</strong> os valores acima são recalculados desfazendo entradas/saídas registradas depois da data de corte. Não existe "foto" histórica salva; a reconstrução só é confiável a partir de quando cada módulo começou a registrar movimento de cada item.
+    Além disso, itens de <strong>Produto Acabado baixados por pedido da loja enviado</strong> não geram registro de expedição na Fábrica — em meses com pedidos expedidos, a reconstrução de Produto Acabado pode ficar imprecisa (Matéria-Prima e Insumos não têm essa limitação).
   </div>
 
   <!-- Situação dos Estoques -->
@@ -564,6 +578,29 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <button class="btn btn-b" onclick="abrirAjuste()">+ Lançar Sobra/Perda</button></div>
   <div class="tc"><div class="tw"><table id="t-op-ajustes"><thead><tr><th>Data</th><th>Tipo</th><th>Matéria-Prima</th><th>Quantidade</th><th>OP Vinculada</th><th>Motivo</th><th>Responsável</th><th></th></tr></thead>
   <tbody id="tb-op-ajustes"><tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+</div>
+
+<!-- PREVISÃO DE PRODUÇÃO -->
+<div id="sec-op-prev" class="sec">
+  <div class="sh"><div><p class="st">Previsão de Produção</p><p class="sd">Informe quantos kg pretende produzir de cada item — a composição cadastrada em Precificação (por 1kg de produto) calcula a matéria-prima necessária e cruza com o estoque atual da Fábrica</p></div>
+  <div class="bg">
+    <button class="btn btn-o btn-sm" onclick="loadPrevProdutos()">↻ Atualizar Lista</button>
+    <button class="btn btn-p" onclick="calcularPrevisaoProducao()">📐 Calcular Necessidade</button>
+  </div></div>
+
+  <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar produto..." oninput="filt('t-prev-prod',this.value)"></div>
+  <span style="font-size:.78rem;color:var(--tm)">Preencha a previsão (kg) só dos itens que serão produzidos</span></div>
+  <div class="tw"><table id="t-prev-prod"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Un.</th><th>Estoque Atual</th><th style="width:160px">Previsão de Produção (kg)</th></tr></thead>
+  <tbody id="tb-prev-prod"><tr><td colspan="6"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+
+  <div id="prev-resultado-wrap" style="display:none;margin-top:28px">
+    <div class="sh"><div><p class="st">Necessidade de Matéria-Prima</p><p class="sd" id="prev-resumo-sub"></p></div>
+    <button class="btn btn-l" onclick="exportPrevisaoExcel()">📊 Exportar Excel</button></div>
+    <div class="rel-kpi-row" id="prev-kpis"></div>
+    <div id="prev-avisos-wrap" style="display:none;background:var(--yc);border:1px solid var(--ya);border-radius:var(--r);padding:14px 18px;margin-bottom:18px;font-size:.82rem;color:var(--te);line-height:1.6"></div>
+    <div class="tc"><div class="tw"><table id="t-prev-mp"><thead><tr><th>Código</th><th>Matéria-Prima</th><th>Un.</th><th>Necessário</th><th>Estoque Atual</th><th>Estoque Mínimo</th><th>Ficará</th><th>Status</th><th>Usado em</th></tr></thead>
+    <tbody id="tb-prev-mp"></tbody></table></div></div>
+  </div>
 </div>
 
 </main>
@@ -1038,7 +1075,7 @@ function showSec(id,btn){
   if(btn)btn.classList.add('active');
   toggleSidebar(false);
   window.scrollTo(0,0);
-  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd,'ins-p':loadIns,'ins-e':loadInsEnt,'ins-s':loadInsSai,'op-rec':loadReceitas,'op-exec':loadExecOP};
+  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd,'ins-p':loadIns,'ins-e':loadInsEnt,'ins-s':loadInsSai,'op-rec':loadReceitas,'op-exec':loadExecOP,'op-prev':loadPrevProdutos};
   if(map[id])map[id]();
   if(id==='rel'){
     document.getElementById('btn-exp-pdf').style.display='';
@@ -1047,7 +1084,8 @@ function showSec(id,btn){
     document.getElementById('flt-produto-wrap').style.display='none';
     document.getElementById('flt-tipo-wrap').style.display='none';
     document.getElementById('flt-venc-wrap').style.display='none';
-    loadRelSit();
+    document.getElementById('flt-cutoff-wrap').style.display='flex';
+    loadRelSit(getCutoffDate());
   }
   if(id==='compras'){
     loadItensCriticosCompra();
@@ -2337,10 +2375,11 @@ function showRelTab(tab, btn) {
   document.getElementById('flt-produto-wrap').style.display = (tab==='sit'||tab==='val'||tab==='inv') ? 'none' : '';
   document.getElementById('flt-tipo-wrap').style.display    = tab==='mov-mp' ? '' : 'none';
   document.getElementById('flt-venc-wrap').style.display    = tab==='val' ? '' : 'none';
+  document.getElementById('flt-cutoff-wrap').style.display  = (tab==='sit'||tab==='inv') ? 'flex' : 'none';
   document.getElementById('btn-exp-pdf').style.display      = '';
   document.getElementById('btn-exp-xls').style.display      = '';
+  if(tab!=='sit' && tab!=='inv') document.getElementById('cutoff-aviso').style.display = 'none';
 
-  if(tab==='inv') { loadRelInv(); return; }
   applyRelFilter();
 }
 
@@ -2350,7 +2389,26 @@ function clearRelFilter() {
   document.getElementById('flt-produto').value = '';
   document.getElementById('flt-tipo').value = '';
   document.getElementById('flt-dias').value = '30';
+  document.getElementById('cutoff-modo').value = 'atual';
+  document.getElementById('cutoff-mes').value = '';
+  document.getElementById('cutoff-mes-wrap').style.display = 'none';
   applyRelFilter();
+}
+
+function onCutoffModoChange(){
+  const modo = document.getElementById('cutoff-modo').value;
+  document.getElementById('cutoff-mes-wrap').style.display = modo==='mes' ? '' : 'none';
+}
+
+// Retorna a data de corte (YYYY-MM-DD, último dia do mês escolhido) ou null se "atual"
+function getCutoffDate(){
+  const modoEl = document.getElementById('cutoff-modo');
+  if(!modoEl || modoEl.value !== 'mes') return null;
+  const mes = document.getElementById('cutoff-mes').value; // "YYYY-MM"
+  if(!mes) return null;
+  const [y,m] = mes.split('-').map(Number);
+  const lastDay = new Date(y, m, 0).getDate();
+  return `${y}-${String(m).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
 }
 
 async function applyRelFilter() {
@@ -2359,11 +2417,61 @@ async function applyRelFilter() {
   const prod = document.getElementById('flt-produto').value;
   const tipo = document.getElementById('flt-tipo').value;
   const dias = parseInt(document.getElementById('flt-dias').value);
+  const cutoff = (_relTab==='sit'||_relTab==='inv') ? getCutoffDate() : null;
+  document.getElementById('cutoff-aviso').style.display = cutoff ? 'block' : 'none';
 
-  if(_relTab==='sit')   await loadRelSit();
+  if(_relTab==='sit')    await loadRelSit(cutoff);
+  if(_relTab==='inv')    await loadRelInv(cutoff);
   if(_relTab==='mov-mp') await loadRelMovMP(ini, fim, prod, tipo);
   if(_relTab==='mov-pa') await loadRelMovPA(ini, fim, prod);
   if(_relTab==='val')    await loadRelVal(dias);
+}
+
+// ── Reconstrução de estoque por data: retorna deltas a subtrair do estoque_atual ──
+// reconstruído(codigo) = estoque_atual - delta[codigo]
+async function reconMPDeltas(cutoff){
+  const add=(map,k,v)=>{ if(!k) return; map[k]=(map[k]||0)+v; };
+  const [entR, saiR, ajR] = await Promise.all([
+    sb.from('materiaprima_entradas').select('codigo_produto,quantidade').gt('data_entrada',cutoff),
+    sb.from('materiaprima_saidas').select('codigo_produto,quantidade').gt('data_saida',cutoff),
+    sb.from('producao_ajustes').select('codigo_mp,quantidade').eq('tipo','sobra').gt('data_ajuste',cutoff),
+  ]);
+  const delta = {};
+  (entR.data||[]).forEach(e=>add(delta,e.codigo_produto,Number(e.quantidade)||0));
+  (saiR.data||[]).forEach(s=>add(delta,s.codigo_produto,-(Number(s.quantidade)||0)));
+  (ajR.data||[]).forEach(a=>add(delta,a.codigo_mp,Number(a.quantidade)||0));
+  return delta;
+}
+async function reconInsDeltas(cutoff){
+  const add=(map,k,v)=>{ if(!k) return; map[k]=(map[k]||0)+v; };
+  const [entR, saiR] = await Promise.all([
+    sb.from('insumos_entradas').select('codigo_produto,quantidade').gt('data_entrada',cutoff),
+    sb.from('insumos_saidas').select('codigo_produto,quantidade').gt('data_saida',cutoff),
+  ]);
+  const delta = {};
+  (entR.data||[]).forEach(e=>add(delta,e.codigo_produto,Number(e.quantidade)||0));
+  (saiR.data||[]).forEach(s=>add(delta,s.codigo_produto,-(Number(s.quantidade)||0)));
+  return delta;
+}
+async function reconPADeltas(cutoff){
+  const add=(map,k,v)=>{ if(!k) return; map[k]=(map[k]||0)+v; };
+  const [prodR, expR] = await Promise.all([
+    sb.from('produto_acabado_producao').select('codigo_produto,quantidade').gt('data_producao',cutoff),
+    sb.from('produto_acabado_expedicao').select('codigo_produto,quantidade').gt('data_saida',cutoff),
+  ]);
+  const delta = {};
+  (prodR.data||[]).forEach(p=>add(delta,p.codigo_produto,Number(p.quantidade)||0));
+  (expR.data||[]).forEach(e=>add(delta,e.codigo_produto,-(Number(e.quantidade)||0)));
+  return delta;
+}
+function _reconAplicar(items, delta, codigoField){
+  if(!delta) return items;
+  return items.map(it=>{
+    const d = delta[it[codigoField]]||0;
+    if(!d) return it;
+    const eatuRecon = (Number(it.estoque_atual)||0) - d;
+    return {...it, estoque_atual: eatuRecon, valor_estoque: eatuRecon*(Number(it.preco_medio)||0)};
+  });
 }
 
 // --- Situação dos Estoques ---
@@ -2534,38 +2642,59 @@ function exportRelPDF() {
 }
 
 // --- Exportar relatório como Excel (.xlsx real, uma coluna do Excel por coluna da tabela) ---
+// Converte uma tabela do DOM (thead/tbody/tfoot) numa matriz de linhas para o Excel.
+// Ignora linhas de "sem dados" (colspan) comparando a contagem de colunas com o cabeçalho.
+function _relTableToAoA(tbl) {
+  if(!tbl) return null;
+  const heads = [...tbl.querySelectorAll('thead th')].map(th => th.textContent.trim()).filter(Boolean);
+  if(!heads.length) return null;
+  const rows = [...tbl.querySelectorAll('tbody tr')]
+    .map(tr => [...tr.querySelectorAll('td')].map(td => td.textContent.trim()))
+    .filter(r => r.length === heads.length);
+  const foot = [...tbl.querySelectorAll('tfoot tr')]
+    .map(tr => [...tr.querySelectorAll('td')].map(td => td.textContent.trim()))
+    .filter(r => r.some(c => c));
+  if(!rows.length && !foot.length) return null;
+  return [heads, ...rows, ...foot];
+}
+
 function exportRelExcel() {
-  const titles={'sit':'Situação dos Estoques','mov-mp':'Movimentações de Matéria-Prima','mov-pa':'Movimentações de Produto Acabado','val':'Relatório de Vencimentos','inv':'Inventário por Estoque'};
-  const aoa = [];
-  const tables = document.querySelectorAll(`#rel-${_relTab} table`);
-  const secTitles = document.querySelectorAll(`#rel-${_relTab} .rel-section-title`);
-  let maxCols = 1;
-
-  tables.forEach((tbl,ti)=>{
-    const heads = [...tbl.querySelectorAll('thead th')].map(th=>th.textContent.trim()).filter(Boolean);
-    if(!heads.length) return;
-
-    if(secTitles[ti]){
-      if(aoa.length) aoa.push([]); // linha em branco separando seções
-      aoa.push([secTitles[ti].textContent.trim()]);
-    }
-    aoa.push(heads);
-    maxCols = Math.max(maxCols, heads.length);
-
-    const rows = [...tbl.querySelectorAll('tbody tr')]
-      .map(tr => [...tr.querySelectorAll('td')].map(td => td.textContent.trim()))
-      .filter(r => r.length === heads.length); // descarta linhas de "nenhum item" (colspan)
-    rows.forEach(r => aoa.push(r));
-  });
-
-  if(!aoa.length){ toast('Nada para exportar nesta aba.','error'); return; }
-
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = Array(maxCols).fill({ wch: 20 });
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, (titles[_relTab]||'Relatório').substring(0,31));
-  XLSX.writeFile(wb, `relatorio_${_relTab}_${new Date().toISOString().slice(0,10)}.xlsx`);
-  toast('Excel do relatório gerado!');
+  const dateSuffix = new Date().toISOString().slice(0,10);
+  const cutoff = (_relTab==='sit'||_relTab==='inv') ? getCutoffDate() : null;
+
+  function addSheet(name, aoa) {
+    if(!aoa) return;
+    if(cutoff) aoa = [[`Posição reconstruída em: ${fmtD(cutoff)}`], [], ...aoa];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    const maxCols = Math.max(...aoa.map(r=>r.length), 1);
+    ws['!cols'] = Array(maxCols).fill({ wch: 22 });
+    XLSX.utils.book_append_sheet(wb, ws, name.substring(0,31));
+  }
+
+  if(_relTab==='sit') {
+    addSheet('Matéria-Prima', _relTableToAoA(document.getElementById('t-sit-mp')));
+    addSheet('Produto Acabado', _relTableToAoA(document.getElementById('t-sit-pa')));
+    addSheet('Insumos', _relTableToAoA(document.getElementById('t-sit-ins')));
+  } else if(_relTab==='inv') {
+    addSheet('Matéria-Prima', _relTableToAoA(document.querySelector('#inv-mp-wrap table')));
+    addSheet('Insumos', _relTableToAoA(document.querySelector('#inv-ins-wrap table')));
+    addSheet('Produto Acabado', _relTableToAoA(document.querySelector('#inv-pa-wrap table')));
+    addSheet('Consolidado', _relTableToAoA(document.querySelector('#inv-all-wrap table')));
+  } else if(_relTab==='mov-mp') {
+    addSheet('Entradas MP', _relTableToAoA(document.getElementById('trel-ent')));
+    addSheet('Saídas MP', _relTableToAoA(document.getElementById('trel-sai')));
+  } else if(_relTab==='mov-pa') {
+    addSheet('Produções PA', _relTableToAoA(document.getElementById('trel-prod')));
+    addSheet('Expedições PA', _relTableToAoA(document.getElementById('trel-exp')));
+  } else if(_relTab==='val') {
+    addSheet('Vencimentos MP', _relTableToAoA(document.getElementById('trel-vmp')));
+    addSheet('Vencimentos PA', _relTableToAoA(document.getElementById('trel-vpa')));
+  }
+
+  if(!wb.SheetNames.length){ toast('Nada para exportar nesta aba.','error'); return; }
+  XLSX.writeFile(wb, `relatorio_${_relTab}_${dateSuffix}.xlsx`);
+  toast(`Excel gerado com ${wb.SheetNames.length} guia(s)!`);
 }
 
 // Update showSec to handle rel tab
@@ -2866,13 +2995,20 @@ async function delInsSai(id) {
 // ================================================================
 
 // Patch loadRelSit to include value columns and insumos
-async function loadRelSit() {
+async function loadRelSit(cutoff) {
   const [mpR, paR, insR] = await Promise.all([
     sb.from('materiaprima_produtos').select('*').order('codigo'),
     sb.from('produto_acabado_cadastro').select('*').order('codigo'),
     sb.from('insumos_produtos').select('*').order('codigo'),
   ]);
-  const mp = mpR.data||[], pa = paR.data||[], ins = insR.data||[];
+  let mp = mpR.data||[], pa = paR.data||[], ins = insR.data||[];
+
+  if(cutoff){
+    const [dMP, dIns, dPA] = await Promise.all([reconMPDeltas(cutoff), reconInsDeltas(cutoff), reconPADeltas(cutoff)]);
+    mp  = _reconAplicar(mp, dMP, 'codigo');
+    ins = _reconAplicar(ins, dIns, 'codigo');
+    pa  = _reconAplicar(pa, dPA, 'codigo');
+  }
 
   const mpCri  = mp.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
   const paCri  = pa.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
@@ -2909,16 +3045,18 @@ async function loadRelSit() {
 
   // Rebuild tables with value columns if they haven't been extended yet
   const sit = document.getElementById('rel-sit');
+  const cutoffNota = cutoff ? `<div style="font-size:.78rem;color:var(--tm);margin:-10px 0 14px"><strong>Posição reconstruída em:</strong> ${fmtD(cutoff)}</div>` : '';
   sit.innerHTML = `
     <div class="rel-kpi-row" id="rel-sit-kpis-inner"></div>
+    ${cutoffNota}
     <div class="rel-section-title">Matéria-Prima — Quantidade e Valor</div>
-    <div class="tc"><div class="tw"><table><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead>
+    <div class="tc"><div class="tw"><table id="t-sit-mp"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead>
     <tbody>${buildTableRows(mp,false)}</tbody></table></div></div>
     <div class="rel-section-title" style="margin-top:22px">Produto Acabado — Quantidade e Valor</div>
-    <div class="tc"><div class="tw"><table><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Preço Venda</th><th>Valor Estoque</th><th>Status</th></tr></thead>
+    <div class="tc"><div class="tw"><table id="t-sit-pa"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Preço Venda</th><th>Valor Estoque</th><th>Status</th></tr></thead>
     <tbody>${buildTableRows(pa,true)}</tbody></table></div></div>
     <div class="rel-section-title" style="margin-top:22px">Insumos — Quantidade e Valor</div>
-    <div class="tc"><div class="tw"><table><thead><tr><th>Código</th><th>Insumo</th><th>Categoria</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead>
+    <div class="tc"><div class="tw"><table id="t-sit-ins"><thead><tr><th>Código</th><th>Insumo</th><th>Categoria</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead>
     <tbody>${buildTableRows(ins,false)}</tbody></table></div></div>
     <div style="background:var(--br);border:2px solid var(--m);border-radius:var(--r);padding:18px 22px;margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
       <div><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">💰 Valor Total MP</div><div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--m)">${fmtR(totalMP)}</div></div>
@@ -2969,7 +3107,7 @@ function _invGrandFooter(totalValor) {
   </tr>`;
 }
 
-async function loadRelInv() {
+async function loadRelInv(cutoff) {
   // KPIs
   const [mpR, insR, paR] = await Promise.all([
     sb.from('materiaprima_produtos').select('*').order('produto'),
@@ -2979,6 +3117,23 @@ async function loadRelInv() {
   _invData.mp  = mpR.data  || [];
   _invData.ins = insR.data || [];
   _invData.pa  = paR.data  || [];
+
+  if(cutoff){
+    const [dMP, dIns, dPA] = await Promise.all([reconMPDeltas(cutoff), reconInsDeltas(cutoff), reconPADeltas(cutoff)]);
+    _invData.mp  = _reconAplicar(_invData.mp, dMP, 'codigo');
+    _invData.ins = _reconAplicar(_invData.ins, dIns, 'codigo');
+    _invData.pa  = _reconAplicar(_invData.pa, dPA, 'codigo');
+  }
+
+  const cutoffNotaInv = document.getElementById('inv-cutoff-nota');
+  if(cutoffNotaInv) cutoffNotaInv.remove();
+  if(cutoff){
+    const nota = document.createElement('div');
+    nota.id = 'inv-cutoff-nota';
+    nota.style.cssText = 'font-size:.78rem;color:var(--tm);margin-bottom:14px';
+    nota.innerHTML = `<strong>Posição reconstruída em:</strong> ${fmtD(cutoff)}`;
+    document.getElementById('rel-inv-kpis').insertAdjacentElement('afterend', nota);
+  }
 
   const totalMP  = _invData.mp.reduce((s,p) => s + (p.estoque_atual||0)*(p.preco_medio||0), 0);
   const totalIns = _invData.ins.reduce((s,p) => s + (p.estoque_atual||0)*(p.preco_medio||0), 0);
@@ -3516,6 +3671,187 @@ async function loadAjustes(){
     <td>${a.responsavel||'—'}</td>
     <td></td>
   </tr>`).join('');
+}
+
+// ================================================================
+// ==================== PREVISÃO DE PRODUÇÃO ======================
+// ================================================================
+// Explode a composição cadastrada em Precificação (precificacao_produto_insumos,
+// por 1kg de produto) até a matéria-prima, resolvendo insumos compostos
+// recursivamente via precificacao_insumo_componentes, e cruza com o estoque
+// atual da Fábrica (materiaprima_produtos).
+
+let _prevResultado = null;
+
+async function loadPrevProdutos(){
+  const tb = document.getElementById('tb-prev-prod');
+  if(!tb) return;
+  tb.innerHTML = '<tr><td colspan="6"><div class="ls"><div class="sp"></div></div></td></tr>';
+  const { data, error } = await sb.from('produto_acabado_cadastro').select('*').order('categoria').order('produto');
+  if(error){ tb.innerHTML = `<tr><td colspan="6"><div class="es"><div class="ei">📐</div><p>Erro: ${error.message}</p></div></td></tr>`; return; }
+  if(!data?.length){ tb.innerHTML = '<tr><td colspan="6"><div class="es"><div class="ei">📐</div><p>Nenhum produto sincronizado da Precificação ainda</p></div></td></tr>'; return; }
+  tb.innerHTML = data.map(p=>`<tr>
+    <td><code>${p.codigo}</code></td>
+    <td><strong>${p.produto}</strong></td>
+    <td>${p.categoria||'—'}</td>
+    <td>${p.unidade}</td>
+    <td style="text-align:right">${fmt(p.estoque_atual)}</td>
+    <td><input type="number" class="prev-qtd-input" min="0" step="0.001" placeholder="0" style="width:130px"
+      data-produto-id="${p.precificacao_produto_id||''}" data-nome="${(p.produto||'').replace(/"/g,'&quot;')}" data-categoria="${(p.categoria||'').replace(/"/g,'&quot;')}"></td>
+  </tr>`).join('');
+  const wrap = document.getElementById('prev-resultado-wrap');
+  if(wrap) wrap.style.display = 'none';
+  _prevResultado = null;
+}
+
+async function _prevBuildInsumoIndex(){
+  const [insR, compR, mpR] = await Promise.all([
+    sb.from('precificacao_insumos').select('id,nome,unidade,materiaprima_id,composto'),
+    sb.from('precificacao_insumo_componentes').select('insumo_id,componente_insumo_id,quantidade'),
+    sb.from('materiaprima_produtos').select('id,codigo,produto,unidade,estoque_atual,estoque_minimo'),
+  ]);
+  const insumoById = {}; (insR.data||[]).forEach(i=>insumoById[i.id]=i);
+  const compByInsumo = {}; (compR.data||[]).forEach(c=>{ (compByInsumo[c.insumo_id] = compByInsumo[c.insumo_id]||[]).push(c); });
+  const mpById = {}; (mpR.data||[]).forEach(m=>mpById[m.id]=m);
+  return { insumoById, compByInsumo, mpById };
+}
+
+// Resolve recursivamente um insumo até matéria-prima, acumulando em `acc` (por código de MP)
+function _prevExplodeInsumo(insumoId, qtyNeeded, idx, produtoNome, acc, warnings, depth){
+  depth = depth||0;
+  if(depth>6){ warnings.push({produto:produtoNome, insumo:'(composição)', motivo:'Profundidade máxima de composição excedida — verifique se há referência circular'}); return; }
+  const ins = idx.insumoById[insumoId];
+  if(!ins){ warnings.push({produto:produtoNome, insumo:'(desconhecido)', motivo:'Insumo referenciado não encontrado no cadastro de Precificação'}); return; }
+
+  if(ins.materiaprima_id){
+    const mp = idx.mpById[ins.materiaprima_id];
+    if(!mp){ warnings.push({produto:produtoNome, insumo:ins.nome, motivo:'Matéria-prima vinculada não encontrada no Estoque Fábrica'}); return; }
+    if(!acc[mp.codigo]) acc[mp.codigo] = { codigo:mp.codigo, produto:mp.produto, unidade:mp.unidade, estoque_atual:Number(mp.estoque_atual)||0, estoque_minimo:Number(mp.estoque_minimo)||0, necessario:0, origens:new Set() };
+    acc[mp.codigo].necessario += qtyNeeded;
+    acc[mp.codigo].origens.add(produtoNome);
+    return;
+  }
+
+  if(ins.composto){
+    const comps = idx.compByInsumo[insumoId]||[];
+    if(!comps.length){ warnings.push({produto:produtoNome, insumo:ins.nome, motivo:'Insumo composto sem componentes cadastrados em Precificação'}); return; }
+    comps.forEach(c=>_prevExplodeInsumo(c.componente_insumo_id, qtyNeeded*Number(c.quantidade||0), idx, produtoNome, acc, warnings, depth+1));
+    return;
+  }
+
+  warnings.push({produto:produtoNome, insumo:ins.nome, motivo:'Sem matéria-prima vinculada nem composição cadastrada — não é possível calcular o consumo'});
+}
+
+async function calcularPrevisaoProducao(){
+  const linhas = [...document.querySelectorAll('.prev-qtd-input')].map(inp=>({
+    produto_id: inp.dataset.produtoId, nome: inp.dataset.nome, categoria: inp.dataset.categoria, kg: parseFloat(inp.value)||0
+  })).filter(l=>l.kg>0);
+
+  if(!linhas.length){ toast('Informe ao menos uma previsão de produção (kg) para calcular.','error'); return; }
+  const semVinculo = linhas.filter(l=>!l.produto_id);
+
+  const idx = await _prevBuildInsumoIndex();
+  const idsValidos = linhas.filter(l=>l.produto_id).map(l=>l.produto_id);
+  const { data: piData, error } = idsValidos.length
+    ? await sb.from('precificacao_produto_insumos').select('produto_id,insumo_id,quantidade').in('produto_id', idsValidos)
+    : { data: [] };
+  if(error){ toast('Erro ao buscar composição em Precificação: '+error.message,'error'); return; }
+
+  const acc = {}; const warnings = [];
+  semVinculo.forEach(l=>warnings.push({produto:l.nome, insumo:'—', motivo:'Produto sem vínculo com Precificação (precificacao_produto_id ausente)'}));
+
+  linhas.filter(l=>l.produto_id).forEach(linha=>{
+    const itens = (piData||[]).filter(pi=>pi.produto_id===linha.produto_id);
+    if(!itens.length){ warnings.push({produto:linha.nome, insumo:'—', motivo:'Produto sem composição cadastrada em Precificação — não é possível calcular'}); return; }
+    itens.forEach(pi=>{
+      const qtyNeeded = linha.kg * Number(pi.quantidade||0);
+      _prevExplodeInsumo(pi.insumo_id, qtyNeeded, idx, linha.nome, acc, warnings);
+    });
+  });
+
+  _prevResultado = { acc, warnings, detalhePorProduto: linhas };
+  renderPrevisaoResultado();
+}
+
+function renderPrevisaoResultado(){
+  const rows = Object.values(_prevResultado.acc).map(m=>{
+    const resultante = m.estoque_atual - m.necessario;
+    let status, statusCls;
+    if(resultante < 0){ status='FALTA'; statusCls='CRITICO'; }
+    else if(resultante < m.estoque_minimo){ status='ATENÇÃO'; statusCls='ATENCAO'; }
+    else { status='OK'; statusCls='OK'; }
+    return {...m, resultante, status, statusCls};
+  }).sort((a,b)=>{
+    const ordem = {FALTA:0,'ATENÇÃO':1,OK:2};
+    if(ordem[a.status]!==ordem[b.status]) return ordem[a.status]-ordem[b.status];
+    return a.produto.localeCompare(b.produto);
+  });
+
+  const nFalta = rows.filter(r=>r.status==='FALTA').length;
+  const nAtencao = rows.filter(r=>r.status==='ATENÇÃO').length;
+  const nOk = rows.filter(r=>r.status==='OK').length;
+
+  document.getElementById('prev-resumo-sub').textContent = `${_prevResultado.detalhePorProduto.length} produto(s) na previsão · ${rows.length} matéria(s)-prima envolvida(s)`;
+  document.getElementById('prev-kpis').innerHTML = `
+    <div class="rel-kpi ${nFalta>0?'neg':'pos'}"><div class="rv">${nFalta}</div><div class="rl">Vão Faltar</div></div>
+    <div class="rel-kpi warn"><div class="rv">${nAtencao}</div><div class="rl">Ficam Abaixo do Mínimo</div></div>
+    <div class="rel-kpi pos"><div class="rv">${nOk}</div><div class="rl">OK após Produção</div></div>
+    <div class="rel-kpi"><div class="rv">${rows.length}</div><div class="rl">Itens de MP Envolvidos</div></div>`;
+
+  const avisosWrap = document.getElementById('prev-avisos-wrap');
+  if(_prevResultado.warnings.length){
+    avisosWrap.style.display='block';
+    avisosWrap.innerHTML = `<strong>⚠️ ${_prevResultado.warnings.length} item(ns) não puderam ser calculados:</strong><br>` +
+      _prevResultado.warnings.map(w=>`• ${w.produto}${w.insumo && w.insumo!=='—' ? ' — '+w.insumo : ''}: ${w.motivo}`).join('<br>');
+  } else {
+    avisosWrap.style.display='none';
+    avisosWrap.innerHTML='';
+  }
+
+  document.getElementById('tb-prev-mp').innerHTML = rows.length ? rows.map(r=>`<tr>
+    <td><code>${r.codigo}</code></td>
+    <td><strong>${r.produto}</strong></td>
+    <td>${r.unidade}</td>
+    <td style="text-align:right">${fmt(r.necessario)}</td>
+    <td style="text-align:right">${fmt(r.estoque_atual)}</td>
+    <td style="text-align:right">${fmt(r.estoque_minimo)}</td>
+    <td style="text-align:right;font-weight:700">${fmt(r.resultante)}</td>
+    <td><span class="sb ${r.statusCls}">${r.status}</span></td>
+    <td style="font-size:.76rem">${[...r.origens].join(', ')}</td>
+  </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--tm)">Nenhuma matéria-prima resolvida para esta previsão</td></tr>';
+
+  document.getElementById('prev-resultado-wrap').style.display='block';
+}
+
+function exportPrevisaoExcel(){
+  if(!_prevResultado || !Object.keys(_prevResultado.acc).length){ toast('Calcule a previsão antes de exportar.','error'); return; }
+  const wb = XLSX.utils.book_new();
+
+  const rows = Object.values(_prevResultado.acc).map(m=>{
+    const resultante = m.estoque_atual - m.necessario;
+    const status = resultante<0 ? 'FALTA' : (resultante<m.estoque_minimo ? 'ATENÇÃO' : 'OK');
+    return {...m, resultante, status};
+  }).sort((a,b)=>a.produto.localeCompare(b.produto));
+
+  const aoaMP = [['Código','Matéria-Prima','Un.','Necessário','Estoque Atual','Estoque Mínimo','Ficará','Status','Usado em']];
+  rows.forEach(m=>aoaMP.push([m.codigo, m.produto, m.unidade, fmt(m.necessario), fmt(m.estoque_atual), fmt(m.estoque_minimo), fmt(m.resultante), m.status, [...m.origens].join(', ')]));
+  const wsMP = XLSX.utils.aoa_to_sheet(aoaMP); wsMP['!cols']=Array(9).fill({wch:22});
+  XLSX.utils.book_append_sheet(wb, wsMP, 'Necessidade de MP');
+
+  const aoaDet = [['Produto','Categoria','Previsão de Produção (kg)']];
+  _prevResultado.detalhePorProduto.forEach(l=>aoaDet.push([l.nome, l.categoria||'—', fmt(l.kg)]));
+  const wsDet = XLSX.utils.aoa_to_sheet(aoaDet); wsDet['!cols']=Array(3).fill({wch:28});
+  XLSX.utils.book_append_sheet(wb, wsDet, 'Previsão por Produto');
+
+  if(_prevResultado.warnings.length){
+    const aoaW = [['Produto','Insumo','Motivo']];
+    _prevResultado.warnings.forEach(w=>aoaW.push([w.produto, w.insumo||'—', w.motivo]));
+    const wsW = XLSX.utils.aoa_to_sheet(aoaW); wsW['!cols']=Array(3).fill({wch:34});
+    XLSX.utils.book_append_sheet(wb, wsW, 'Avisos');
+  }
+
+  XLSX.writeFile(wb, `previsao_producao_${new Date().toISOString().slice(0,10)}.xlsx`);
+  toast('Excel da previsão gerado!');
 }
 
 // ── Portão de acesso: sem sessão válida ou sem permissão, volta pro portal ──
