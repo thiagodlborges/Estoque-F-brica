@@ -564,7 +564,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <tbody id="tb-op-embpad"><tr><td colspan="4"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 
   <div class="sh" style="margin-top:28px"><div><p class="st">Receitas Cadastradas (Ordens de Produção)</p><p class="sd">Ficha técnica: ingredientes de matéria-prima e/ou semi-acabado vinculados por percentual, roteiro de preparo/envase</p></div>
-  <button class="btn btn-p" onclick="abrirNovaReceita()">+ Nova Receita</button></div>
+  <div class="bg"><button class="btn btn-o" onclick="auditarTodasReceitas()">🔎 Auditar Todas (vs. Precificação)</button><button class="btn btn-p" onclick="abrirNovaReceita()">+ Nova Receita</button></div></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-op-rec',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadReceitas()">↻</button></div>
   <div class="tw"><table id="t-op-rec"><thead><tr><th>Código</th><th>Produto</th><th>Tipo</th><th>Base</th><th>Ingredientes</th><th>Embalagens</th><th>Status</th><th></th></tr></thead>
   <tbody id="tb-op-rec"><tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
@@ -757,6 +757,24 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr full"><label>Observações</label><textarea id="rec-obs"></textarea></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-rec')">Cancelar</button><button class="btn btn-p" onclick="saveReceita()">Salvar Receita</button></div></div>
+</div>
+
+<!-- Auditoria/Sincronização vs Precificação (1 receita) -->
+<div class="mo" id="m-op-audit">
+  <div class="md" style="max-width:640px"><div class="mh"><span class="mt" id="audit-titulo">Comparar com Precificação</span><button class="mc" onclick="closeModal('m-op-audit')">✕</button></div>
+  <div class="mb">
+    <div id="audit-resumo" style="margin-bottom:14px"></div>
+    <div class="tc"><div class="tw"><table><thead><tr><th>Matéria-Prima</th><th>Precificação</th><th>Ordens de Produção</th><th>Situação</th></tr></thead>
+    <tbody id="audit-tbody"></tbody></table></div></div>
+  </div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-audit')">Fechar</button><button class="btn btn-p" id="audit-btn-sync" onclick="sincronizarReceitaAtual()">🔄 Sincronizar de Precificação</button></div></div>
+</div>
+
+<!-- Auditoria geral (todas as receitas) -->
+<div class="mo" id="m-op-audit-geral">
+  <div class="md" style="max-width:560px"><div class="mh"><span class="mt">Auditoria — Precificação × Ordens de Produção</span><button class="mc" onclick="closeModal('m-op-audit-geral')">✕</button></div>
+  <div class="mb"><div id="audit-geral-body"><div class="ls"><div class="sp"></div></div></div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-audit-geral')">Fechar</button></div></div>
 </div>
 
 <!-- Nova OP (execução) -->
@@ -3417,11 +3435,160 @@ async function loadReceitas(){
       <td style="max-width:160px;white-space:normal">${embs}</td>
       <td><span class="sb ${r.ativo?'OK':'ATRASADO'}">${r.ativo?'ATIVA':'INATIVA'}</span></td>
       <td><div class="bg">
+        ${!isBase?`<button class="edit-btn" title="Comparar com Precificação" onclick="auditarReceita('${r.id}')">🔍</button>`:''}
         <button class="edit-btn" title="Editar" onclick="editReceita('${r.id}')">✏️</button>
         <button class="del-btn" title="Excluir" onclick="delReceita('${r.id}','${r.nome_produto.replace(/'/g,"\\'")}')">🗑</button>
       </div></td>
     </tr>`;
   }).join('');
+}
+
+// ===== Auditoria / Sincronização: Precificação x Ordens de Produção =====
+// Resolve a composição de um produto em Precificação até matéria-prima crua,
+// explodindo insumos compostos recursivamente (mesma lógica usada nas receitas de OP).
+async function resolverComposicaoPrecificacao(nomeProduto){
+  const { data: prods } = await sb.from('precificacao_produtos').select('id,nome').eq('nome', nomeProduto).eq('ativo', true).limit(1);
+  const produto = prods && prods[0];
+  if(!produto) return null;
+
+  const [piR, insR, compR, mpR] = await Promise.all([
+    sb.from('precificacao_produto_insumos').select('insumo_id,quantidade').eq('produto_id', produto.id),
+    sb.from('precificacao_insumos').select('id,nome,materiaprima_id,composto'),
+    sb.from('precificacao_insumo_componentes').select('insumo_id,componente_insumo_id,quantidade'),
+    sb.from('materiaprima_produtos').select('id,codigo,produto'),
+  ]);
+  const insumoById = {}; (insR.data||[]).forEach(i=>insumoById[i.id]=i);
+  const compByInsumo = {}; (compR.data||[]).forEach(c=>{ (compByInsumo[c.insumo_id]=compByInsumo[c.insumo_id]||[]).push(c); });
+  const mpById = {}; (mpR.data||[]).forEach(m=>mpById[m.id]=m);
+
+  const acc = {}; const warnings = [];
+  function explode(insumoId, qty, depth){
+    depth = depth||0;
+    if(depth>6){ warnings.push('Profundidade máxima de composição excedida'); return; }
+    const ins = insumoById[insumoId];
+    if(!ins){ warnings.push('Insumo referenciado não encontrado'); return; }
+    if(ins.materiaprima_id){
+      const mp = mpById[ins.materiaprima_id];
+      if(!mp){ warnings.push('Matéria-prima vinculada a "'+ins.nome+'" não encontrada'); return; }
+      if(!acc[mp.codigo]) acc[mp.codigo] = { codigo: mp.codigo, produto: mp.produto, quantidade: 0 };
+      acc[mp.codigo].quantidade += qty;
+      return;
+    }
+    if(ins.composto){
+      const comps = compByInsumo[insumoId]||[];
+      if(!comps.length){ warnings.push('Insumo composto "'+ins.nome+'" sem componentes cadastrados'); return; }
+      comps.forEach(c=>explode(c.componente_insumo_id, qty*Number(c.quantidade||0), depth+1));
+      return;
+    }
+    warnings.push('Insumo "'+ins.nome+'" sem matéria-prima nem composição vinculada');
+  }
+  (piR.data||[]).forEach(pi=>explode(pi.insumo_id, Number(pi.quantidade||0), 0));
+
+  return { produtoId: produto.id, itens: Object.values(acc), warnings };
+}
+
+let _auditReceitaAtual = null;
+
+async function auditarReceita(recId){
+  const { data: rec } = await sb.from('producao_receitas').select('*').eq('id', recId).single();
+  if(!rec) return;
+  const { data: itensOP } = await sb.from('producao_receita_itens').select('*').eq('receita_id', recId);
+  const precif = await resolverComposicaoPrecificacao(rec.nome_produto);
+
+  document.getElementById('audit-titulo').textContent = 'Comparar — ' + rec.nome_produto;
+
+  if(!precif){
+    document.getElementById('audit-resumo').innerHTML = `<div style="padding:10px 12px;background:var(--yc);border-radius:8px;color:var(--te)">⚠️ Não encontrei "${rec.nome_produto}" ativo em Precificação — não dá pra comparar.</div>`;
+    document.getElementById('audit-tbody').innerHTML = '';
+    document.getElementById('audit-btn-sync').style.display = 'none';
+    openModal('m-op-audit');
+    return;
+  }
+
+  const opByCodigo = {}; (itensOP||[]).filter(i=>i.codigo_mp).forEach(i=>opByCodigo[i.codigo_mp]={produto:i.produto_mp, quantidade:Number(i.percentual)});
+  const precifByCodigo = {}; precif.itens.forEach(i=>precifByCodigo[i.codigo]=i);
+  const codigos = [...new Set([...Object.keys(opByCodigo), ...Object.keys(precifByCodigo)])].sort();
+
+  let diffs = 0;
+  const rows = codigos.map(cod=>{
+    const p = precifByCodigo[cod], o = opByCodigo[cod];
+    let situacao, cls;
+    if(!o){ situacao='Só em Precificação'; cls='CRITICO'; diffs++; }
+    else if(!p){ situacao='Só em OP'; cls='ATENCAO'; diffs++; }
+    else if(Math.abs(p.quantidade - o.quantidade) > 0.0001){ situacao='Quantidade diferente'; cls='CRITICO'; diffs++; }
+    else { situacao='OK'; cls='OK'; }
+    return `<tr>
+      <td>${(p&&p.produto)||(o&&o.produto)||cod}</td>
+      <td>${p?fmt(p.quantidade):'—'}</td>
+      <td>${o?fmt(o.quantidade):'—'}</td>
+      <td><span class="sb ${cls}">${situacao}</span></td>
+    </tr>`;
+  });
+  if(precif.warnings.length) rows.push(`<tr><td colspan="4" style="color:var(--vc);font-size:.75rem">⚠️ ${precif.warnings.join(' · ')}</td></tr>`);
+
+  document.getElementById('audit-tbody').innerHTML = rows.join('');
+  document.getElementById('audit-resumo').innerHTML = diffs===0
+    ? `<div style="padding:10px 12px;background:var(--gc);border-radius:8px;color:var(--te)">✅ Tudo igual entre Precificação e Ordens de Produção.</div>`
+    : `<div style="padding:10px 12px;background:var(--bs);border-radius:8px;color:var(--te)">⚠️ ${diffs} divergência(s) encontrada(s).</div>`;
+  document.getElementById('audit-btn-sync').style.display = diffs>0 ? '' : 'none';
+
+  _auditReceitaAtual = { receitaId: recId, nome: rec.nome_produto, itensPrecif: precif.itens };
+  openModal('m-op-audit');
+}
+
+async function sincronizarReceitaAtual(){
+  if(!_auditReceitaAtual) return;
+  if(!confirm('Isso substitui os ingredientes de matéria-prima dessa receita em Ordens de Produção pelos dados atuais de Precificação. Ingredientes de semi-acabado (se houver) não são afetados. Confirma?')) return;
+
+  const { receitaId, itensPrecif } = _auditReceitaAtual;
+  const { error: errDel } = await sb.from('producao_receita_itens').delete().eq('receita_id', receitaId).not('codigo_mp','is',null);
+  if(errDel){ toast('Erro ao sincronizar: '+errDel.message,'error'); return; }
+  const { error } = await sb.from('producao_receita_itens').insert(
+    itensPrecif.map((i,idx)=>({ receita_id: receitaId, codigo_mp: i.codigo, produto_mp: i.produto, percentual: i.quantidade, unidade: 'Kg', ordem: idx }))
+  );
+  if(error){ toast('Erro ao sincronizar: '+error.message,'error'); return; }
+  toast('Receita sincronizada com Precificação!');
+  closeModal('m-op-audit');
+  loadReceitas();
+}
+
+async function auditarTodasReceitas(){
+  openModal('m-op-audit-geral');
+  const body = document.getElementById('audit-geral-body');
+  body.innerHTML = '<div class="ls"><div class="sp"></div></div>';
+
+  const { data: recs } = await sb.from('producao_receitas').select('*').eq('categoria_op','produto_acabado').eq('ativo', true).order('nome_produto');
+  const { data: itens } = await sb.from('producao_receita_itens').select('*').in('receita_id', (recs||[]).map(r=>r.id));
+  const byRec = {}; (itens||[]).forEach(i=>{ (byRec[i.receita_id]=byRec[i.receita_id]||[]).push(i); });
+
+  const results = [];
+  for(const r of (recs||[])){
+    const precif = await resolverComposicaoPrecificacao(r.nome_produto);
+    if(!precif){ results.push({ nome:r.nome_produto, status:'sem_match' }); continue; }
+    const opByCodigo = {}; (byRec[r.id]||[]).filter(i=>i.codigo_mp).forEach(i=>opByCodigo[i.codigo_mp]=Number(i.percentual));
+    const precifByCodigo = {}; precif.itens.forEach(i=>precifByCodigo[i.codigo]=i.quantidade);
+    const codigos = new Set([...Object.keys(opByCodigo), ...Object.keys(precifByCodigo)]);
+    let diffs = 0;
+    codigos.forEach(cod=>{
+      const p = precifByCodigo[cod], o = opByCodigo[cod];
+      if(p===undefined || o===undefined || Math.abs(p-o)>0.0001) diffs++;
+    });
+    results.push({ nome:r.nome_produto, status: diffs>0?'divergente':'ok', diffs, receitaId:r.id });
+  }
+
+  const divergentes = results.filter(r=>r.status==='divergente');
+  const semMatch = results.filter(r=>r.status==='sem_match');
+  const ok = results.filter(r=>r.status==='ok');
+
+  body.innerHTML = `
+    <div style="margin-bottom:14px;font-size:.88rem">✅ <strong>${ok.length}</strong> receita(s) em dia · ⚠️ <strong>${divergentes.length}</strong> divergente(s) · ❔ <strong>${semMatch.length}</strong> sem correspondência em Precificação</div>
+    ${divergentes.length ? '<div class="ftit" style="margin-bottom:8px">⚠️ Divergentes</div>' + divergentes.map(r=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid var(--bp);background:var(--bs);border-radius:8px;margin-bottom:6px">
+        <span>${r.nome} <small style="color:var(--tm)">(${r.diffs} diferença(s))</small></span>
+        <button class="btn btn-p btn-sm" onclick="closeModal('m-op-audit-geral');auditarReceita('${r.receitaId}')">Ver e sincronizar</button>
+      </div>`).join('') : ''}
+    ${semMatch.length ? '<div class="ftit" style="margin:14px 0 8px">❔ Sem correspondência em Precificação</div>' + semMatch.map(r=>`<div style="padding:6px 10px;color:var(--tm);font-size:.85rem">${r.nome}</div>`).join('') : ''}
+  `;
 }
 
 async function abrirNovaReceita(){
