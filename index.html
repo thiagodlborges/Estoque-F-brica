@@ -559,11 +559,15 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 
 <!-- RECEITAS (CADASTRO DE OP) -->
 <div id="sec-op-rec" class="sec">
-  <div class="sh"><div><p class="st">Receitas Cadastradas (Ordens de Produção)</p><p class="sd">Ficha técnica: ingredientes de matéria-prima vinculados por percentual, roteiro de preparo/envase</p></div>
+  <div class="sh"><div><p class="st">Embalagens Padrão</p><p class="sd">Peso por unidade de venda, usado pra calcular a previsão de rendimento das Ordens de Produto Acabado</p></div></div>
+  <div class="tc"><div class="tw"><table id="t-op-embpad"><thead><tr><th>Categoria</th><th>Unidade de Venda</th><th>Peso por Unidade (kg)</th><th></th></tr></thead>
+  <tbody id="tb-op-embpad"><tr><td colspan="4"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+
+  <div class="sh" style="margin-top:28px"><div><p class="st">Receitas Cadastradas (Ordens de Produção)</p><p class="sd">Ficha técnica: ingredientes de matéria-prima e/ou semi-acabado vinculados por percentual, roteiro de preparo/envase</p></div>
   <button class="btn btn-p" onclick="abrirNovaReceita()">+ Nova Receita</button></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-op-rec',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadReceitas()">↻</button></div>
-  <div class="tw"><table id="t-op-rec"><thead><tr><th>Código</th><th>Produto</th><th>Base</th><th>Ingredientes</th><th>Embalagens</th><th>Status</th><th></th></tr></thead>
-  <tbody id="tb-op-rec"><tr><td colspan="7"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+  <div class="tw"><table id="t-op-rec"><thead><tr><th>Código</th><th>Produto</th><th>Tipo</th><th>Base</th><th>Ingredientes</th><th>Embalagens</th><th>Status</th><th></th></tr></thead>
+  <tbody id="tb-op-rec"><tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
 <!-- EXECUÇÃO DE OP -->
@@ -734,11 +738,18 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Código <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="rec-cod" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
     <div class="fgr"><label>Tipo de Ordem</label><input id="rec-tipo" type="text" placeholder="Ex: Merengue"></div>
     <div class="fgr full"><label>Nome do Produto *</label><input id="rec-nome" type="text" placeholder="Ex: Merengue"></div>
+    <div class="fgr"><label>Categoria da OP *</label><select id="rec-categoria-op" onchange="onRecCategoriaOpChange()">
+      <option value="produto_acabado">🧊 Produto Acabado</option>
+      <option value="base">🧪 Base (semi-acabado)</option>
+    </select></div>
+    <div class="fgr" id="rec-categoria-produto-wrap"><label>Categoria do Produto</label><select id="rec-categoria-produto">
+      <option value="">—</option><option>Gelato</option><option>Potes</option><option>Picolés</option><option>Picolés Yeez</option>
+    </select></div>
     <div class="fgr"><label>Quantidade Base *</label><input id="rec-qtdbase" type="number" min="0.001" step="0.001" value="1"></div>
     <div class="fgr"><label>Unidade Base</label><select id="rec-unbase"><option>Kg</option><option>L</option><option>Un</option></select></div>
     <div class="fgr full"><label>Embalagens (uma por linha)</label><textarea id="rec-emb" placeholder="Potes de 360 g&#10;Potes de 150 g&#10;Caixas de 6 kg" style="min-height:60px"></textarea></div>
     <hr class="fdiv">
-    <div class="ftit">🌾 Ingredientes (% sobre a quantidade base)</div>
+    <div class="ftit">🌾 Ingredientes (% sobre a quantidade base) — matéria-prima ou semi-acabado de uma Ordem de Base</div>
     <div class="full" id="rec-itens-wrap" style="display:flex;flex-direction:column;gap:8px"></div>
     <div class="full"><button type="button" class="btn btn-o btn-sm" onclick="addRecItemRow()">+ Adicionar ingrediente</button></div>
     <hr class="fdiv">
@@ -767,13 +778,31 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 
 <!-- Finalizar OP (baixa automática) -->
 <div class="mo" id="m-op-final">
-  <div class="md"><div class="mh"><span class="mt">Finalizar OP — Baixa de Matéria-Prima</span><button class="mc" onclick="closeModal('m-op-final')">✕</button></div>
+  <div class="md"><div class="mh"><span class="mt">Finalizar OP — Baixa de Insumos</span><button class="mc" onclick="closeModal('m-op-final')">✕</button></div>
   <div class="mb">
-    <p style="font-size:.82rem;color:var(--tm);margin-bottom:12px">Confira/ajuste as quantidades realmente consumidas. A baixa é feita pelo FIFO (lotes mais antigos primeiro) e reflete nas Saídas de MP.</p>
+    <p style="font-size:.82rem;color:var(--tm);margin-bottom:12px">Confira/ajuste as quantidades realmente consumidas (matéria-prima baixa pelo FIFO; semi-acabado baixa direto do estoque da Base). Depois disso a OP fica aguardando a confirmação do rendimento real.</p>
     <input type="hidden" id="opf-ordem-id">
     <div id="opf-itens-wrap" style="display:flex;flex-direction:column;gap:10px"></div>
   </div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-final')">Cancelar</button><button class="btn btn-b" onclick="confirmarFinalizarOP()">Confirmar Baixa</button></div></div>
+</div>
+
+<!-- Confirmar Rendimento (produto acabado ou base) -->
+<div class="mo" id="m-op-rendimento">
+  <div class="md"><div class="mh"><span class="mt">Confirmar Rendimento</span><button class="mc" onclick="closeModal('m-op-rendimento')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="rend-ordem-id">
+    <p id="rend-info" style="font-size:.84rem;color:var(--tm);margin-bottom:14px;background:var(--cs);padding:10px 12px;border-radius:8px"></p>
+    <div class="fg">
+      <div class="fgr full"><label id="rend-qtd-label">Quantidade Real Produzida *</label><input id="rend-qtd" type="number" min="0" step="0.001" oninput="onRendQtdChange()"></div>
+      <div class="fgr full" id="rend-perda-wrap" style="display:none">
+        <label style="color:var(--vc)">⚠️ Rendeu abaixo do previsto — Motivo da Perda *</label>
+        <input id="rend-motivo" type="text" placeholder="Ex: rendimento abaixo do esperado, quebra no envase...">
+      </div>
+      <div class="fgr full"><label>Responsável</label><input id="rend-resp" type="text"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-rendimento')">Cancelar</button><button class="btn btn-p" onclick="confirmarRendimento()">Confirmar Rendimento</button></div></div>
 </div>
 
 <!-- Ajuste manual: sobra / perda -->
@@ -3288,24 +3317,48 @@ async function loadRelInv(cutoff) {
 // ===================================================================
 let _recItemSeq = 0;
 
-function addRecItemRow(codigo='', nome='', pct='', un=''){
+let _receitasBaseCache = [];
+async function carregarReceitasBase(){
+  const { data } = await sb.from('producao_receitas').select('id,codigo,nome_produto').eq('categoria_op','base').eq('ativo',true).order('nome_produto');
+  _receitasBaseCache = data || [];
+}
+
+function onRecCategoriaOpChange(){
+  const isPA = document.getElementById('rec-categoria-op').value === 'produto_acabado';
+  document.getElementById('rec-categoria-produto-wrap').style.display = isPA ? '' : 'none';
+}
+
+function addRecItemRow(tipoItem='mp', codigo='', nome='', pct='', un='', receitaBaseId=''){
   const wrap = document.getElementById('rec-itens-wrap');
   const n = ++_recItemSeq;
   const prefix = 'reci' + n;
   const row = document.createElement('div');
   row.className = 'rec-item-row';
   row.dataset.rowid = prefix;
-  row.style.cssText = 'display:grid;grid-template-columns:2fr 100px 90px 32px;gap:8px;align-items:start';
+  row.style.cssText = 'display:grid;grid-template-columns:118px 2fr 100px 90px 32px;gap:8px;align-items:start';
+  const baseOptions = _receitasBaseCache.map(r=>`<option value="${r.id}" ${r.id===receitaBaseId?'selected':''}>${r.nome_produto} (${r.codigo})</option>`).join('');
   row.innerHTML = `
+    <select class="rec-item-tipo" onchange="onRecItemTipoChange('${prefix}')">
+      <option value="mp" ${tipoItem==='mp'?'selected':''}>Mat.-Prima</option>
+      <option value="semiacabado" ${tipoItem==='semiacabado'?'selected':''}>🧪 Semi-Acab.</option>
+    </select>
     <div>
-      <div class="prod-search-wrap" id="psw-${prefix}">
-        <span class="prod-search-icon">🔍</span>
-        <input class="prod-search-input${codigo?' selected':''}" id="${prefix}-prod-search" type="text" placeholder="Matéria-prima..." autocomplete="off" value="${nome}"
-          oninput="psSearch(this,'${prefix}','mp')" onfocus="psSearch(this,'${prefix}','mp')" onkeydown="psKey(event,'${prefix}')">
-        <div class="prod-search-dropdown" id="psd-${prefix}"></div>
+      <div id="reci-mp-${prefix}" style="${tipoItem==='semiacabado'?'display:none':''}">
+        <div class="prod-search-wrap" id="psw-${prefix}">
+          <span class="prod-search-icon">🔍</span>
+          <input class="prod-search-input${tipoItem==='mp'&&codigo?' selected':''}" id="${prefix}-prod-search" type="text" placeholder="Matéria-prima..." autocomplete="off" value="${tipoItem==='mp'?nome:''}"
+            oninput="psSearch(this,'${prefix}','mp')" onfocus="psSearch(this,'${prefix}','mp')" onkeydown="psKey(event,'${prefix}')">
+          <div class="prod-search-dropdown" id="psd-${prefix}"></div>
+        </div>
+        <div class="prod-search-cod-display" id="ps-cod-${prefix}">${tipoItem==='mp'&&codigo?'📦 '+codigo:''}</div>
+        <input type="hidden" id="${prefix}-prod" value="${tipoItem==='mp'?codigo:''}">
       </div>
-      <div class="prod-search-cod-display" id="ps-cod-${prefix}">${codigo?'📦 '+codigo:''}</div>
-      <input type="hidden" id="${prefix}-prod" value="${codigo}">
+      <div id="reci-sa-${prefix}" style="${tipoItem==='semiacabado'?'':'display:none'}">
+        <select class="rec-item-basesel">
+          <option value="">— Selecione o semi-acabado —</option>
+          ${baseOptions}
+        </select>
+      </div>
     </div>
     <input type="number" min="0.001" step="0.001" placeholder="% (ex: 0.667)" value="${pct}" class="rec-item-pct">
     <select class="rec-item-un"><option${un==='Kg'?' selected':''}>Kg</option><option${un==='L'?' selected':''}>L</option><option${un==='Un'?' selected':''}>Un</option></select>
@@ -3313,26 +3366,55 @@ function addRecItemRow(codigo='', nome='', pct='', un=''){
   wrap.appendChild(row);
 }
 
+function onRecItemTipoChange(prefix){
+  const row = document.querySelector(`[data-rowid="${prefix}"]`);
+  const tipo = row.querySelector('.rec-item-tipo').value;
+  document.getElementById('reci-mp-'+prefix).style.display = tipo==='mp' ? '' : 'none';
+  document.getElementById('reci-sa-'+prefix).style.display = tipo==='semiacabado' ? '' : 'none';
+}
+
+async function loadEmbPadrao(){
+  const tb = document.getElementById('tb-op-embpad');
+  const { data, error } = await sb.from('producao_embalagens_padrao').select('*').order('categoria');
+  if(error){ tb.innerHTML = `<tr><td colspan="4">Erro: ${error.message}</td></tr>`; return; }
+  tb.innerHTML = (data||[]).map(e=>`<tr>
+    <td><strong>${e.categoria}</strong></td>
+    <td>${e.nome_unidade}</td>
+    <td><input type="number" min="0" step="0.001" id="embpad-${e.categoria.replace(/\s/g,'_')}" value="${e.peso_kg??''}" style="width:110px" placeholder="não definido"></td>
+    <td><button class="btn btn-p btn-xs" onclick="salvarEmbPadrao('${e.categoria}')">Salvar</button></td>
+  </tr>`).join('') || '<tr><td colspan="4">Nenhuma categoria cadastrada.</td></tr>';
+}
+async function salvarEmbPadrao(categoria){
+  const val = document.getElementById('embpad-'+categoria.replace(/\s/g,'_')).value;
+  const peso = val === '' ? null : parseFloat(val);
+  const { error } = await sb.from('producao_embalagens_padrao').update({ peso_kg: peso, atualizado_em: new Date().toISOString() }).eq('categoria', categoria);
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast('Peso padrão de "'+categoria+'" atualizado!');
+}
+
 async function loadReceitas(){
+  loadEmbPadrao();
   const tb = document.getElementById('tb-op-rec');
-  tb.innerHTML = '<tr><td colspan="7"><div class="ls"><div class="sp"></div></div></td></tr>';
+  tb.innerHTML = '<tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr>';
   const { data: recs, error } = await sb.from('producao_receitas').select('*').order('nome_produto');
-  if(error){ tb.innerHTML = `<tr><td colspan="7"><div class="es"><div class="ei">📋</div><p>Erro: ${error.message}</p></div></td></tr>`; return; }
-  if(!recs?.length){ tb.innerHTML = '<tr><td colspan="7"><div class="es"><div class="ei">📋</div><p>Nenhuma receita cadastrada</p></div></td></tr>'; return; }
+  if(error){ tb.innerHTML = `<tr><td colspan="8"><div class="es"><div class="ei">📋</div><p>Erro: ${error.message}</p></div></td></tr>`; return; }
+  if(!recs?.length){ tb.innerHTML = '<tr><td colspan="8"><div class="es"><div class="ei">📋</div><p>Nenhuma receita cadastrada</p></div></td></tr>'; return; }
   const ids = recs.map(r=>r.id);
   const { data: itens } = await sb.from('producao_receita_itens').select('*').in('receita_id', ids).order('ordem');
   const byRec = {};
   (itens||[]).forEach(i=>{ (byRec[i.receita_id] ||= []).push(i); });
   tb.innerHTML = recs.map(r=>{
     const its = byRec[r.id]||[];
-    const ingList = its.map(i=>`${i.produto_mp} (${(i.percentual*100).toFixed(1)}%)`).join(', ') || '—';
+    const ingList = its.map(i=>`${i.receita_base_id?'🧪 ':''}${i.produto_mp} (${(i.percentual*100).toFixed(1)}%)`).join(', ') || '—';
     const embs = (r.embalagens||[]).join(', ') || '—';
+    const isBase = r.categoria_op === 'base';
     return `<tr>
       <td><strong>${r.codigo}</strong></td>
       <td>${r.nome_produto}<br><small style="color:var(--tm)">${r.tipo_ordem||''}</small></td>
-      <td>${fmt(r.quantidade_base)} ${r.unidade_base}</td>
-      <td style="max-width:280px;white-space:normal">${ingList}</td>
-      <td style="max-width:180px;white-space:normal">${embs}</td>
+      <td>${isBase ? '<span class="sb ATENCAO">🧪 Base</span>' : '<span class="sb OK">🧊 '+(r.categoria_produto||'Acabado')+'</span>'}${isBase?'':(r.categoria_produto?'':'<br><small style="color:var(--vc)">⚠️ sem categoria</small>')}</td>
+      <td>${fmt(r.quantidade_base)} ${r.unidade_base}${isBase?`<br><small style="color:var(--tm)">estoque: ${fmt(r.estoque_atual)} kg</small>`:''}</td>
+      <td style="max-width:260px;white-space:normal">${ingList}</td>
+      <td style="max-width:160px;white-space:normal">${embs}</td>
       <td><span class="sb ${r.ativo?'OK':'ATRASADO'}">${r.ativo?'ATIVA':'INATIVA'}</span></td>
       <td><div class="bg">
         <button class="edit-btn" title="Editar" onclick="editReceita('${r.id}')">✏️</button>
@@ -3342,21 +3424,27 @@ async function loadReceitas(){
   }).join('');
 }
 
-function abrirNovaReceita(){
+async function abrirNovaReceita(){
+  await carregarReceitasBase();
   document.getElementById('op-rec-title').textContent = 'Nova Receita (Ordem de Produção)';
   document.getElementById('rec-id').value = '';
   document.getElementById('rec-cod').value = '';
   document.getElementById('rec-tipo').value = '';
   document.getElementById('rec-nome').value = '';
+  document.getElementById('rec-categoria-op').value = 'produto_acabado';
+  document.getElementById('rec-categoria-produto').value = '';
+  onRecCategoriaOpChange();
   document.getElementById('rec-qtdbase').value = '1';
   document.getElementById('rec-unbase').value = 'Kg';
   document.getElementById('rec-emb').value = '';
   document.getElementById('rec-roteiro').value = '';
   document.getElementById('rec-obs').value = '';
+  document.getElementById('rec-itens-wrap').innerHTML = '';
   openModal('m-op-rec');
 }
 
 async function editReceita(id){
+  await carregarReceitasBase();
   const { data: r, error } = await sb.from('producao_receitas').select('*').eq('id', id).single();
   if(error){ toast('Erro ao carregar receita: '+error.message,'error'); return; }
   const { data: itens } = await sb.from('producao_receita_itens').select('*').eq('receita_id', id).order('ordem');
@@ -3365,13 +3453,16 @@ async function editReceita(id){
   document.getElementById('rec-cod').value = r.codigo;
   document.getElementById('rec-tipo').value = r.tipo_ordem || '';
   document.getElementById('rec-nome').value = r.nome_produto;
+  document.getElementById('rec-categoria-op').value = r.categoria_op || 'produto_acabado';
+  document.getElementById('rec-categoria-produto').value = r.categoria_produto || '';
+  onRecCategoriaOpChange();
   document.getElementById('rec-qtdbase').value = r.quantidade_base;
   document.getElementById('rec-unbase').value = r.unidade_base;
   document.getElementById('rec-emb').value = (r.embalagens||[]).join('\n');
   document.getElementById('rec-roteiro').value = r.roteiro || '';
   document.getElementById('rec-obs').value = r.observacoes || '';
   document.getElementById('rec-itens-wrap').innerHTML = '';
-  (itens||[]).forEach(i=>addRecItemRow(i.codigo_mp, i.produto_mp, i.percentual, i.unidade));
+  (itens||[]).forEach(i=>addRecItemRow(i.receita_base_id?'semiacabado':'mp', i.codigo_mp, i.produto_mp, i.percentual, i.unidade, i.receita_base_id));
   if(!itens?.length) addRecItemRow();
   openModal('m-op-rec');
 }
@@ -3389,6 +3480,8 @@ async function saveReceita(){
   const cod = document.getElementById('rec-cod').value.trim();
   const tipo = document.getElementById('rec-tipo').value.trim()||null;
   const nome = document.getElementById('rec-nome').value.trim();
+  const categoriaOp = document.getElementById('rec-categoria-op').value;
+  const categoriaProduto = categoriaOp==='produto_acabado' ? (document.getElementById('rec-categoria-produto').value || null) : null;
   const qtdbase = parseFloat(document.getElementById('rec-qtdbase').value);
   const unbase = document.getElementById('rec-unbase').value;
   const emb = document.getElementById('rec-emb').value.split('\n').map(s=>s.trim()).filter(Boolean);
@@ -3396,27 +3489,34 @@ async function saveReceita(){
   const obs = document.getElementById('rec-obs').value.trim()||null;
 
   const rows = [...document.querySelectorAll('#rec-itens-wrap .rec-item-row')];
-  const itens = rows.map(row=>({
-    codigo_mp: row.querySelector('input[type=hidden]').value,
-    produto_mp: row.querySelector('.prod-search-input').value.trim(),
-    percentual: parseFloat(row.querySelector('.rec-item-pct').value),
-    unidade: row.querySelector('.rec-item-un').value
-  }));
+  const itens = rows.map(row=>{
+    const rtipo = row.querySelector('.rec-item-tipo').value;
+    const pct = parseFloat(row.querySelector('.rec-item-pct').value);
+    const un = row.querySelector('.rec-item-un').value;
+    if(rtipo==='semiacabado'){
+      const sel = row.querySelector('.rec-item-basesel');
+      const opt = sel.options[sel.selectedIndex];
+      return { receita_base_id: sel.value||null, codigo_mp: null, produto_mp: opt&&sel.value?opt.textContent.split(' (')[0]:'', percentual: pct, unidade: un };
+    }
+    return { receita_base_id: null, codigo_mp: row.querySelector('input[type=hidden]').value, produto_mp: row.querySelector('.prod-search-input').value.trim(), percentual: pct, unidade: un };
+  });
 
   if(!cod||!nome||!qtdbase){ toast('Preencha código, nome do produto e quantidade base','error'); return; }
-  if(!itens.length || itens.some(i=>!i.codigo_mp || !i.percentual)){ toast('Todo ingrediente precisa de matéria-prima selecionada e percentual','error'); return; }
+  if(!itens.length || itens.some(i=>!i.percentual || (!i.codigo_mp && !i.receita_base_id))){ toast('Todo ingrediente precisa de matéria-prima ou semi-acabado selecionado, e percentual','error'); return; }
 
   let receitaId = id;
   if(id){
     const { error } = await sb.from('producao_receitas').update({
-      tipo_ordem: tipo, nome_produto: nome, unidade_base: unbase, quantidade_base: qtdbase,
+      tipo_ordem: tipo, nome_produto: nome, categoria_op: categoriaOp, categoria_produto: categoriaProduto,
+      unidade_base: unbase, quantidade_base: qtdbase,
       embalagens: emb, roteiro, observacoes: obs, updated_at: new Date().toISOString()
     }).eq('id', id);
     if(error){ toast('Erro: '+error.message,'error'); return; }
     await sb.from('producao_receita_itens').delete().eq('receita_id', id);
   } else {
     const { data, error } = await sb.from('producao_receitas').insert({
-      codigo: cod, tipo_ordem: tipo, nome_produto: nome, unidade_base: unbase, quantidade_base: qtdbase,
+      codigo: cod, tipo_ordem: tipo, nome_produto: nome, categoria_op: categoriaOp, categoria_produto: categoriaProduto,
+      unidade_base: unbase, quantidade_base: qtdbase,
       embalagens: emb, roteiro, observacoes: obs
     }).select('id').single();
     if(error){ toast('Erro: '+error.message,'error'); return; }
@@ -3424,7 +3524,7 @@ async function saveReceita(){
   }
 
   const { error: errItens } = await sb.from('producao_receita_itens').insert(
-    itens.map((i,idx)=>({ receita_id: receitaId, codigo_mp: i.codigo_mp, produto_mp: i.produto_mp, percentual: i.percentual, unidade: i.unidade, ordem: idx }))
+    itens.map((i,idx)=>({ receita_id: receitaId, codigo_mp: i.codigo_mp, produto_mp: i.produto_mp, receita_base_id: i.receita_base_id, percentual: i.percentual, unidade: i.unidade, ordem: idx }))
   );
   if(errItens){ toast('Erro ao salvar ingredientes: '+errItens.message,'error'); return; }
 
@@ -3467,16 +3567,27 @@ async function previewReceitaConsumo(){
   if(!r || !qtd){ prev.innerHTML=''; return; }
   const { data: itens } = await sb.from('producao_receita_itens').select('*').eq('receita_id', id).order('ordem');
   const fator = qtd / r.quantidade_base;
-  const codes = (itens||[]).map(i=>i.codigo_mp);
-  const { data: estoques } = await sb.from('materiaprima_produtos').select('codigo,estoque_atual,estoque_reservado').in('codigo', codes);
-  const estMap = {}; (estoques||[]).forEach(e=>estMap[e.codigo]=e);
+  const mpCodes = (itens||[]).filter(i=>!i.receita_base_id).map(i=>i.codigo_mp);
+  const baseIds = (itens||[]).filter(i=>i.receita_base_id).map(i=>i.receita_base_id);
+  const [mpR, baseR] = await Promise.all([
+    mpCodes.length ? sb.from('materiaprima_produtos').select('codigo,estoque_atual,estoque_reservado').in('codigo', mpCodes) : Promise.resolve({data:[]}),
+    baseIds.length ? sb.from('producao_receitas').select('id,estoque_atual,estoque_reservado').in('id', baseIds) : Promise.resolve({data:[]}),
+  ]);
+  const estMap = {}; (mpR.data||[]).forEach(e=>estMap[e.codigo]=e);
+  const baseMap = {}; (baseR.data||[]).forEach(e=>baseMap[e.id]=e);
+  let previsaoHtml = '';
+  if(r.categoria_op==='produto_acabado' && r.categoria_produto){
+    const { data: emb } = await sb.from('producao_embalagens_padrao').select('*').eq('categoria', r.categoria_produto).single();
+    if(emb?.peso_kg){ previsaoHtml = `<div style="margin-top:8px;padding:6px 10px;background:var(--cs);border-radius:6px">📦 Previsão de rendimento: <strong>${fmt(qtd/emb.peso_kg)} ${emb.nome_unidade}(s)</strong> (${emb.peso_kg}kg cada)</div>`; }
+    else { previsaoHtml = `<div style="margin-top:8px;padding:6px 10px;background:var(--yc);border-radius:6px;color:var(--te)">⚠️ Categoria "${r.categoria_produto}" ainda sem peso padrão cadastrado — previsão de rendimento não será calculada.</div>`; }
+  }
   prev.innerHTML = '<strong>Consumo previsto:</strong><br>' + (itens||[]).map(i=>{
     const q = i.percentual * fator;
-    const e = estMap[i.codigo_mp];
+    const e = i.receita_base_id ? baseMap[i.receita_base_id] : estMap[i.codigo_mp];
     const disp = e ? (e.estoque_atual - e.estoque_reservado) : 0;
     const falta = disp < q;
-    return `• ${i.produto_mp}: ${fmt(q)} ${i.unidade} ${falta?`<span style="color:var(--vc);font-weight:600">— disponível apenas ${fmt(disp)}</span>`:`<span style="color:var(--gok)">(disponível: ${fmt(disp)})</span>`}`;
-  }).join('<br>');
+    return `• ${i.receita_base_id?'🧪 ':''}${i.produto_mp}: ${fmt(q)} ${i.unidade} ${falta?`<span style="color:var(--vc);font-weight:600">— disponível apenas ${fmt(disp)}</span>`:`<span style="color:var(--gok)">(disponível: ${fmt(disp)})</span>`}`;
+  }).join('<br>') + previsaoHtml;
 }
 
 function abrirNovaOP(){
@@ -3506,12 +3617,19 @@ async function saveNovaOP(){
 
   const { data: ordem, error } = await sb.from('producao_ordens').insert({
     numero_op: numero, receita_id: receitaId, produto: r.nome_produto, quantidade_planejada: qtd,
-    unidade: un, embalagem, data_criacao, responsavel: resp, observacoes: obs, status: 'CADASTRADA'
+    unidade: un, embalagem, data_criacao, responsavel: resp, observacoes: obs, status: 'CADASTRADA',
+    categoria_op: r.categoria_op, categoria_produto: r.categoria_produto
   }).select('id').single();
   if(error){ toast('Erro: '+error.message,'error'); return; }
 
   const { error: errItens } = await sb.from('producao_ordem_itens').insert(
-    (itens||[]).map(i=>({ ordem_id: ordem.id, codigo_mp: i.codigo_mp, produto_mp: i.produto_mp, unidade: i.unidade, quantidade_planejada: i.percentual * fator }))
+    (itens||[]).map(i=>({
+      ordem_id: ordem.id,
+      tipo_item: i.receita_base_id ? 'semiacabado' : 'mp',
+      codigo_mp: i.codigo_mp, produto_mp: i.produto_mp, unidade: i.unidade,
+      quantidade_planejada: i.percentual * fator,
+      receita_base_id: i.receita_base_id
+    }))
   );
   if(errItens){ toast('Erro ao gravar itens da OP: '+errItens.message,'error'); return; }
 
@@ -3532,23 +3650,33 @@ async function loadExecOP(){
 
   tb.innerHTML = ops.map(o=>{
     const its = byOp[o.id]||[];
-    const mpList = its.length ? `<details><summary style="font-size:.7rem;color:var(--tm);cursor:pointer">📦 ${its.length} MP(s)</summary>
+    const mpList = its.length ? `<details><summary style="font-size:.7rem;color:var(--tm);cursor:pointer">📦 ${its.length} insumo(s)</summary>
         <div style="padding:4px 0 0 8px;font-size:.7rem;color:var(--tm)">
-          ${its.map(i=>`• ${i.produto_mp} — plan.: ${fmt(i.quantidade_planejada)} ${i.unidade}${i.quantidade_baixada>0?` | baixado: ${fmt(i.quantidade_baixada)}`:''}`).join('<br>')}
+          ${its.map(i=>`• ${i.tipo_item==='semiacabado'?'🧪 ':''}${i.produto_mp} — plan.: ${fmt(i.quantidade_planejada)} ${i.unidade}${i.quantidade_baixada>0?` | baixado: ${fmt(i.quantidade_baixada)}`:''}`).join('<br>')}
         </div></details>` : '—';
     const sk = o.status;
+    const skClass = sk==='FINALIZADA'?'OK':sk==='CANCELADA'?'CRITICO':sk==='SEPARADA'?'ATENCAO':sk==='AGUARDANDO_RENDIMENTO'?'ATENCAO':'EM_PROCESSO';
+    const skLabel = sk==='AGUARDANDO_RENDIMENTO' ? 'AGUARD. RENDIMENTO' : sk;
     let acoes = '';
-    if(o.status==='CADASTRADA') acoes += `<button class="btn btn-p btn-xs" onclick="separarOP('${o.id}')">Separar MP</button> `;
-    if(o.status==='SEPARADA') acoes += `<button class="btn btn-b btn-xs" onclick="abrirFinalizarOP('${o.id}')">Finalizar (baixa)</button> `;
+    if(o.status==='CADASTRADA') acoes += `<button class="btn btn-p btn-xs" onclick="separarOP('${o.id}')">Separar</button> `;
+    if(o.status==='SEPARADA') acoes += `<button class="btn btn-b btn-xs" onclick="abrirFinalizarOP('${o.id}')">Finalizar</button> `;
+    if(o.status==='AGUARDANDO_RENDIMENTO') acoes += `<button class="btn btn-p btn-xs" onclick="abrirConfirmarRendimento('${o.id}')">📦 Confirmar Rendimento</button> `;
     if(['CADASTRADA','SEPARADA'].includes(o.status)) acoes += `<button class="btn btn-o btn-xs" onclick="cancelarOP('${o.id}')">Cancelar</button> `;
     if(['CADASTRADA','CANCELADA'].includes(o.status)) acoes += `<button class="del-btn" title="Excluir" onclick="delOP('${o.id}','${o.numero_op}')">🗑</button>`;
+    const tipoTag = o.categoria_op==='base' ? '<span class="sb ATENCAO" style="font-size:.62rem">🧪 Base</span>' : '<span class="sb OK" style="font-size:.62rem">🧊 Acabado</span>';
+    let rendInfo = '';
+    if(sk==='AGUARDANDO_RENDIMENTO' && o.rendimento_previsto!=null) rendInfo = `<br><small style="color:var(--ya)">Previsto: ${fmt(o.rendimento_previsto)} ${o.rendimento_unidade}</small>`;
+    if(sk==='FINALIZADA' && o.rendimento_confirmado!=null){
+      rendInfo = `<br><small style="color:var(--gok)">Rendeu: ${fmt(o.rendimento_confirmado)} ${o.rendimento_unidade||''}</small>`;
+      if(o.perda_rendimento_qtd>0) rendInfo += `<br><small style="color:var(--vc)">⚠️ Perda: ${fmt(o.perda_rendimento_qtd)} ${o.rendimento_unidade||''}</small>`;
+    }
     return `<tr>
       <td><strong>${o.numero_op}</strong><br><small style="color:var(--tm)">${fmtD(o.data_criacao)}</small></td>
-      <td>${o.produto}</td>
-      <td>${fmt(o.quantidade_planejada)} ${o.unidade}</td>
+      <td>${o.produto}<br>${tipoTag}</td>
+      <td>${fmt(o.quantidade_planejada)} ${o.unidade}${rendInfo}</td>
       <td>${o.embalagem||'—'}</td>
       <td>${o.responsavel||'—'}</td>
-      <td><span class="sb ${sk==='FINALIZADA'?'OK':sk==='CANCELADA'?'CRITICO':sk==='SEPARADA'?'ATENCAO':'EM_PROCESSO'}">${sk}</span></td>
+      <td><span class="sb ${skClass}">${skLabel}</span></td>
       <td>${fmtR(o.custo_mp_total)}</td>
       <td style="min-width:160px">${mpList}</td>
       <td><div class="bg" style="flex-wrap:wrap">${acoes}</div></td>
@@ -3572,8 +3700,8 @@ async function abrirFinalizarOP(id){
   if(error){ toast('Erro: '+error.message,'error'); return; }
   document.getElementById('opf-ordem-id').value = id;
   document.getElementById('opf-itens-wrap').innerHTML = (itens||[]).map(i=>`
-    <div class="fgr" data-codigo="${i.codigo_mp}">
-      <label>${i.produto_mp} — separado: ${fmt(i.quantidade_separada)} ${i.unidade}</label>
+    <div class="fgr" data-codigo="${i.codigo_mp||''}" data-tipo="${i.tipo_item}" data-basereceita="${i.receita_base_id||''}">
+      <label>${i.tipo_item==='semiacabado'?'🧪 ':'📦 '}${i.produto_mp} — separado: ${fmt(i.quantidade_separada)} ${i.unidade}</label>
       <input type="number" min="0" step="0.001" class="opf-qtd-input" value="${i.quantidade_separada}">
     </div>`).join('');
   openModal('m-op-final');
@@ -3581,19 +3709,65 @@ async function abrirFinalizarOP(id){
 
 async function confirmarFinalizarOP(){
   const id = document.getElementById('opf-ordem-id').value;
-  const rows = [...document.querySelectorAll('#opf-itens-wrap [data-codigo]')];
+  const rows = [...document.querySelectorAll('#opf-itens-wrap [data-tipo]')];
   const itens = rows.map(row=>({
-    codigo_mp: row.dataset.codigo,
+    tipo_item: row.dataset.tipo,
+    codigo_mp: row.dataset.codigo || null,
+    receita_base_id: row.dataset.basereceita || null,
     quantidade: parseFloat(row.querySelector('.opf-qtd-input').value)||0
   }));
   const resp = prompt('Responsável pela finalização (opcional):','') || null;
   const { error } = await sb.rpc('producao_finalizar_op', { p_ordem_id: id, p_itens: itens, p_responsavel: resp });
   if(error){ toast('Erro ao finalizar: '+error.message,'error'); return; }
-  toast('OP finalizada — baixa de matéria-prima registrada!');
+  toast('Insumos baixados! Agora falta confirmar o rendimento real da OP.');
   closeModal('m-op-final');
   loadExecOP();
   loadMPSai();
   if(document.getElementById('sec-mp-p')?.classList.contains('active')) loadMP();
+  if(document.getElementById('sec-dashboard')?.classList.contains('active')) loadDash();
+}
+
+// ===== Confirmação de rendimento (produto acabado ou base) =====
+let _rendPrevisto = null;
+
+async function abrirConfirmarRendimento(id){
+  const { data: o, error } = await sb.from('producao_ordens').select('*').eq('id', id).single();
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  document.getElementById('rend-ordem-id').value = id;
+  document.getElementById('rend-qtd').value = o.rendimento_previsto ?? '';
+  document.getElementById('rend-motivo').value = '';
+  document.getElementById('rend-resp').value = '';
+  document.getElementById('rend-perda-wrap').style.display = 'none';
+  const unidadeLabel = o.rendimento_unidade || (o.categoria_op==='base' ? 'Kg' : 'unidades');
+  document.getElementById('rend-qtd-label').textContent = `Quantidade Real Produzida (${unidadeLabel}) *`;
+  if(o.rendimento_previsto != null){
+    document.getElementById('rend-info').innerHTML = `<strong>${o.produto}</strong> — previsão calculada: <strong>${fmt(o.rendimento_previsto)} ${unidadeLabel}</strong> (a partir de ${fmt(o.quantidade_planejada)} ${o.unidade} produzidos). Se render menos que isso, a diferença vira perda de ${o.categoria_op==='base'?'semi-acabado':'produto acabado'} — motivo obrigatório.`;
+  } else {
+    document.getElementById('rend-info').innerHTML = `<strong>${o.produto}</strong> — ⚠️ a categoria "${o.categoria_produto||'—'}" ainda não tem peso padrão cadastrado (veja "Embalagens Padrão" em Receitas). Não dá pra calcular previsão nem perda automaticamente agora — só informe a quantidade produzida.`;
+  }
+  _rendPrevisto = o.rendimento_previsto;
+  openModal('m-op-rendimento');
+}
+
+function onRendQtdChange(){
+  const qtd = parseFloat(document.getElementById('rend-qtd').value);
+  const wrap = document.getElementById('rend-perda-wrap');
+  wrap.style.display = (_rendPrevisto != null && !isNaN(qtd) && qtd < _rendPrevisto) ? '' : 'none';
+}
+
+async function confirmarRendimento(){
+  const id = document.getElementById('rend-ordem-id').value;
+  const qtd = parseFloat(document.getElementById('rend-qtd').value);
+  const motivo = document.getElementById('rend-motivo').value.trim() || null;
+  const resp = document.getElementById('rend-resp').value.trim() || null;
+  if(isNaN(qtd) || qtd < 0){ toast('Informe a quantidade realmente produzida','error'); return; }
+  const { error } = await sb.rpc('producao_confirmar_rendimento', { p_ordem_id: id, p_quantidade_confirmada: qtd, p_motivo_perda: motivo, p_responsavel: resp });
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast('Rendimento confirmado — estoque atualizado!');
+  closeModal('m-op-rendimento');
+  loadExecOP();
+  loadReceitas();
+  if(document.getElementById('sec-pa-p')?.classList.contains('active')) loadPA();
   if(document.getElementById('sec-dashboard')?.classList.contains('active')) loadDash();
 }
 
@@ -3735,7 +3909,8 @@ async function calcularPrevisaoProducao(){
       .select('receita_id,codigo_mp,produto_mp,percentual,unidade').in('receita_id', receitaIds);
     if(error) throw new Error('Erro ao buscar receita em Ordens de Produção: '+error.message);
 
-    const codigosMP = [...new Set((itensData||[]).map(i=>i.codigo_mp))];
+    const itensMP = (itensData||[]).filter(i=>!i.receita_base_id);
+    const codigosMP = [...new Set(itensMP.map(i=>i.codigo_mp))];
     const { data: mpData, error: errMp } = codigosMP.length
       ? await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual,estoque_minimo').in('codigo', codigosMP)
       : { data: [] };
@@ -3748,6 +3923,10 @@ async function calcularPrevisaoProducao(){
       const itens = (itensData||[]).filter(i=>i.receita_id===linha.receita_id);
       if(!itens.length){ warnings.push({produto:linha.nome, insumo:'—', motivo:'Receita sem itens cadastrados em Ordens de Produção'}); return; }
       itens.forEach(it=>{
+        if(it.receita_base_id){
+          warnings.push({produto:linha.nome, insumo:it.produto_mp, motivo:'Ingrediente vem do estoque de semi-acabado (Ordem de Base) — essa ferramenta calcula só matéria-prima direta, não semi-acabado. Confira o estoque de "'+it.produto_mp+'" em Receitas (OP).'});
+          return;
+        }
         const mp = mpByCodigo[it.codigo_mp];
         if(!mp){ warnings.push({produto:linha.nome, insumo:it.produto_mp, motivo:'Matéria-prima '+it.codigo_mp+' não encontrada no Estoque Fábrica'}); return; }
         const qtyNeeded = linha.kg * Number(it.percentual||0);
