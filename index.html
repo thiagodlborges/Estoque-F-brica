@@ -566,8 +566,8 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="sh" style="margin-top:28px"><div><p class="st">Receitas Cadastradas (Ordens de Produção)</p><p class="sd">Ficha técnica: ingredientes de matéria-prima e/ou semi-acabado vinculados por percentual, roteiro de preparo/envase</p></div>
   <div class="bg"><button class="btn btn-o" onclick="auditarTodasReceitas()">🔎 Auditar Todas (vs. Precificação)</button><button class="btn btn-p" onclick="abrirNovaReceita()">+ Nova Receita</button></div></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-op-rec',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadReceitas()">↻</button></div>
-  <div class="tw"><table id="t-op-rec"><thead><tr><th>Código</th><th>Produto</th><th>Tipo</th><th>Base</th><th>Ingredientes</th><th>Embalagens</th><th>Status</th><th></th></tr></thead>
-  <tbody id="tb-op-rec"><tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+  <div class="tw"><table id="t-op-rec"><thead><tr><th>Código</th><th>Produto</th><th>Tipo</th><th>Vínculo</th><th>Base</th><th>Ingredientes</th><th>Embalagens</th><th>Status</th><th></th></tr></thead>
+  <tbody id="tb-op-rec"><tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
 <!-- EXECUÇÃO DE OP -->
@@ -749,6 +749,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Unidade Base</label><select id="rec-unbase"><option>Kg</option><option>L</option><option>Un</option></select></div>
     <div class="fgr full"><label>Embalagens (uma por linha)</label><textarea id="rec-emb" placeholder="Potes de 360 g&#10;Potes de 150 g&#10;Caixas de 6 kg" style="min-height:60px"></textarea></div>
     <hr class="fdiv">
+    <div id="rec-vinculo-aviso" style="display:none;background:var(--cs);border:1px solid var(--gok);border-radius:8px;padding:10px 12px;font-size:.78rem;color:var(--te);margin-bottom:10px"></div>
     <div class="ftit">🌾 Ingredientes (% sobre a quantidade base) — matéria-prima ou semi-acabado de uma Ordem de Base</div>
     <div class="full" id="rec-itens-wrap" style="display:flex;flex-direction:column;gap:8px"></div>
     <div class="full"><button type="button" class="btn btn-o btn-sm" onclick="addRecItemRow()">+ Adicionar ingrediente</button></div>
@@ -3353,13 +3354,26 @@ function addRecItemRow(tipoItem='mp', codigo='', nome='', pct='', un='', receita
   const row = document.createElement('div');
   row.className = 'rec-item-row';
   row.dataset.rowid = prefix;
+  row.dataset.tipo = tipoItem;
+
+  // Receita vinculada + linha de matéria-prima: gerida automaticamente, só leitura.
+  if(_recVinculadaAtual && tipoItem==='mp'){
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 100px 90px;gap:8px;align-items:center;opacity:.7';
+    row.innerHTML = `
+      <div style="font-size:.82rem">🔒 ${nome} <small style="color:var(--tm)">(${codigo})</small></div>
+      <input type="number" value="${pct}" class="rec-item-pct" disabled style="background:var(--cs)">
+      <select class="rec-item-un" disabled style="background:var(--cs)"><option selected>${un}</option></select>`;
+    wrap.appendChild(row);
+    return;
+  }
+
   row.style.cssText = 'display:grid;grid-template-columns:118px 2fr 100px 90px 32px;gap:8px;align-items:start';
   const baseOptions = _receitasBaseCache.map(r=>`<option value="${r.id}" ${r.id===receitaBaseId?'selected':''}>${r.nome_produto} (${r.codigo})</option>`).join('');
+  const tipoOpts = _recVinculadaAtual
+    ? `<option value="semiacabado" selected>🧪 Semi-Acab.</option>`
+    : `<option value="mp" ${tipoItem==='mp'?'selected':''}>Mat.-Prima</option><option value="semiacabado" ${tipoItem==='semiacabado'?'selected':''}>🧪 Semi-Acab.</option>`;
   row.innerHTML = `
-    <select class="rec-item-tipo" onchange="onRecItemTipoChange('${prefix}')">
-      <option value="mp" ${tipoItem==='mp'?'selected':''}>Mat.-Prima</option>
-      <option value="semiacabado" ${tipoItem==='semiacabado'?'selected':''}>🧪 Semi-Acab.</option>
-    </select>
+    <select class="rec-item-tipo" onchange="onRecItemTipoChange('${prefix}')" ${_recVinculadaAtual?'disabled':''}>${tipoOpts}</select>
     <div>
       <div id="reci-mp-${prefix}" style="${tipoItem==='semiacabado'?'display:none':''}">
         <div class="prod-search-wrap" id="psw-${prefix}">
@@ -3413,10 +3427,10 @@ async function salvarEmbPadrao(categoria){
 async function loadReceitas(){
   loadEmbPadrao();
   const tb = document.getElementById('tb-op-rec');
-  tb.innerHTML = '<tr><td colspan="8"><div class="ls"><div class="sp"></div></div></td></tr>';
+  tb.innerHTML = '<tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr>';
   const { data: recs, error } = await sb.from('producao_receitas').select('*').order('nome_produto');
-  if(error){ tb.innerHTML = `<tr><td colspan="8"><div class="es"><div class="ei">📋</div><p>Erro: ${error.message}</p></div></td></tr>`; return; }
-  if(!recs?.length){ tb.innerHTML = '<tr><td colspan="8"><div class="es"><div class="ei">📋</div><p>Nenhuma receita cadastrada</p></div></td></tr>'; return; }
+  if(error){ tb.innerHTML = `<tr><td colspan="9"><div class="es"><div class="ei">📋</div><p>Erro: ${error.message}</p></div></td></tr>`; return; }
+  if(!recs?.length){ tb.innerHTML = '<tr><td colspan="9"><div class="es"><div class="ei">📋</div><p>Nenhuma receita cadastrada</p></div></td></tr>'; return; }
   const ids = recs.map(r=>r.id);
   const { data: itens } = await sb.from('producao_receita_itens').select('*').in('receita_id', ids).order('ordem');
   const byRec = {};
@@ -3426,16 +3440,20 @@ async function loadReceitas(){
     const ingList = its.map(i=>`${i.receita_base_id?'🧪 ':''}${i.produto_mp} (${(i.percentual*100).toFixed(1)}%)`).join(', ') || '—';
     const embs = (r.embalagens||[]).join(', ') || '—';
     const isBase = r.categoria_op === 'base';
+    const vinculo = r.vinculado_precificacao
+      ? `<span class="sb OK">🔗 Vinculada</span><br><small style="color:var(--tm)">${r.sincronizado_em?('sync '+new Date(r.sincronizado_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})):''}</small>`
+      : `<span class="sb ATENCAO">🔓 Independente</span>`;
     return `<tr>
       <td><strong>${r.codigo}</strong></td>
       <td>${r.nome_produto}<br><small style="color:var(--tm)">${r.tipo_ordem||''}</small></td>
       <td>${isBase ? '<span class="sb ATENCAO">🧪 Base</span>' : '<span class="sb OK">🧊 '+(r.categoria_produto||'Acabado')+'</span>'}${isBase?'':(r.categoria_produto?'':'<br><small style="color:var(--vc)">⚠️ sem categoria</small>')}</td>
+      <td>${vinculo}</td>
       <td>${fmt(r.quantidade_base)} ${r.unidade_base}${isBase?`<br><small style="color:var(--tm)">estoque: ${fmt(r.estoque_atual)} kg</small>`:''}</td>
-      <td style="max-width:260px;white-space:normal">${ingList}</td>
-      <td style="max-width:160px;white-space:normal">${embs}</td>
+      <td style="max-width:220px;white-space:normal">${ingList}</td>
+      <td style="max-width:140px;white-space:normal">${embs}</td>
       <td><span class="sb ${r.ativo?'OK':'ATRASADO'}">${r.ativo?'ATIVA':'INATIVA'}</span></td>
       <td><div class="bg">
-        ${!isBase?`<button class="edit-btn" title="Comparar com Precificação" onclick="auditarReceita('${r.id}')">🔍</button>`:''}
+        <button class="edit-btn" title="${r.vinculado_precificacao?'Ver vínculo / forçar sincronização':'Comparar / vincular a Precificação'}" onclick="auditarReceita('${r.id}')">🔍</button>
         <button class="edit-btn" title="Editar" onclick="editReceita('${r.id}')">✏️</button>
         <button class="del-btn" title="Excluir" onclick="delReceita('${r.id}','${r.nome_produto.replace(/'/g,"\\'")}')">🗑</button>
       </div></td>
@@ -3495,10 +3513,23 @@ async function auditarReceita(recId){
   const { data: itensOP } = await sb.from('producao_receita_itens').select('*').eq('receita_id', recId);
   const precif = await resolverComposicaoPrecificacao(rec.nome_produto);
 
-  document.getElementById('audit-titulo').textContent = 'Comparar — ' + rec.nome_produto;
+  document.getElementById('audit-titulo').textContent = 'Precificação × Ordens de Produção — ' + rec.nome_produto;
+  _auditReceitaAtual = { receitaId: recId, nome: rec.nome_produto, itensPrecif: precif?precif.itens:[], vinculado: rec.vinculado_precificacao, precifProdutoId: precif?precif.produtoId:null };
+
+  if(rec.vinculado_precificacao){
+    document.getElementById('audit-resumo').innerHTML = `<div style="padding:10px 12px;background:var(--gc);border-radius:8px;color:var(--te)">
+      🔗 <strong>Vinculada</strong> — qualquer correção feita em Precificação (nesse produto) já reflete aqui automaticamente. Última sincronização: ${rec.sincronizado_em ? new Date(rec.sincronizado_em).toLocaleString('pt-BR') : '—'}.
+    </div>
+    <button class="btn btn-o btn-sm" style="margin-top:8px" onclick="desvincularReceitaAtual()">🔓 Desvincular (voltar a editar manualmente)</button>`;
+    document.getElementById('audit-tbody').innerHTML = (itensOP||[]).filter(i=>i.codigo_mp).map(i=>`<tr><td>${i.produto_mp}</td><td>${fmt(i.percentual)}</td><td>${fmt(i.percentual)}</td><td><span class="sb OK">Sincronizado</span></td></tr>`).join('');
+    document.getElementById('audit-btn-sync').textContent = '🔄 Forçar sincronização agora';
+    document.getElementById('audit-btn-sync').style.display = '';
+    openModal('m-op-audit');
+    return;
+  }
 
   if(!precif){
-    document.getElementById('audit-resumo').innerHTML = `<div style="padding:10px 12px;background:var(--yc);border-radius:8px;color:var(--te)">⚠️ Não encontrei "${rec.nome_produto}" ativo em Precificação — não dá pra comparar.</div>`;
+    document.getElementById('audit-resumo').innerHTML = `<div style="padding:10px 12px;background:var(--yc);border-radius:8px;color:var(--te)">⚠️ Não encontrei "${rec.nome_produto}" ativo em Precificação — não dá pra comparar nem vincular.</div>`;
     document.getElementById('audit-tbody').innerHTML = '';
     document.getElementById('audit-btn-sync').style.display = 'none';
     openModal('m-op-audit');
@@ -3527,27 +3558,38 @@ async function auditarReceita(recId){
   if(precif.warnings.length) rows.push(`<tr><td colspan="4" style="color:var(--vc);font-size:.75rem">⚠️ ${precif.warnings.join(' · ')}</td></tr>`);
 
   document.getElementById('audit-tbody').innerHTML = rows.join('');
-  document.getElementById('audit-resumo').innerHTML = diffs===0
+  document.getElementById('audit-resumo').innerHTML = (diffs===0
     ? `<div style="padding:10px 12px;background:var(--gc);border-radius:8px;color:var(--te)">✅ Tudo igual entre Precificação e Ordens de Produção.</div>`
-    : `<div style="padding:10px 12px;background:var(--bs);border-radius:8px;color:var(--te)">⚠️ ${diffs} divergência(s) encontrada(s).</div>`;
-  document.getElementById('audit-btn-sync').style.display = diffs>0 ? '' : 'none';
-
-  _auditReceitaAtual = { receitaId: recId, nome: rec.nome_produto, itensPrecif: precif.itens };
+    : `<div style="padding:10px 12px;background:var(--bs);border-radius:8px;color:var(--te)">⚠️ ${diffs} divergência(s) encontrada(s).</div>`)
+    + `<div style="margin-top:8px;padding:10px 12px;background:var(--cs);border-radius:8px;font-size:.8rem">🔗 Ainda não vinculada — mudanças futuras em Precificação <strong>não</strong> vão refletir aqui sozinhas. Vincule pra deixar automático daqui pra frente.</div>`;
+  document.getElementById('audit-btn-sync').textContent = '🔗 Vincular a Precificação e Sincronizar';
+  document.getElementById('audit-btn-sync').style.display = '';
   openModal('m-op-audit');
 }
 
 async function sincronizarReceitaAtual(){
   if(!_auditReceitaAtual) return;
-  if(!confirm('Isso substitui os ingredientes de matéria-prima dessa receita em Ordens de Produção pelos dados atuais de Precificação. Ingredientes de semi-acabado (se houver) não são afetados. Confirma?')) return;
+  const { receitaId, vinculado, precifProdutoId } = _auditReceitaAtual;
 
-  const { receitaId, itensPrecif } = _auditReceitaAtual;
-  const { error: errDel } = await sb.from('producao_receita_itens').delete().eq('receita_id', receitaId).not('codigo_mp','is',null);
-  if(errDel){ toast('Erro ao sincronizar: '+errDel.message,'error'); return; }
-  const { error } = await sb.from('producao_receita_itens').insert(
-    itensPrecif.map((i,idx)=>({ receita_id: receitaId, codigo_mp: i.codigo, produto_mp: i.produto, percentual: i.quantidade, unidade: 'Kg', ordem: idx }))
-  );
+  if(!vinculado){
+    if(!precifProdutoId){ toast('Não encontrei o produto correspondente em Precificação.','error'); return; }
+    const { error: errLink } = await sb.from('producao_receitas').update({ precificacao_produto_id: precifProdutoId, vinculado_precificacao: true }).eq('id', receitaId);
+    if(errLink){ toast('Erro ao vincular: '+errLink.message,'error'); return; }
+  }
+
+  const { error } = await sb.rpc('producao_sincronizar_receita', { p_receita_id: receitaId });
   if(error){ toast('Erro ao sincronizar: '+error.message,'error'); return; }
-  toast('Receita sincronizada com Precificação!');
+  toast(vinculado ? 'Sincronizado com Precificação!' : 'Vinculada e sincronizada com Precificação!');
+  closeModal('m-op-audit');
+  loadReceitas();
+}
+
+async function desvincularReceitaAtual(){
+  if(!_auditReceitaAtual) return;
+  if(!confirm('Desvincular essa receita? Ela para de se atualizar sozinha quando Precificação mudar — as quantidades atuais ficam congeladas e editáveis na mão a partir de agora.')) return;
+  const { error } = await sb.from('producao_receitas').update({ vinculado_precificacao: false }).eq('id', _auditReceitaAtual.receitaId);
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast('Receita desvinculada — agora é editável manualmente.');
   closeModal('m-op-audit');
   loadReceitas();
 }
@@ -3607,8 +3649,12 @@ async function abrirNovaReceita(){
   document.getElementById('rec-roteiro').value = '';
   document.getElementById('rec-obs').value = '';
   document.getElementById('rec-itens-wrap').innerHTML = '';
+  _recVinculadaAtual = false;
+  document.getElementById('rec-vinculo-aviso').style.display = 'none';
   openModal('m-op-rec');
 }
+
+let _recVinculadaAtual = false;
 
 async function editReceita(id){
   await carregarReceitasBase();
@@ -3628,6 +3674,12 @@ async function editReceita(id){
   document.getElementById('rec-emb').value = (r.embalagens||[]).join('\n');
   document.getElementById('rec-roteiro').value = r.roteiro || '';
   document.getElementById('rec-obs').value = r.observacoes || '';
+  _recVinculadaAtual = !!r.vinculado_precificacao;
+  const avisoEl = document.getElementById('rec-vinculo-aviso');
+  avisoEl.innerHTML = _recVinculadaAtual
+    ? `🔗 <strong>Vinculada a Precificação</strong> — os ingredientes de matéria-prima abaixo são geridos automaticamente e não podem ser editados aqui. Pra mudar, edite em Precificação (reflete sozinho) ou desvincule pela lupa 🔍 na listagem.`
+    : '';
+  avisoEl.style.display = _recVinculadaAtual ? 'block' : 'none';
   document.getElementById('rec-itens-wrap').innerHTML = '';
   (itens||[]).forEach(i=>addRecItemRow(i.receita_base_id?'semiacabado':'mp', i.codigo_mp, i.produto_mp, i.percentual, i.unidade, i.receita_base_id));
   if(!itens?.length) addRecItemRow();
@@ -3656,7 +3708,7 @@ async function saveReceita(){
   const obs = document.getElementById('rec-obs').value.trim()||null;
 
   const rows = [...document.querySelectorAll('#rec-itens-wrap .rec-item-row')];
-  const itens = rows.map(row=>{
+  const itens = rows.filter(row => !(_recVinculadaAtual && row.dataset.tipo === 'mp')).map(row=>{
     const rtipo = row.querySelector('.rec-item-tipo').value;
     const pct = parseFloat(row.querySelector('.rec-item-pct').value);
     const un = row.querySelector('.rec-item-un').value;
@@ -3669,7 +3721,8 @@ async function saveReceita(){
   });
 
   if(!cod||!nome||!qtdbase){ toast('Preencha código, nome do produto e quantidade base','error'); return; }
-  if(!itens.length || itens.some(i=>!i.percentual || (!i.codigo_mp && !i.receita_base_id))){ toast('Todo ingrediente precisa de matéria-prima ou semi-acabado selecionado, e percentual','error'); return; }
+  if(!_recVinculadaAtual && (!itens.length || itens.some(i=>!i.percentual || (!i.codigo_mp && !i.receita_base_id)))){ toast('Todo ingrediente precisa de matéria-prima ou semi-acabado selecionado, e percentual','error'); return; }
+  if(itens.some(i=>i.receita_base_id && !i.percentual)){ toast('Todo ingrediente de semi-acabado precisa de percentual','error'); return; }
 
   let receitaId = id;
   if(id){
@@ -3679,7 +3732,9 @@ async function saveReceita(){
       embalagens: emb, roteiro, observacoes: obs, updated_at: new Date().toISOString()
     }).eq('id', id);
     if(error){ toast('Erro: '+error.message,'error'); return; }
-    await sb.from('producao_receita_itens').delete().eq('receita_id', id);
+    // Receita vinculada: preserva as linhas de MP (geridas pelo gatilho automático), só mexe no semi-acabado.
+    if(_recVinculadaAtual) await sb.from('producao_receita_itens').delete().eq('receita_id', id).not('receita_base_id','is',null);
+    else await sb.from('producao_receita_itens').delete().eq('receita_id', id);
   } else {
     const { data, error } = await sb.from('producao_receitas').insert({
       codigo: cod, tipo_ordem: tipo, nome_produto: nome, categoria_op: categoriaOp, categoria_produto: categoriaProduto,
@@ -3690,10 +3745,12 @@ async function saveReceita(){
     receitaId = data.id;
   }
 
-  const { error: errItens } = await sb.from('producao_receita_itens').insert(
-    itens.map((i,idx)=>({ receita_id: receitaId, codigo_mp: i.codigo_mp, produto_mp: i.produto_mp, receita_base_id: i.receita_base_id, percentual: i.percentual, unidade: i.unidade, ordem: idx }))
-  );
-  if(errItens){ toast('Erro ao salvar ingredientes: '+errItens.message,'error'); return; }
+  if(itens.length){
+    const { error: errItens } = await sb.from('producao_receita_itens').insert(
+      itens.map((i,idx)=>({ receita_id: receitaId, codigo_mp: i.codigo_mp, produto_mp: i.produto_mp, receita_base_id: i.receita_base_id, percentual: i.percentual, unidade: i.unidade, ordem: idx }))
+    );
+    if(errItens){ toast('Erro ao salvar ingredientes: '+errItens.message,'error'); return; }
+  }
 
   toast(id?'Receita atualizada!':'Receita cadastrada!');
   closeModal('m-op-rec');
