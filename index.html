@@ -559,11 +559,12 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 
 <!-- RECEITAS (CADASTRO DE OP) -->
 <div id="sec-op-rec" class="sec">
-  <div class="sh"><div><p class="st">Embalagens Padrão</p><p class="sd">Peso por unidade de venda, usado pra calcular a previsão de rendimento das Ordens de Produto Acabado</p></div></div>
+  <div class="sh"><div><p class="st">Embalagens Padrão</p><p class="sd">Peso por unidade de venda (sempre em Kg), usado pra calcular a previsão de rendimento das Ordens de Produto Acabado. Livre pra cadastrar quantas categorias/pesos forem necessários — ex: picolés de tamanhos diferentes, caixas de gelato de pesos diferentes.</p></div>
+  <button class="btn btn-o btn-sm" onclick="novaLinhaEmbPadrao()">+ Nova Embalagem</button></div>
   <div class="tc"><div class="tw"><table id="t-op-embpad"><thead><tr><th>Categoria</th><th>Unidade de Venda</th><th>Peso por Unidade (kg)</th><th></th></tr></thead>
   <tbody id="tb-op-embpad"><tr><td colspan="4"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 
-  <div class="sh" style="margin-top:28px"><div><p class="st">Receitas Cadastradas (Ordens de Produção)</p><p class="sd">Ficha técnica: ingredientes de matéria-prima e/ou semi-acabado vinculados por percentual, roteiro de preparo/envase</p></div>
+  <div class="sh" style="margin-top:32px"><div><p class="st">Receitas Cadastradas (Ordens de Produção)</p><p class="sd">Ficha técnica: ingredientes de matéria-prima e/ou semi-acabado vinculados por percentual, roteiro de preparo/envase</p></div>
   <div class="bg"><button class="btn btn-o" onclick="auditarTodasReceitas()">🔎 Auditar Todas (vs. Precificação)</button><button class="btn btn-p" onclick="abrirNovaReceita()">+ Nova Receita</button></div></div>
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-op-rec',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadReceitas()">↻</button></div>
   <div class="tw"><table id="t-op-rec"><thead><tr><th>Código</th><th>Produto</th><th>Tipo</th><th>Vínculo</th><th>Base</th><th>Ingredientes</th><th>Embalagens</th><th>Status</th><th></th></tr></thead>
@@ -574,6 +575,13 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 <div id="sec-op-exec" class="sec">
   <div class="sh"><div><p class="st">Execução de Ordens de Produção</p><p class="sd">Iniciar separa a matéria-prima do estoque disponível; finalizar dá baixa automática (FIFO)</p></div>
   <button class="btn btn-p" onclick="abrirNovaOP()">+ Nova Ordem de Produção</button></div>
+
+  <div id="op-maes-pendentes-wrap" style="display:none;margin-bottom:32px">
+    <div class="sh"><div><p class="st">🔗 OP Mães Pendentes de Fechamento</p><p class="sd">Lotes já separados aguardando as filhas de embalagem terminarem, pra então baixar a matéria-prima</p></div></div>
+    <div class="tc"><div class="tw"><table id="t-op-maes-pend"><thead><tr><th>Nº OP Mãe</th><th>Produto</th><th>Kg Total</th><th>Alocado nas Filhas</th><th>Filhas</th><th>Ações</th></tr></thead>
+    <tbody id="tb-op-maes-pend"></tbody></table></div></div>
+  </div>
+
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-op-exec',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadExecOP()">↻</button></div>
   <div class="tw"><table id="t-op-exec"><thead><tr><th>Nº OP</th><th>Produto</th><th>Qtd. Planejada</th><th>Embalagem</th><th>Responsável</th><th>Status</th><th>Custo MP</th><th>Matéria-Prima</th><th>Ações</th></tr></thead>
   <tbody id="tb-op-exec"><tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
@@ -597,7 +605,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="tw"><table id="t-prev-prod"><thead><tr><th>Receita</th><th>Sabor</th><th>Estoque Atual (PA)</th><th style="width:160px">Previsão de Produção (kg)</th></tr></thead>
   <tbody id="tb-prev-prod"><tr><td colspan="4"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 
-  <div id="prev-resultado-wrap" style="display:none;margin-top:28px">
+  <div id="prev-resultado-wrap" style="display:none;margin-top:32px">
     <div class="sh"><div><p class="st">Necessidade de Matéria-Prima</p><p class="sd" id="prev-resumo-sub"></p></div>
     <button class="btn btn-l" onclick="exportPrevisaoExcel()">📊 Exportar Excel</button></div>
     <div class="rel-kpi-row" id="prev-kpis"></div>
@@ -743,7 +751,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
       <option value="base">🧪 Base (semi-acabado)</option>
     </select></div>
     <div class="fgr" id="rec-categoria-produto-wrap"><label>Categoria do Produto</label><select id="rec-categoria-produto">
-      <option value="">—</option><option>Gelato</option><option>Potes</option><option>Picolés</option><option>Picolés Yeez</option>
+      <option value="">—</option>
     </select></div>
     <div class="fgr"><label>Quantidade Base *</label><input id="rec-qtdbase" type="number" min="0.001" step="0.001" value="1"></div>
     <div class="fgr"><label>Unidade Base</label><select id="rec-unbase"><option>Kg</option><option>L</option><option>Un</option></select></div>
@@ -783,27 +791,52 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="md"><div class="mh"><span class="mt">Nova Ordem de Produção</span><button class="mc" onclick="closeModal('m-op-nova')">✕</button></div>
   <div class="mb"><div class="fg">
     <div class="fgr"><label>Nº OP <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="opx-numero" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
+    <div class="fgr"><label>Tipo de OP *</label><select id="opx-tipo" onchange="onOpxTipoChange()">
+      <option value="unica">🧊 Única (produz e embala em uma etapa)</option>
+      <option value="mae">🔗 Mãe (lote grande, gera OPs Filhas de embalagem)</option>
+    </select></div>
     <div class="fgr"><label>Receita *</label><select id="opx-receita" onchange="onReceitaSelecionada()"><option value="">— Selecione —</option></select></div>
     <div class="fgr"><label>Quantidade a Produzir *</label><input id="opx-qtd" type="number" min="0.001" step="0.001" oninput="previewReceitaConsumo()"></div>
     <div class="fgr"><label>Unidade</label><input id="opx-un" type="text" disabled></div>
-    <div class="fgr"><label>Embalagem</label><select id="opx-embalagem"><option value="">—</option></select></div>
+    <div class="fgr" id="opx-embalagem-wrap"><label>Embalagem</label><select id="opx-embalagem"><option value="">—</option></select></div>
     <div class="fgr"><label>Data</label><input id="opx-data" type="date"></div>
     <div class="fgr"><label>Responsável</label><input id="opx-resp" type="text"></div>
     <div class="fgr full"><label>Observações</label><textarea id="opx-obs"></textarea></div>
+    <div class="fgr full" id="opx-mae-aviso" style="display:none;font-size:.8rem;color:var(--te);background:var(--yc);padding:10px 12px;border-radius:8px">🔗 Essa OP só reserva/baixa a matéria-prima do lote total. A embalagem em caixas/potes/picolés (e o rendimento de cada uma) é feita depois, criando OPs Filhas a partir dela.</div>
     <div class="fgr full" id="opx-preview" style="font-size:.8rem;color:var(--tm)"></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-nova')">Cancelar</button><button class="btn btn-p" onclick="saveNovaOP()">Cadastrar OP</button></div></div>
 </div>
 
-<!-- Finalizar OP (baixa automática) -->
-<div class="mo" id="m-op-final">
-  <div class="md"><div class="mh"><span class="mt">Finalizar OP — Baixa de Insumos</span><button class="mc" onclick="closeModal('m-op-final')">✕</button></div>
+<!-- Nova OP Filha -->
+<div class="mo" id="m-op-filha">
+  <div class="md"><div class="mh"><span class="mt">Nova OP Filha</span><button class="mc" onclick="closeModal('m-op-filha')">✕</button></div>
   <div class="mb">
-    <p style="font-size:.82rem;color:var(--tm);margin-bottom:12px">Confira/ajuste as quantidades realmente consumidas (matéria-prima baixa pelo FIFO; semi-acabado baixa direto do estoque da Base). Depois disso a OP fica aguardando a confirmação do rendimento real.</p>
+    <input type="hidden" id="opfilha-mae-id">
+    <p id="opfilha-saldo-info" style="font-size:.82rem;color:var(--tm);margin-bottom:14px;background:var(--cs);padding:10px 12px;border-radius:8px"></p>
+    <div class="fg">
+      <div class="fgr"><label>Nº OP Filha <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="opfilha-numero" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
+      <div class="fgr"><label>Categoria (embalagem) *</label><select id="opfilha-categoria" onchange="onOpfilhaCategoriaChange()"><option value="">— Selecione —</option></select></div>
+      <div class="fgr full"><label>Produto Final *</label><select id="opfilha-produto"><option value="">— Selecione a categoria primeiro —</option></select></div>
+      <div class="fgr"><label>Quantidade a Embalar (Kg) *</label><input id="opfilha-qtd" type="number" min="0.001" step="0.001" oninput="onOpfilhaQtdChange()"></div>
+      <div class="fgr"><label>Responsável</label><input id="opfilha-resp" type="text"></div>
+      <div class="fgr full"><label>Observações</label><textarea id="opfilha-obs"></textarea></div>
+      <div class="fgr full" id="opfilha-preview" style="font-size:.82rem;color:var(--tm)"></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-filha')">Cancelar</button><button class="btn btn-p" onclick="salvarOpFilha()">Cadastrar Filha</button></div></div>
+</div>
+
+<!-- Finalizar OP (baixa automática) / Encerrar OP Mãe -->
+<div class="mo" id="m-op-final">
+  <div class="md"><div class="mh"><span class="mt" id="opf-titulo">Finalizar OP — Baixa de Insumos</span><button class="mc" onclick="closeModal('m-op-final')">✕</button></div>
+  <div class="mb">
+    <p style="font-size:.82rem;color:var(--tm);margin-bottom:12px" id="opf-descricao">Confira/ajuste as quantidades realmente consumidas (matéria-prima baixa pelo FIFO; semi-acabado baixa direto do estoque da Base). Depois disso a OP fica aguardando a confirmação do rendimento real.</p>
     <input type="hidden" id="opf-ordem-id">
+    <input type="hidden" id="opf-modo" value="unica">
     <div id="opf-itens-wrap" style="display:flex;flex-direction:column;gap:10px"></div>
   </div>
-  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-final')">Cancelar</button><button class="btn btn-b" onclick="confirmarFinalizarOP()">Confirmar Baixa</button></div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-op-final')">Cancelar</button><button class="btn btn-b" id="opf-btn-confirmar" onclick="confirmarFinalizarOP()">Confirmar Baixa</button></div></div>
 </div>
 
 <!-- Confirmar Rendimento (produto acabado ou base) -->
@@ -3406,22 +3439,66 @@ function onRecItemTipoChange(prefix){
 }
 
 async function loadEmbPadrao(){
+  await carregarEmbPadraoCache();
   const tb = document.getElementById('tb-op-embpad');
-  const { data, error } = await sb.from('producao_embalagens_padrao').select('*').order('categoria');
-  if(error){ tb.innerHTML = `<tr><td colspan="4">Erro: ${error.message}</td></tr>`; return; }
-  tb.innerHTML = (data||[]).map(e=>`<tr>
-    <td><strong>${e.categoria}</strong></td>
-    <td>${e.nome_unidade}</td>
-    <td><input type="number" min="0" step="0.001" id="embpad-${e.categoria.replace(/\s/g,'_')}" value="${e.peso_kg??''}" style="width:110px" placeholder="não definido"></td>
-    <td><button class="btn btn-p btn-xs" onclick="salvarEmbPadrao('${e.categoria}')">Salvar</button></td>
+  tb.innerHTML = _embPadraoCache.map(e=>`<tr data-cat-original="${e.categoria}">
+    <td><input type="text" class="embpad-categoria" value="${e.categoria}" style="width:150px" placeholder="Ex: Picolé Pequeno"></td>
+    <td><input type="text" class="embpad-unidade" value="${e.nome_unidade}" style="width:120px" placeholder="Ex: Picolé P"></td>
+    <td><input type="number" min="0" step="0.001" class="embpad-peso" value="${e.peso_kg??''}" style="width:110px" placeholder="não definido"> kg</td>
+    <td><div class="bg">
+      <button class="btn btn-p btn-xs" onclick="salvarEmbPadrao(this)">Salvar</button>
+      <button class="del-btn" title="Excluir" onclick="excluirEmbPadrao(this,'${e.categoria}')">🗑</button>
+    </div></td>
   </tr>`).join('') || '<tr><td colspan="4">Nenhuma categoria cadastrada.</td></tr>';
 }
-async function salvarEmbPadrao(categoria){
-  const val = document.getElementById('embpad-'+categoria.replace(/\s/g,'_')).value;
-  const peso = val === '' ? null : parseFloat(val);
-  const { error } = await sb.from('producao_embalagens_padrao').update({ peso_kg: peso, atualizado_em: new Date().toISOString() }).eq('categoria', categoria);
+
+function novaLinhaEmbPadrao(){
+  const tb = document.getElementById('tb-op-embpad');
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td><input type="text" class="embpad-categoria" value="" style="width:150px" placeholder="Ex: Picolé Grande"></td>
+    <td><input type="text" class="embpad-unidade" value="" style="width:120px" placeholder="Ex: Picolé G"></td>
+    <td><input type="number" min="0" step="0.001" class="embpad-peso" value="" style="width:110px" placeholder="0.100"> kg</td>
+    <td><div class="bg">
+      <button class="btn btn-p btn-xs" onclick="salvarEmbPadrao(this)">Salvar</button>
+      <button class="del-btn" title="Remover linha" onclick="this.closest('tr').remove()">🗑</button>
+    </div></td>`;
+  tb.appendChild(row);
+}
+
+async function salvarEmbPadrao(btnEl){
+  const row = btnEl.closest('tr');
+  const categoriaOriginal = row.dataset.catOriginal || null;
+  const categoria = row.querySelector('.embpad-categoria').value.trim();
+  const nomeUnidade = row.querySelector('.embpad-unidade').value.trim();
+  const pesoStr = row.querySelector('.embpad-peso').value;
+  const peso = pesoStr === '' ? null : parseFloat(pesoStr);
+
+  if(!categoria || !nomeUnidade){ toast('Preencha categoria e nome da unidade','error'); return; }
+
+  let error;
+  if(categoriaOriginal){
+    if(categoriaOriginal === categoria){
+      ({ error } = await sb.from('producao_embalagens_padrao').update({ nome_unidade: nomeUnidade, peso_kg: peso, atualizado_em: new Date().toISOString() }).eq('categoria', categoriaOriginal));
+    } else {
+      // categoria (chave primária) mudou de nome: apaga a antiga e recria com o novo nome
+      await sb.from('producao_embalagens_padrao').delete().eq('categoria', categoriaOriginal);
+      ({ error } = await sb.from('producao_embalagens_padrao').insert({ categoria, nome_unidade: nomeUnidade, peso_kg: peso }));
+    }
+  } else {
+    ({ error } = await sb.from('producao_embalagens_padrao').insert({ categoria, nome_unidade: nomeUnidade, peso_kg: peso }));
+  }
   if(error){ toast('Erro: '+error.message,'error'); return; }
-  toast('Peso padrão de "'+categoria+'" atualizado!');
+  toast('Embalagem "'+categoria+'" salva!');
+  loadEmbPadrao();
+}
+
+async function excluirEmbPadrao(btnEl, categoria){
+  if(!confirm(`Excluir a embalagem "${categoria}"? Receitas/OPs que já usam essa categoria não são afetadas, mas não vão mais calcular previsão de rendimento automaticamente.`)) return;
+  const { error } = await sb.from('producao_embalagens_padrao').delete().eq('categoria', categoria);
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast('Embalagem excluída.');
+  loadEmbPadrao();
 }
 
 async function loadReceitas(){
@@ -3635,6 +3712,7 @@ async function auditarTodasReceitas(){
 
 async function abrirNovaReceita(){
   await carregarReceitasBase();
+  await popularSelectCategoriaProduto();
   document.getElementById('op-rec-title').textContent = 'Nova Receita (Ordem de Produção)';
   document.getElementById('rec-id').value = '';
   document.getElementById('rec-cod').value = '';
@@ -3654,10 +3732,19 @@ async function abrirNovaReceita(){
   openModal('m-op-rec');
 }
 
+async function popularSelectCategoriaProduto(){
+  await carregarEmbPadraoCache();
+  const sel = document.getElementById('rec-categoria-produto');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">—</option>' + _embPadraoCache.map(e=>`<option>${e.categoria}</option>`).join('');
+  sel.value = atual;
+}
+
 let _recVinculadaAtual = false;
 
 async function editReceita(id){
   await carregarReceitasBase();
+  await popularSelectCategoriaProduto();
   const { data: r, error } = await sb.from('producao_receitas').select('*').eq('id', id).single();
   if(error){ toast('Erro ao carregar receita: '+error.message,'error'); return; }
   const { data: itens } = await sb.from('producao_receita_itens').select('*').eq('receita_id', id).order('ordem');
@@ -3761,6 +3848,12 @@ async function saveReceita(){
 // ===== EXECUÇÃO DE OP =====
 // ===================================================================
 let _receitasCache = [];
+let _embPadraoCache = [];
+async function carregarEmbPadraoCache(){
+  const { data } = await sb.from('producao_embalagens_padrao').select('*').order('categoria');
+  _embPadraoCache = data || [];
+  return _embPadraoCache;
+}
 
 async function popularSelectReceitas(){
   const { data } = await sb.from('producao_receitas').select('*').eq('ativo', true).order('nome_produto');
@@ -3814,22 +3907,31 @@ async function previewReceitaConsumo(){
   }).join('<br>') + previsaoHtml;
 }
 
+function onOpxTipoChange(){
+  const tipo = document.getElementById('opx-tipo').value;
+  document.getElementById('opx-embalagem-wrap').style.display = tipo==='mae' ? 'none' : '';
+  document.getElementById('opx-mae-aviso').style.display = tipo==='mae' ? '' : 'none';
+}
+
 function abrirNovaOP(){
+  document.getElementById('opx-tipo').value = 'unica';
   document.getElementById('opx-qtd').value = '';
   document.getElementById('opx-resp').value = '';
   document.getElementById('opx-obs').value = '';
   document.getElementById('opx-embalagem').innerHTML = '<option value="">—</option>';
   document.getElementById('opx-un').value = '';
   document.getElementById('opx-preview').innerHTML = '';
+  onOpxTipoChange();
   openModal('m-op-nova');
 }
 
 async function saveNovaOP(){
   const numero = document.getElementById('opx-numero').value;
+  const tipoOp = document.getElementById('opx-tipo').value;
   const receitaId = document.getElementById('opx-receita').value;
   const qtd = parseFloat(document.getElementById('opx-qtd').value);
   const un = document.getElementById('opx-un').value;
-  const embalagem = document.getElementById('opx-embalagem').value || null;
+  const embalagem = tipoOp==='mae' ? null : (document.getElementById('opx-embalagem').value || null);
   const data_criacao = document.getElementById('opx-data').value || today();
   const resp = document.getElementById('opx-resp').value.trim()||null;
   const obs = document.getElementById('opx-obs').value.trim()||null;
@@ -3840,9 +3942,9 @@ async function saveNovaOP(){
   const fator = qtd / r.quantidade_base;
 
   const { data: ordem, error } = await sb.from('producao_ordens').insert({
-    numero_op: numero, receita_id: receitaId, produto: r.nome_produto, quantidade_planejada: qtd,
+    numero_op: numero, tipo_op: tipoOp, receita_id: receitaId, produto: r.nome_produto, quantidade_planejada: qtd,
     unidade: un, embalagem, data_criacao, responsavel: resp, observacoes: obs, status: 'CADASTRADA',
-    categoria_op: r.categoria_op, categoria_produto: r.categoria_produto
+    categoria_op: r.categoria_op, categoria_produto: tipoOp==='mae' ? null : r.categoria_produto
   }).select('id').single();
   if(error){ toast('Erro: '+error.message,'error'); return; }
 
@@ -3867,35 +3969,55 @@ async function loadExecOP(){
   tb.innerHTML = '<tr><td colspan="9"><div class="ls"><div class="sp"></div></div></td></tr>';
   const { data: ops, error } = await sb.from('producao_ordens').select('*').order('created_at',{ascending:false});
   if(error){ tb.innerHTML = `<tr><td colspan="9"><div class="es"><div class="ei">🏭</div><p>Erro: ${error.message}</p></div></td></tr>`; loadAjustes(); return; }
-  if(!ops?.length){ tb.innerHTML = '<tr><td colspan="9"><div class="es"><div class="ei">🏭</div><p>Nenhuma OP cadastrada</p></div></td></tr>'; loadAjustes(); return; }
+  if(!ops?.length){ tb.innerHTML = '<tr><td colspan="9"><div class="es"><div class="ei">🏭</div><p>Nenhuma OP cadastrada</p></div></td></tr>'; document.getElementById('op-maes-pendentes-wrap').style.display='none'; loadAjustes(); return; }
   const ids = ops.map(o=>o.id);
   const { data: itens } = await sb.from('producao_ordem_itens').select('*').in('ordem_id', ids);
   const byOp = {}; (itens||[]).forEach(i=>{ (byOp[i.ordem_id] ||= []).push(i); });
 
-  tb.innerHTML = ops.map(o=>{
+  const filhasPorMae = {};
+  ops.filter(o=>o.tipo_op==='filha').forEach(o=>{ (filhasPorMae[o.ordem_mae_id] ||= []).push(o); });
+
+  function linhaOP(o, ehFilha){
     const its = byOp[o.id]||[];
     const mpList = its.length ? `<details><summary style="font-size:.7rem;color:var(--tm);cursor:pointer">📦 ${its.length} insumo(s)</summary>
         <div style="padding:4px 0 0 8px;font-size:.7rem;color:var(--tm)">
           ${its.map(i=>`• ${i.tipo_item==='semiacabado'?'🧪 ':''}${i.produto_mp} — plan.: ${fmt(i.quantidade_planejada)} ${i.unidade}${i.quantidade_baixada>0?` | baixado: ${fmt(i.quantidade_baixada)}`:''}`).join('<br>')}
-        </div></details>` : '—';
+        </div></details>` : (ehFilha ? '<small style="color:var(--tm)">baixa fica com a mãe</small>' : '—');
     const sk = o.status;
     const skClass = sk==='FINALIZADA'?'OK':sk==='CANCELADA'?'CRITICO':sk==='SEPARADA'?'ATENCAO':sk==='AGUARDANDO_RENDIMENTO'?'ATENCAO':'EM_PROCESSO';
     const skLabel = sk==='AGUARDANDO_RENDIMENTO' ? 'AGUARD. RENDIMENTO' : sk;
     let acoes = '';
-    if(o.status==='CADASTRADA') acoes += `<button class="btn btn-p btn-xs" onclick="separarOP('${o.id}')">Separar</button> `;
-    if(o.status==='SEPARADA') acoes += `<button class="btn btn-b btn-xs" onclick="abrirFinalizarOP('${o.id}')">Finalizar</button> `;
-    if(o.status==='AGUARDANDO_RENDIMENTO') acoes += `<button class="btn btn-p btn-xs" onclick="abrirConfirmarRendimento('${o.id}')">📦 Confirmar Rendimento</button> `;
-    if(['CADASTRADA','SEPARADA'].includes(o.status)) acoes += `<button class="btn btn-o btn-xs" onclick="cancelarOP('${o.id}')">Cancelar</button> `;
-    if(['CADASTRADA','CANCELADA'].includes(o.status)) acoes += `<button class="del-btn" title="Excluir" onclick="delOP('${o.id}','${o.numero_op}')">🗑</button>`;
-    const tipoTag = o.categoria_op==='base' ? '<span class="sb ATENCAO" style="font-size:.62rem">🧪 Base</span>' : '<span class="sb OK" style="font-size:.62rem">🧊 Acabado</span>';
+    if(o.tipo_op==='filha'){
+      if(o.status==='AGUARDANDO_RENDIMENTO') acoes += `<button class="btn btn-p btn-xs" onclick="abrirConfirmarRendimento('${o.id}')">📦 Confirmar Rendimento</button> `;
+    } else if(o.tipo_op==='mae'){
+      if(o.status==='CADASTRADA') acoes += `<button class="btn btn-p btn-xs" onclick="separarOP('${o.id}')">Separar</button> `;
+      if(o.status==='SEPARADA') acoes += `<button class="btn btn-o btn-xs" onclick="abrirNovaOpFilha('${o.id}')">+ Filha</button> `;
+      if(o.status==='SEPARADA'){
+        const filhas = filhasPorMae[o.id]||[];
+        const pendentes = filhas.filter(f=>!['FINALIZADA','CANCELADA'].includes(f.status)).length;
+        const podeEncerrar = filhas.length>0 && pendentes===0;
+        acoes += `<button class="btn btn-b btn-xs" ${podeEncerrar?'':'disabled title="Aguardando todas as filhas finalizarem"'} onclick="abrirEncerrarMae('${o.id}')">🔒 Encerrar Mãe</button> `;
+      }
+      if(['CADASTRADA','SEPARADA'].includes(o.status)) acoes += `<button class="btn btn-o btn-xs" onclick="cancelarOP('${o.id}')">Cancelar</button> `;
+    } else {
+      if(o.status==='CADASTRADA') acoes += `<button class="btn btn-p btn-xs" onclick="separarOP('${o.id}')">Separar</button> `;
+      if(o.status==='SEPARADA') acoes += `<button class="btn btn-b btn-xs" onclick="abrirFinalizarOP('${o.id}')">Finalizar</button> `;
+      if(o.status==='AGUARDANDO_RENDIMENTO') acoes += `<button class="btn btn-p btn-xs" onclick="abrirConfirmarRendimento('${o.id}')">📦 Confirmar Rendimento</button> `;
+      if(['CADASTRADA','SEPARADA'].includes(o.status)) acoes += `<button class="btn btn-o btn-xs" onclick="cancelarOP('${o.id}')">Cancelar</button> `;
+    }
+    if(['CADASTRADA','CANCELADA'].includes(o.status) && o.tipo_op!=='mae') acoes += `<button class="del-btn" title="Excluir" onclick="delOP('${o.id}','${o.numero_op}')">🗑</button>`;
+
+    const tipoTag = o.tipo_op==='mae' ? '<span class="sb ATENCAO" style="font-size:.62rem">🔗 Mãe</span>'
+      : o.tipo_op==='filha' ? '<span class="sb OK" style="font-size:.62rem">↳ Filha ('+(o.categoria_produto||'')+')</span>'
+      : o.categoria_op==='base' ? '<span class="sb ATENCAO" style="font-size:.62rem">🧪 Base</span>' : '<span class="sb OK" style="font-size:.62rem">🧊 Acabado</span>';
     let rendInfo = '';
     if(sk==='AGUARDANDO_RENDIMENTO' && o.rendimento_previsto!=null) rendInfo = `<br><small style="color:var(--ya)">Previsto: ${fmt(o.rendimento_previsto)} ${o.rendimento_unidade}</small>`;
     if(sk==='FINALIZADA' && o.rendimento_confirmado!=null){
       rendInfo = `<br><small style="color:var(--gok)">Rendeu: ${fmt(o.rendimento_confirmado)} ${o.rendimento_unidade||''}</small>`;
       if(o.perda_rendimento_qtd>0) rendInfo += `<br><small style="color:var(--vc)">⚠️ Perda: ${fmt(o.perda_rendimento_qtd)} ${o.rendimento_unidade||''}</small>`;
     }
-    return `<tr>
-      <td><strong>${o.numero_op}</strong><br><small style="color:var(--tm)">${fmtD(o.data_criacao)}</small></td>
+    return `<tr${ehFilha?' style="background:var(--cs)"':''}>
+      <td>${ehFilha?'<span style="color:var(--tm)">↳ </span>':''}<strong>${o.numero_op}</strong><br><small style="color:var(--tm)">${fmtD(o.data_criacao)}</small></td>
       <td>${o.produto}<br>${tipoTag}</td>
       <td>${fmt(o.quantidade_planejada)} ${o.unidade}${rendInfo}</td>
       <td>${o.embalagem||'—'}</td>
@@ -3905,7 +4027,45 @@ async function loadExecOP(){
       <td style="min-width:160px">${mpList}</td>
       <td><div class="bg" style="flex-wrap:wrap">${acoes}</div></td>
     </tr>`;
+  }
+
+  const topo = ops.filter(o=>o.tipo_op!=='filha');
+  tb.innerHTML = topo.map(o=>{
+    let html = linhaOP(o, false);
+    if(o.tipo_op==='mae'){
+      const filhas = (filhasPorMae[o.id]||[]).sort((a,b)=>a.numero_op.localeCompare(b.numero_op));
+      html += filhas.map(f=>linhaOP(f, true)).join('');
+    }
+    return html;
   }).join('');
+
+  // Painel de mães pendentes de fechamento
+  const maesPend = ops.filter(o=>o.tipo_op==='mae' && o.status==='SEPARADA');
+  const wrapPend = document.getElementById('op-maes-pendentes-wrap');
+  if(maesPend.length){
+    wrapPend.style.display = '';
+    document.getElementById('tb-op-maes-pend').innerHTML = maesPend.map(o=>{
+      const filhas = filhasPorMae[o.id]||[];
+      const alocado = filhas.filter(f=>f.status!=='CANCELADA').reduce((s,f)=>s+Number(f.quantidade_planejada),0);
+      const finalizadas = filhas.filter(f=>f.status==='FINALIZADA').length;
+      const pendentes = filhas.filter(f=>!['FINALIZADA','CANCELADA'].includes(f.status)).length;
+      const podeEncerrar = filhas.length>0 && pendentes===0;
+      return `<tr>
+        <td><strong>${o.numero_op}</strong></td>
+        <td>${o.produto}</td>
+        <td>${fmt(o.quantidade_planejada)} Kg</td>
+        <td>${fmt(alocado)} Kg <small style="color:var(--tm)">(${fmt(o.quantidade_planejada-alocado)} kg livres)</small></td>
+        <td>${finalizadas}/${filhas.length} finalizada(s)${pendentes>0?` · <span style="color:var(--vc)">${pendentes} pendente(s)</span>`:''}</td>
+        <td><div class="bg">
+          <button class="btn btn-o btn-xs" onclick="abrirNovaOpFilha('${o.id}')">+ Filha</button>
+          <button class="btn btn-b btn-xs" ${podeEncerrar?'':'disabled'} onclick="abrirEncerrarMae('${o.id}')">🔒 Encerrar</button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  } else {
+    wrapPend.style.display = 'none';
+  }
+
   loadAjustes();
 }
 
@@ -3922,7 +4082,28 @@ async function separarOP(id){
 async function abrirFinalizarOP(id){
   const { data: itens, error } = await sb.from('producao_ordem_itens').select('*').eq('ordem_id', id);
   if(error){ toast('Erro: '+error.message,'error'); return; }
+  document.getElementById('opf-modo').value = 'unica';
   document.getElementById('opf-ordem-id').value = id;
+  document.getElementById('opf-titulo').textContent = 'Finalizar OP — Baixa de Insumos';
+  document.getElementById('opf-descricao').textContent = 'Confira/ajuste as quantidades realmente consumidas (matéria-prima baixa pelo FIFO; semi-acabado baixa direto do estoque da Base). Depois disso a OP fica aguardando a confirmação do rendimento real.';
+  document.getElementById('opf-btn-confirmar').textContent = 'Confirmar Baixa';
+  document.getElementById('opf-itens-wrap').innerHTML = (itens||[]).map(i=>`
+    <div class="fgr" data-codigo="${i.codigo_mp||''}" data-tipo="${i.tipo_item}" data-basereceita="${i.receita_base_id||''}">
+      <label>${i.tipo_item==='semiacabado'?'🧪 ':'📦 '}${i.produto_mp} — separado: ${fmt(i.quantidade_separada)} ${i.unidade}</label>
+      <input type="number" min="0" step="0.001" class="opf-qtd-input" value="${i.quantidade_separada}">
+    </div>`).join('');
+  openModal('m-op-final');
+}
+
+async function abrirEncerrarMae(id){
+  const { data: ordem } = await sb.from('producao_ordens').select('*').eq('id', id).single();
+  const { data: itens, error } = await sb.from('producao_ordem_itens').select('*').eq('ordem_id', id);
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  document.getElementById('opf-modo').value = 'mae';
+  document.getElementById('opf-ordem-id').value = id;
+  document.getElementById('opf-titulo').textContent = 'Encerrar OP Mãe — ' + (ordem?.numero_op||'');
+  document.getElementById('opf-descricao').textContent = 'Todas as filhas já finalizaram. Confira/ajuste as quantidades realmente consumidas do lote total — essa é a baixa definitiva de matéria-prima da mãe.';
+  document.getElementById('opf-btn-confirmar').textContent = '🔒 Confirmar e Encerrar Mãe';
   document.getElementById('opf-itens-wrap').innerHTML = (itens||[]).map(i=>`
     <div class="fgr" data-codigo="${i.codigo_mp||''}" data-tipo="${i.tipo_item}" data-basereceita="${i.receita_base_id||''}">
       <label>${i.tipo_item==='semiacabado'?'🧪 ':'📦 '}${i.produto_mp} — separado: ${fmt(i.quantidade_separada)} ${i.unidade}</label>
@@ -3933,6 +4114,7 @@ async function abrirFinalizarOP(id){
 
 async function confirmarFinalizarOP(){
   const id = document.getElementById('opf-ordem-id').value;
+  const modo = document.getElementById('opf-modo').value;
   const rows = [...document.querySelectorAll('#opf-itens-wrap [data-tipo]')];
   const itens = rows.map(row=>({
     tipo_item: row.dataset.tipo,
@@ -3940,15 +4122,81 @@ async function confirmarFinalizarOP(){
     receita_base_id: row.dataset.basereceita || null,
     quantidade: parseFloat(row.querySelector('.opf-qtd-input').value)||0
   }));
-  const resp = prompt('Responsável pela finalização (opcional):','') || null;
-  const { error } = await sb.rpc('producao_finalizar_op', { p_ordem_id: id, p_itens: itens, p_responsavel: resp });
-  if(error){ toast('Erro ao finalizar: '+error.message,'error'); return; }
-  toast('Insumos baixados! Agora falta confirmar o rendimento real da OP.');
+  const resp = prompt('Responsável (opcional):','') || null;
+  const rpc = modo==='mae' ? 'producao_encerrar_op_mae' : 'producao_finalizar_op';
+  const { error } = await sb.rpc(rpc, { p_ordem_id: id, p_itens: itens, p_responsavel: resp });
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast(modo==='mae' ? 'OP Mãe encerrada — matéria-prima baixada!' : 'Insumos baixados! Agora falta confirmar o rendimento real da OP.');
   closeModal('m-op-final');
   loadExecOP();
   loadMPSai();
   if(document.getElementById('sec-mp-p')?.classList.contains('active')) loadMP();
   if(document.getElementById('sec-dashboard')?.classList.contains('active')) loadDash();
+}
+
+// ===== OP Filha =====
+async function abrirNovaOpFilha(maeId){
+  await carregarEmbPadraoCache();
+  const { data: mae, error } = await sb.from('producao_ordens').select('*').eq('id', maeId).single();
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  const { data: filhas } = await sb.from('producao_ordens').select('quantidade_planejada,status').eq('ordem_mae_id', maeId).neq('status','CANCELADA');
+  const alocado = (filhas||[]).reduce((s,f)=>s+Number(f.quantidade_planejada),0);
+  const disponivel = Number(mae.quantidade_planejada) - alocado;
+
+  document.getElementById('opfilha-mae-id').value = maeId;
+  document.getElementById('opfilha-numero').value = mae.numero_op + '-F' + ((filhas?.length||0)+1);
+  document.getElementById('opfilha-categoria').innerHTML = '<option value="">— Selecione —</option>' + _embPadraoCache.map(e=>`<option value="${e.categoria}">${e.categoria} (${e.nome_unidade} — ${e.peso_kg?fmt(e.peso_kg)+'kg':'peso não definido'})</option>`).join('');
+  document.getElementById('opfilha-produto').innerHTML = '<option value="">— Selecione a categoria primeiro —</option>';
+  document.getElementById('opfilha-qtd').value = '';
+  document.getElementById('opfilha-resp').value = '';
+  document.getElementById('opfilha-obs').value = '';
+  document.getElementById('opfilha-preview').innerHTML = '';
+  document.getElementById('opfilha-saldo-info').innerHTML = `<strong>${mae.produto}</strong> (${mae.numero_op}) — lote total: ${fmt(mae.quantidade_planejada)} kg · já alocado em filhas: ${fmt(alocado)} kg · <strong style="color:var(--gok)">disponível: ${fmt(disponivel)} kg</strong>`;
+  openModal('m-op-filha');
+}
+
+async function onOpfilhaCategoriaChange(){
+  const cat = document.getElementById('opfilha-categoria').value;
+  const sel = document.getElementById('opfilha-produto');
+  if(!cat){ sel.innerHTML = '<option value="">— Selecione a categoria primeiro —</option>'; return; }
+  const { data, error } = await sb.from('produto_acabado_cadastro').select('produto').eq('categoria', cat).order('produto');
+  if(error){ sel.innerHTML = '<option value="">Erro ao carregar produtos</option>'; return; }
+  sel.innerHTML = '<option value="">— Selecione —</option>' + [...new Set((data||[]).map(d=>d.produto))].map(p=>`<option>${p}</option>`).join('');
+  onOpfilhaQtdChange();
+}
+
+function onOpfilhaQtdChange(){
+  const cat = document.getElementById('opfilha-categoria').value;
+  const qtd = parseFloat(document.getElementById('opfilha-qtd').value);
+  const prev = document.getElementById('opfilha-preview');
+  const emb = _embPadraoCache.find(e=>e.categoria===cat);
+  if(!cat || !qtd || !emb){ prev.innerHTML=''; return; }
+  if(emb.peso_kg){
+    prev.innerHTML = `📦 Previsão de rendimento: <strong>${fmt(qtd/emb.peso_kg)} ${emb.nome_unidade}(s)</strong> (${fmt(emb.peso_kg)}kg cada)`;
+  } else {
+    prev.innerHTML = `<span style="color:var(--vc)">⚠️ Categoria "${cat}" ainda sem peso padrão cadastrado em Embalagens Padrão — não será possível calcular previsão de rendimento nem perda automaticamente.</span>`;
+  }
+}
+
+async function salvarOpFilha(){
+  const maeId = document.getElementById('opfilha-mae-id').value;
+  const numero = document.getElementById('opfilha-numero').value;
+  const produto = document.getElementById('opfilha-produto').value;
+  const categoria = document.getElementById('opfilha-categoria').value;
+  const qtd = parseFloat(document.getElementById('opfilha-qtd').value);
+  const resp = document.getElementById('opfilha-resp').value.trim() || null;
+  const obs = document.getElementById('opfilha-obs').value.trim() || null;
+
+  if(!produto || !categoria || !qtd){ toast('Preencha categoria, produto final e quantidade','error'); return; }
+
+  const { error } = await sb.rpc('producao_criar_op_filha', {
+    p_ordem_mae_id: maeId, p_numero_op: numero, p_produto: produto, p_categoria_produto: categoria,
+    p_quantidade_kg: qtd, p_responsavel: resp, p_observacoes: obs
+  });
+  if(error){ toast('Erro: '+error.message,'error'); return; }
+  toast('OP Filha '+numero+' cadastrada — já pode confirmar o rendimento dela.');
+  closeModal('m-op-filha');
+  loadExecOP();
 }
 
 // ===== Confirmação de rendimento (produto acabado ou base) =====
