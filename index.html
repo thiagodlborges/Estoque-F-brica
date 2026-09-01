@@ -277,7 +277,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <tbody id="tb-mp-p"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
 </div>
 
-<!-- CADASTROS AUXILIARES (Nome Técnico / Fabricante / Fornecedor / Nome Comercial) -->
+<!-- CADASTROS AUXILIARES (Nome Técnico / Fabricante / Fornecedor / Variação) -->
 <div id="sec-mp-cad-aux" class="sec">
   <div class="sh"><div><p class="st">Cadastros Auxiliares — Matéria-Prima</p><p class="sd">Listas usadas nos campos suspensos do cadastro de Matéria-Prima</p></div></div>
   <div class="tc" style="display:flex;flex-wrap:wrap;gap:20px">
@@ -307,11 +307,11 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     </div>
     <div style="flex:1;min-width:280px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong style="font-size:.85rem">🏷️ Nome Comercial</strong>
-        <button class="btn btn-p btn-sm" onclick="addAuxRow('nomecom')">+ Novo</button>
+        <strong style="font-size:.85rem">🎛️ Variação</strong>
+        <button class="btn btn-p btn-sm" onclick="addAuxRow('variacao')">+ Novo</button>
       </div>
-      <div class="tw"><table id="t-aux-nomecom"><thead><tr><th>Nome</th><th>Ativo</th><th></th></tr></thead>
-      <tbody id="tb-aux-nomecom"><tr><td colspan="3"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div>
+      <div class="tw"><table id="t-aux-variacao"><thead><tr><th>Nome</th><th>Ativo</th><th></th></tr></thead>
+      <tbody id="tb-aux-variacao"><tr><td colspan="3"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div>
     </div>
   </div>
 </div>
@@ -670,13 +670,13 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="mb"><div class="fg">
     <div class="fgr"><label>Código <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="mp-cod" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
     <div class="fgr"><label>Unidade *</label><select id="mp-un"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
-    <div class="fgr full"><label>Produto *</label><input id="mp-nome" type="text" placeholder="Ex: Gordura Vegetal"></div>
+    <div class="fgr full"><label>Nome Comercial *</label><input id="mp-nome" type="text" placeholder="Ex: Gordura Vegetal"></div>
     <div class="fgr"><label>Estoque Mínimo *</label><input id="mp-emin" type="number" min="0" step="0.001" placeholder="0"></div>
     <div class="fgr"><label>Estoque Atual</label><input id="mp-eatu" type="number" min="0" step="0.001" placeholder="0"></div>
     <div class="fgr"><label>Nome Técnico</label><select id="mp-nometec"><option value="">—</option></select></div>
     <div class="fgr"><label>Fabricante</label><select id="mp-fabricante"><option value="">—</option></select></div>
     <div class="fgr"><label>Fornecedor</label><select id="mp-fornecedor"><option value="">—</option></select></div>
-    <div class="fgr"><label>Nome Comercial</label><select id="mp-nomecom"><option value="">—</option></select></div>
+    <div class="fgr"><label>Variação</label><select id="mp-variacao"><option value="">—</option></select></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-mp-p')">Cancelar</button><button class="btn btn-p" onclick="saveMP()">Salvar</button></div></div>
 </div>
@@ -1042,7 +1042,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="mb"><div class="fg">
     <div class="fgr"><label>Código</label><input id="mpe-cod" type="text" disabled style="opacity:.6"></div>
     <div class="fgr"><label>Unidade</label><select id="mpe-un"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
-    <div class="fgr full"><label>Produto *</label><input id="mpe-nome" type="text"></div>
+    <div class="fgr full"><label>Nome Comercial *</label><input id="mpe-nome" type="text"></div>
     <div class="ftit">💰 Preços e Estoque</div>
     <div class="fgr"><label>Estoque Mínimo</label><input id="mpe-emin" type="number" min="0" step="0.001"></div>
     <div class="fgr"><label>Estoque Atual</label><input id="mpe-eatu" type="number" min="0" step="0.001"></div>
@@ -1052,7 +1052,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Nome Técnico</label><select id="mpe-nometec"><option value="">—</option></select></div>
     <div class="fgr"><label>Fabricante</label><select id="mpe-fabricante"><option value="">—</option></select></div>
     <div class="fgr"><label>Fornecedor</label><select id="mpe-fornecedor"><option value="">—</option></select></div>
-    <div class="fgr"><label>Nome Comercial</label><select id="mpe-nomecom"><option value="">—</option></select></div>
+    <div class="fgr"><label>Variação</label><select id="mpe-variacao"><option value="">—</option></select></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-mp-edit')">Cancelar</button><button class="btn btn-p" onclick="saveEditMP()">Salvar Alterações</button></div></div>
 </div>
@@ -1515,10 +1515,10 @@ async function saveMP(){
   const nometec = document.getElementById('mp-nometec').value || null;
   const fabricante = document.getElementById('mp-fabricante').value || null;
   const fornecedor = document.getElementById('mp-fornecedor').value || null;
-  const nomecom = document.getElementById('mp-nomecom').value || null;
+  const variacao = document.getElementById('mp-variacao').value || null;
   if(!cod || cod.startsWith('⏳')){toast('Aguarde o código ser gerado','error');return;}
-  if(!nome){toast('Preencha o nome do produto','error');return;}
-  const {error} = await sb.from('materiaprima_produtos').insert({codigo:cod,produto:nome,unidade:un,estoque_minimo:emin,estoque_atual:eatu,nome_tecnico_id:nometec,fabricante_id:fabricante,fornecedor_id:fornecedor,nome_comercial_id:nomecom});
+  if(!nome){toast('Preencha o nome comercial do produto','error');return;}
+  const {error} = await sb.from('materiaprima_produtos').insert({codigo:cod,produto:nome,unidade:un,estoque_minimo:emin,estoque_atual:eatu,nome_tecnico_id:nometec,fabricante_id:fabricante,fornecedor_id:fornecedor,variacao_id:variacao});
   if(error){
     if(error.code==='23505') toast('Código já existe. Reabra o formulário.','error');
     else toast('Erro: '+error.message,'error');
@@ -2754,12 +2754,27 @@ function exportRelPDF() {
     ).filter(r=>r.length>0);
 
     if(!rows.length){y+=6;return;}
-    const colW = (W-margin*2)/heads.length;
+
+    // Colunas de nome (Produto/Insumo/Categoria) precisam de bem mais espaço
+    // que colunas curtas (Código, Un., Mín., Status) — largura proporcional
+    // em vez de dividir tudo igual, senão nome comprido fica cortado.
+    const pesos = heads.map(h => {
+      const hl = h.toLowerCase();
+      if (hl.includes('produto') || hl.includes('insumo')) return 3.2;
+      if (hl === 'categoria' || hl.includes('nome')) return 2;
+      if (hl.includes('código')) return 1.3;
+      if (['un.','mín.','atual','status'].includes(hl)) return 0.85;
+      return 1.1;
+    });
+    const pesoTotal = pesos.reduce((a,b)=>a+b,0);
+    const colWs = pesos.map(p => (W-margin*2) * (p/pesoTotal));
+    const colX = []; let acc = margin; colWs.forEach(w => { colX.push(acc); acc += w; });
+    const maxChars = colWs.map(w => Math.max(6, Math.floor(w/1.15)));
 
     // Table header
     doc.setFillColor(240,232,222);doc.rect(margin,y,W-margin*2,6,'F');
     doc.setFontSize(6);doc.setFont('helvetica','bold');doc.setTextColor(92,51,23);
-    heads.forEach((h,i)=>doc.text(h.substring(0,18),margin+i*colW+1,y+4));
+    heads.forEach((h,i)=>doc.text(h.substring(0,maxChars[i]),colX[i]+1,y+4));
     y+=7;
 
     // Table rows
@@ -2768,7 +2783,7 @@ function exportRelPDF() {
       if(y>190){doc.addPage();y=margin;}
       if(ri%2===0){doc.setFillColor(251,248,244);doc.rect(margin,y-1,W-margin*2,6,'F');}
       doc.setFontSize(6);
-      row.forEach((cell,i)=>{ if(heads[i]) doc.text((cell||'').substring(0,22),margin+i*colW+1,y+3); });
+      row.forEach((cell,i)=>{ if(heads[i]) doc.text((cell||'').substring(0,maxChars[i]),colX[i]+1,y+3); });
       y+=5;
     });
     y+=4;
@@ -2813,6 +2828,7 @@ function exportRelExcel() {
     addSheet('Matéria-Prima', _relTableToAoA(document.getElementById('t-sit-mp')));
     addSheet('Produto Acabado', _relTableToAoA(document.getElementById('t-sit-pa')));
     addSheet('Insumos', _relTableToAoA(document.getElementById('t-sit-ins')));
+    addSheet('Semi-Acabados', _relTableToAoA(document.getElementById('t-sit-base')));
   } else if(_relTab==='inv') {
     addSheet('Matéria-Prima', _relTableToAoA(document.querySelector('#inv-mp-wrap table')));
     addSheet('Insumos', _relTableToAoA(document.querySelector('#inv-ins-wrap table')));
@@ -2851,7 +2867,7 @@ function openEditMP(p) {
     document.getElementById('mpe-nometec').value    = p.nome_tecnico_id||'';
     document.getElementById('mpe-fabricante').value = p.fabricante_id||'';
     document.getElementById('mpe-fornecedor').value = p.fornecedor_id||'';
-    document.getElementById('mpe-nomecom').value    = p.nome_comercial_id||'';
+    document.getElementById('mpe-variacao').value    = p.variacao_id||'';
   });
   openModal('m-mp-edit');
 }
@@ -2867,7 +2883,7 @@ async function saveEditMP() {
     nome_tecnico_id:   document.getElementById('mpe-nometec').value || null,
     fabricante_id:     document.getElementById('mpe-fabricante').value || null,
     fornecedor_id:     document.getElementById('mpe-fornecedor').value || null,
-    nome_comercial_id: document.getElementById('mpe-nomecom').value || null,
+    variacao_id:       document.getElementById('mpe-variacao').value || null,
     updated_at:     new Date().toISOString(),
   };
   const {error} = await sb.from('materiaprima_produtos').update(upd).eq('codigo',cod);
@@ -2880,7 +2896,7 @@ const AUX_TABELAS = {
   nometec:    'materiaprima_nomes_tecnicos',
   fabricante: 'materiaprima_fabricantes',
   fornecedor: 'materiaprima_fornecedores',
-  nomecom:    'materiaprima_nomes_comerciais',
+  variacao:   'materiaprima_variacoes',
 };
 
 // Popula os 4 <select> de um formulário (prefixo 'mp' ou 'mpe') com as listas
@@ -3211,12 +3227,15 @@ async function delInsSai(id) {
 
 // Patch loadRelSit to include value columns and insumos
 async function loadRelSit(cutoff) {
-  const [mpR, paR, insR] = await Promise.all([
+  const [mpR, paR, insR, baseR, baseItensR] = await Promise.all([
     sb.from('materiaprima_produtos').select('*').order('codigo'),
     sb.from('produto_acabado_cadastro').select('*').order('codigo'),
     sb.from('insumos_produtos').select('*').order('codigo'),
+    sb.from('producao_receitas').select('id,codigo,nome_produto,unidade_base,estoque_atual,estoque_reservado').eq('categoria_op','base').eq('ativo',true).order('nome_produto'),
+    sb.from('producao_receita_itens').select('receita_id,codigo_mp,percentual'),
   ]);
   let mp = mpR.data||[], pa = paR.data||[], ins = insR.data||[];
+  const baseRecs = baseR.data||[];
 
   if(cutoff){
     const [dMP, dIns, dPA] = await Promise.all([reconMPDeltas(cutoff), reconInsDeltas(cutoff), reconPADeltas(cutoff)]);
@@ -3225,38 +3244,65 @@ async function loadRelSit(cutoff) {
     pa  = _reconAplicar(pa, dPA, 'codigo');
   }
 
+  // Custo/kg estimado de cada semi-acabado: soma (percentual × preço médio da
+  // matéria-prima) dos ingredientes diretos da receita. Não há "estoque mínimo"
+  // cadastrado pra semi-acabado ainda, então esses itens não entram na
+  // contagem de "críticos" por enquanto.
+  const precoMPPorCodigo = {};
+  mp.forEach(p => { precoMPPorCodigo[p.codigo] = Number(p.preco_medio)||0; });
+  const itensPorReceita = {};
+  (baseItensR.data||[]).forEach(i => { (itensPorReceita[i.receita_id] = itensPorReceita[i.receita_id]||[]).push(i); });
+  const base = baseRecs.map(r => {
+    const custoKg = (itensPorReceita[r.id]||[]).reduce((s,i) => s + (Number(i.percentual)||0) * (precoMPPorCodigo[i.codigo_mp]||0), 0);
+    return { ...r, custo_kg: custoKg, valor_estoque: (Number(r.estoque_atual)||0) * custoKg };
+  });
+
   const mpCri  = mp.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
   const paCri  = pa.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
   const insCri = ins.filter(p=>gst(p.estoque_atual,p.estoque_minimo)==='CRÍTICO').length;
   const totalMP  = mp.reduce((s,p)=>s+((p.estoque_atual||0)*(p.preco_medio||0)),0);
-  const totalPA  = pa.reduce((s,p)=>s+((p.estoque_atual||0)*(p.preco_medio||0)),0);
+  const totalPA  = pa.reduce((s,p)=>s+((p.estoque_atual||0)*(p.preco_custo||0)),0);
   const totalIns = ins.reduce((s,p)=>s+((p.estoque_atual||0)*(p.preco_medio||0)),0);
+  const totalBase = base.reduce((s,r)=>s+r.valor_estoque,0);
 
   document.getElementById('rel-sit-kpis').innerHTML = `
-    <div class="rel-kpi"><div class="rv">${mp.length+pa.length+ins.length}</div><div class="rl">Total de Itens</div></div>
-    <div class="rel-kpi pos"><div class="rv">${fmtR(totalMP+totalPA+totalIns)}</div><div class="rl">Valor Total em Estoque</div></div>
+    <div class="rel-kpi"><div class="rv">${mp.length+pa.length+ins.length+base.length}</div><div class="rl">Total de Itens</div></div>
+    <div class="rel-kpi pos"><div class="rv">${fmtR(totalMP+totalPA+totalIns+totalBase)}</div><div class="rl">Valor Total em Estoque</div></div>
     <div class="rel-kpi warn"><div class="rv">${fmtR(totalMP)}</div><div class="rl">Valor MP</div></div>
     <div class="rel-kpi warn"><div class="rv">${fmtR(totalPA)}</div><div class="rl">Valor PA</div></div>
     <div class="rel-kpi warn"><div class="rv">${fmtR(totalIns)}</div><div class="rl">Valor Insumos</div></div>
+    <div class="rel-kpi warn"><div class="rv">${fmtR(totalBase)}</div><div class="rl">Valor Semi-Acabado</div></div>
     <div class="rel-kpi ${mpCri+paCri+insCri>0?'neg':'pos'}"><div class="rv">${mpCri+paCri+insCri}</div><div class="rl">Itens Críticos</div></div>`;
 
-  function buildTableRows(items, hasVenda) {
+  function buildTableRows(items, hasVenda, precoCampo) {
+    precoCampo = precoCampo || 'preco_medio';
     return items.map(p=>{
       const st=gst(p.estoque_atual,p.estoque_minimo);
       const vc=vCls(p.data_vencimento);
       const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
-      const vEst=(p.estoque_atual||0)*(p.preco_medio||0);
+      const precoBase = Number(p[precoCampo])||0;
+      const vEst=(p.estoque_atual||0)*precoBase;
       return `<tr>
         <td><code>${p.codigo}</code></td><td>${p.produto}</td><td>${p.categoria||p.unidade}</td>
         <td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td>
         <td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td>
-        <td class="preco-cell">${fmtR(p.preco_medio||0)}</td>
+        <td class="preco-cell">${fmtR(precoBase)}</td>
         ${hasVenda?`<td class="preco-cell">${fmtR(p.preco_venda||0)}</td>`:''}
         <td class="preco-cell val-pos"><strong>${fmtR(vEst)}</strong></td>
         <td><span class="sb ${sk}">${st}</span></td>
       </tr>`;
     }).join('') || '<tr><td colspan="12" style="text-align:center;padding:20px;color:var(--tm)">Sem dados</td></tr>';
   }
+
+  function buildBaseRows(items) {
+    return items.map(r=>`<tr>
+        <td><code>${r.codigo}</code></td><td>${r.nome_produto}</td><td>${r.unidade_base}</td>
+        <td><strong>${fmt(r.estoque_atual)}</strong></td><td>${fmt(r.estoque_reservado)}</td>
+        <td class="preco-cell">${fmtR(r.custo_kg)}</td>
+        <td class="preco-cell val-pos"><strong>${fmtR(r.valor_estoque)}</strong></td>
+      </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--tm)">Sem semi-acabados cadastrados</td></tr>';
+  }
+
 
   // Rebuild tables with value columns if they haven't been extended yet
   const sit = document.getElementById('rel-sit');
@@ -3268,16 +3314,22 @@ async function loadRelSit(cutoff) {
     <div class="tc"><div class="tw"><table id="t-sit-mp"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead>
     <tbody>${buildTableRows(mp,false)}</tbody></table></div></div>
     <div class="rel-section-title" style="margin-top:22px">Produto Acabado — Quantidade e Valor</div>
-    <div class="tc"><div class="tw"><table id="t-sit-pa"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Preço Venda</th><th>Valor Estoque</th><th>Status</th></tr></thead>
-    <tbody>${buildTableRows(pa,true)}</tbody></table></div></div>
+    <p style="font-size:.78rem;color:var(--tm);margin:-8px 0 10px">Valor em estoque calculado a custo de produção, não a preço de venda.</p>
+    <div class="tc"><div class="tw"><table id="t-sit-pa"><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Custo Médio</th><th>Preço Venda</th><th>Valor Estoque (custo)</th><th>Status</th></tr></thead>
+    <tbody>${buildTableRows(pa,true,'preco_custo')}</tbody></table></div></div>
     <div class="rel-section-title" style="margin-top:22px">Insumos — Quantidade e Valor</div>
     <div class="tc"><div class="tw"><table id="t-sit-ins"><thead><tr><th>Código</th><th>Insumo</th><th>Categoria</th><th>Lote</th><th>Fabricação</th><th>Vencimento</th><th>Mín.</th><th>Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th></tr></thead>
     <tbody>${buildTableRows(ins,false)}</tbody></table></div></div>
+    <div class="rel-section-title" style="margin-top:22px">🧪 Semi-Acabados (Receitas Base) — Quantidade e Valor</div>
+    <p style="font-size:.78rem;color:var(--tm);margin:-8px 0 10px">Custo/kg estimado a partir dos ingredientes de matéria-prima da receita. Ainda não há estoque mínimo cadastrado pra esses itens, então não entram na contagem de "críticos".</p>
+    <div class="tc"><div class="tw"><table id="t-sit-base"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Atual</th><th>Reservado</th><th>Custo/kg (estimado)</th><th>Valor Estoque</th></tr></thead>
+    <tbody>${buildBaseRows(base)}</tbody></table></div></div>
     <div style="background:var(--br);border:2px solid var(--m);border-radius:var(--r);padding:18px 22px;margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
       <div><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">💰 Valor Total MP</div><div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--m)">${fmtR(totalMP)}</div></div>
       <div><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">🧊 Valor Total PA</div><div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--b)">${fmtR(totalPA)}</div></div>
       <div><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">🧴 Valor Total Insumos</div><div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--mm)">${fmtR(totalIns)}</div></div>
-      <div style="border-left:3px solid var(--mc);padding-left:14px"><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">📦 VALOR TOTAL EM ESTOQUE</div><div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--me)">${fmtR(totalMP+totalPA+totalIns)}</div></div>
+      <div><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">🧪 Valor Total Semi-Acabado</div><div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--mc)">${fmtR(totalBase)}</div></div>
+      <div style="border-left:3px solid var(--mc);padding-left:14px"><div style="font-size:.72rem;color:var(--tm);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">📦 VALOR TOTAL EM ESTOQUE</div><div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:800;color:var(--me)">${fmtR(totalMP+totalPA+totalIns+totalBase)}</div></div>
     </div>`;
 }
 
