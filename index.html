@@ -203,6 +203,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 <nav><div class="ni">
   <button class="nt active" onclick="showSec('dashboard',this)">📊 Dashboard</button>
   <button class="nt" onclick="showSec('mp-p',this)">🌾 Matéria-Prima</button>
+  <button class="nt" onclick="showSec('mp-cad-aux',this)">📇 Cadastros Auxiliares</button>
   <button class="nt" onclick="showSec('mp-e',this)">📥 Entradas MP</button>
   <button class="nt" onclick="showSec('mp-s',this)">📤 Saídas MP</button>
   <button class="nt" onclick="showSec('op-rec',this)">📋 Receitas (OP)</button>
@@ -274,6 +275,45 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="tc"><div class="tb"><div class="ts">🔍<input type="text" placeholder="Buscar..." oninput="filt('t-mp-p',this.value)"></div><button class="btn btn-o btn-sm" onclick="loadMP()">↻</button></div>
   <div class="tw"><table id="t-mp-p"><thead><tr><th>Código</th><th>Produto</th><th>Un.</th><th>Estq. Mín.</th><th>Estq. Atual</th><th>Preço Médio</th><th>Valor Estoque</th><th>Status</th><th>Ações</th></tr></thead>
   <tbody id="tb-mp-p"><tr><td colspan="10"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div></div>
+</div>
+
+<!-- CADASTROS AUXILIARES (Nome Técnico / Fabricante / Fornecedor / Nome Comercial) -->
+<div id="sec-mp-cad-aux" class="sec">
+  <div class="sh"><div><p class="st">Cadastros Auxiliares — Matéria-Prima</p><p class="sd">Listas usadas nos campos suspensos do cadastro de Matéria-Prima</p></div></div>
+  <div class="tc" style="display:flex;flex-wrap:wrap;gap:20px">
+    <div style="flex:1;min-width:280px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:.85rem">🔬 Nome Técnico</strong>
+        <button class="btn btn-p btn-sm" onclick="addAuxRow('nometec')">+ Novo</button>
+      </div>
+      <div class="tw"><table id="t-aux-nometec"><thead><tr><th>Nome</th><th>Ativo</th><th></th></tr></thead>
+      <tbody id="tb-aux-nometec"><tr><td colspan="3"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div>
+    </div>
+    <div style="flex:1;min-width:280px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:.85rem">🏭 Fabricante</strong>
+        <button class="btn btn-p btn-sm" onclick="addAuxRow('fabricante')">+ Novo</button>
+      </div>
+      <div class="tw"><table id="t-aux-fabricante"><thead><tr><th>Nome</th><th>Ativo</th><th></th></tr></thead>
+      <tbody id="tb-aux-fabricante"><tr><td colspan="3"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div>
+    </div>
+    <div style="flex:1;min-width:280px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:.85rem">🚚 Fornecedor</strong>
+        <button class="btn btn-p btn-sm" onclick="addAuxRow('fornecedor')">+ Novo</button>
+      </div>
+      <div class="tw"><table id="t-aux-fornecedor"><thead><tr><th>Nome</th><th>Ativo</th><th></th></tr></thead>
+      <tbody id="tb-aux-fornecedor"><tr><td colspan="3"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div>
+    </div>
+    <div style="flex:1;min-width:280px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="font-size:.85rem">🏷️ Nome Comercial</strong>
+        <button class="btn btn-p btn-sm" onclick="addAuxRow('nomecom')">+ Novo</button>
+      </div>
+      <div class="tw"><table id="t-aux-nomecom"><thead><tr><th>Nome</th><th>Ativo</th><th></th></tr></thead>
+      <tbody id="tb-aux-nomecom"><tr><td colspan="3"><div class="ls"><div class="sp"></div></div></td></tr></tbody></table></div>
+    </div>
+  </div>
 </div>
 
 <!-- MP ENTRADAS -->
@@ -633,6 +673,10 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr full"><label>Produto *</label><input id="mp-nome" type="text" placeholder="Ex: Gordura Vegetal"></div>
     <div class="fgr"><label>Estoque Mínimo *</label><input id="mp-emin" type="number" min="0" step="0.001" placeholder="0"></div>
     <div class="fgr"><label>Estoque Atual</label><input id="mp-eatu" type="number" min="0" step="0.001" placeholder="0"></div>
+    <div class="fgr"><label>Nome Técnico</label><select id="mp-nometec"><option value="">—</option></select></div>
+    <div class="fgr"><label>Fabricante</label><select id="mp-fabricante"><option value="">—</option></select></div>
+    <div class="fgr"><label>Fornecedor</label><select id="mp-fornecedor"><option value="">—</option></select></div>
+    <div class="fgr"><label>Nome Comercial</label><select id="mp-nomecom"><option value="">—</option></select></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-mp-p')">Cancelar</button><button class="btn btn-p" onclick="saveMP()">Salvar</button></div></div>
 </div>
@@ -1004,6 +1048,11 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Estoque Atual</label><input id="mpe-eatu" type="number" min="0" step="0.001"></div>
     <div class="fgr"><label>Preço de Custo (R$)</label><input id="mpe-preco" type="number" min="0" step="0.0001"></div>
     <div class="fgr"><label>Preço Médio Ponderado</label><input id="mpe-medio" type="number" min="0" step="0.0001"></div>
+    <div class="ftit">📇 Cadastros Auxiliares</div>
+    <div class="fgr"><label>Nome Técnico</label><select id="mpe-nometec"><option value="">—</option></select></div>
+    <div class="fgr"><label>Fabricante</label><select id="mpe-fabricante"><option value="">—</option></select></div>
+    <div class="fgr"><label>Fornecedor</label><select id="mpe-fornecedor"><option value="">—</option></select></div>
+    <div class="fgr"><label>Nome Comercial</label><select id="mpe-nomecom"><option value="">—</option></select></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-mp-edit')">Cancelar</button><button class="btn btn-p" onclick="saveEditMP()">Salvar Alterações</button></div></div>
 </div>
@@ -1159,7 +1208,7 @@ function showSec(id,btn){
   if(btn)btn.classList.add('active');
   toggleSidebar(false);
   window.scrollTo(0,0);
-  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd,'ins-p':loadIns,'ins-e':loadInsEnt,'ins-s':loadInsSai,'op-rec':loadReceitas,'op-exec':loadExecOP,'op-prev':loadPrevProdutos};
+  const map={'dashboard':loadDash,'mp-p':loadMP,'mp-cad-aux':loadAuxTodas,'mp-e':loadMPEnt,'mp-s':loadMPSai,'proc':loadProc,'pa-p':loadPA,'pa-prod':loadPAProd,'expd':loadExpd,'ins-p':loadIns,'ins-e':loadInsEnt,'ins-s':loadInsSai,'op-rec':loadReceitas,'op-exec':loadExecOP,'op-prev':loadPrevProdutos};
   if(map[id])map[id]();
   if(id==='rel'){
     document.getElementById('btn-exp-pdf').style.display='';
@@ -1181,7 +1230,7 @@ function openModal(id){
   document.getElementById(id).classList.add('open');
   document.querySelectorAll(`#${id} input[type=date]`).forEach(f=>{if(!f.value)f.value=today();});
   // Gera código sequencial ao abrir modal de cadastro
-  if(id==='m-mp-p')  gerarCodigo('MP','mp-cod');
+  if(id==='m-mp-p'){ gerarCodigo('MP','mp-cod'); carregarListasAuxiliaresMP('mp'); }
   if(id==='m-ins-p') gerarCodigo('IN','ins-cod');
   // Carrega OPs abertas ao abrir saída MP
   if(id==='m-mp-s')  carregarOPsAbertas();
@@ -1463,9 +1512,13 @@ async function saveMP(){
   const un    = document.getElementById('mp-un').value;
   const emin  = parseFloat(document.getElementById('mp-emin').value)||0;
   const eatu  = parseFloat(document.getElementById('mp-eatu').value)||0;
+  const nometec = document.getElementById('mp-nometec').value || null;
+  const fabricante = document.getElementById('mp-fabricante').value || null;
+  const fornecedor = document.getElementById('mp-fornecedor').value || null;
+  const nomecom = document.getElementById('mp-nomecom').value || null;
   if(!cod || cod.startsWith('⏳')){toast('Aguarde o código ser gerado','error');return;}
   if(!nome){toast('Preencha o nome do produto','error');return;}
-  const {error} = await sb.from('materiaprima_produtos').insert({codigo:cod,produto:nome,unidade:un,estoque_minimo:emin,estoque_atual:eatu});
+  const {error} = await sb.from('materiaprima_produtos').insert({codigo:cod,produto:nome,unidade:un,estoque_minimo:emin,estoque_atual:eatu,nome_tecnico_id:nometec,fabricante_id:fabricante,fornecedor_id:fornecedor,nome_comercial_id:nomecom});
   if(error){
     if(error.code==='23505') toast('Código já existe. Reabra o formulário.','error');
     else toast('Erro: '+error.message,'error');
@@ -2794,6 +2847,12 @@ function openEditMP(p) {
   document.getElementById('mpe-eatu').value  = p.estoque_atual||0;
   document.getElementById('mpe-preco').value = p.preco_custo||0;
   document.getElementById('mpe-medio').value = p.preco_medio||0;
+  carregarListasAuxiliaresMP('mpe').then(() => {
+    document.getElementById('mpe-nometec').value    = p.nome_tecnico_id||'';
+    document.getElementById('mpe-fabricante').value = p.fabricante_id||'';
+    document.getElementById('mpe-fornecedor').value = p.fornecedor_id||'';
+    document.getElementById('mpe-nomecom').value    = p.nome_comercial_id||'';
+  });
   openModal('m-mp-edit');
 }
 async function saveEditMP() {
@@ -2805,11 +2864,83 @@ async function saveEditMP() {
     estoque_atual:  parseFloat(document.getElementById('mpe-eatu').value)||0,
     preco_custo:    parseFloat(document.getElementById('mpe-preco').value)||0,
     preco_medio:    parseFloat(document.getElementById('mpe-medio').value)||0,
+    nome_tecnico_id:   document.getElementById('mpe-nometec').value || null,
+    fabricante_id:     document.getElementById('mpe-fabricante').value || null,
+    fornecedor_id:     document.getElementById('mpe-fornecedor').value || null,
+    nome_comercial_id: document.getElementById('mpe-nomecom').value || null,
     updated_at:     new Date().toISOString(),
   };
   const {error} = await sb.from('materiaprima_produtos').update(upd).eq('codigo',cod);
   if(error){toast('Erro: '+error.message,'error');return;}
   toast('Matéria-Prima atualizada!'); closeModal('m-mp-edit'); loadMP();
+}
+
+// ===== CADASTROS AUXILIARES (Nome Técnico / Fabricante / Fornecedor / Nome Comercial) =====
+const AUX_TABELAS = {
+  nometec:    'materiaprima_nomes_tecnicos',
+  fabricante: 'materiaprima_fabricantes',
+  fornecedor: 'materiaprima_fornecedores',
+  nomecom:    'materiaprima_nomes_comerciais',
+};
+
+// Popula os 4 <select> de um formulário (prefixo 'mp' ou 'mpe') com as listas
+// auxiliares ativas. Sempre busca fresco, pra refletir o que foi cadastrado
+// na aba "Cadastros Auxiliares" na hora.
+async function carregarListasAuxiliaresMP(prefixo){
+  for (const [campo, tabela] of Object.entries(AUX_TABELAS)){
+    const sel = document.getElementById(prefixo+'-'+campo);
+    if (!sel) continue;
+    const { data, error } = await sb.from(tabela).select('id,nome').eq('ativo', true).order('nome');
+    sel.innerHTML = '<option value="">—</option>' + (error || !data ? '' : data.map(r => `<option value="${r.id}">${r.nome.replace(/</g,'&lt;')}</option>`).join(''));
+  }
+}
+
+async function loadAuxLista(campo){
+  const tabela = AUX_TABELAS[campo];
+  const tb = document.getElementById('tb-aux-'+campo);
+  tb.innerHTML = '<tr><td colspan="3"><div class="ls"><div class="sp"></div></div></td></tr>';
+  const { data, error } = await sb.from(tabela).select('*').order('nome');
+  if (error){ tb.innerHTML = `<tr><td colspan="3"><div class="es"><div class="ei">⚠️</div><p>${error.message}</p></div></td></tr>`; return; }
+  if (!data || !data.length){ tb.innerHTML = '<tr><td colspan="3"><div class="es"><div class="ei">📇</div><p>Nenhum item cadastrado</p></div></td></tr>'; return; }
+  tb.innerHTML = data.map(r => `<tr>
+    <td><input type="text" value="${r.nome.replace(/"/g,'&quot;')}" style="width:100%;border:none;background:transparent" onchange="salvarAuxNome('${campo}','${r.id}',this.value)"></td>
+    <td><input type="checkbox" ${r.ativo?'checked':''} onchange="toggleAuxAtivo('${campo}','${r.id}',this.checked)"></td>
+    <td><button class="del-btn" title="Excluir" onclick="delAuxRow('${campo}','${r.id}')">🗑</button></td>
+  </tr>`).join('');
+}
+
+function addAuxRow(campo){
+  const nome = prompt('Nome do novo item:');
+  if (!nome || !nome.trim()) return;
+  const tabela = AUX_TABELAS[campo];
+  sb.from(tabela).insert({ nome: nome.trim() }).then(({error}) => {
+    if (error){ toast('Erro: '+(error.code==='23505'?'já existe um item com esse nome':error.message), 'error'); return; }
+    toast('Item cadastrado!'); loadAuxLista(campo);
+  });
+}
+function salvarAuxNome(campo,id,nome){
+  const tabela = AUX_TABELAS[campo];
+  sb.from(tabela).update({ nome: nome.trim() }).eq('id',id).then(({error}) => {
+    if (error){ toast('Erro: '+error.message, 'error'); return; }
+    toast('Salvo!');
+  });
+}
+function toggleAuxAtivo(campo,id,ativo){
+  const tabela = AUX_TABELAS[campo];
+  sb.from(tabela).update({ ativo }).eq('id',id).then(({error}) => {
+    if (error){ toast('Erro: '+error.message, 'error'); return; }
+  });
+}
+function delAuxRow(campo,id){
+  if (!confirm('Excluir este item? Se ele estiver em uso em alguma Matéria-Prima, a exclusão pode falhar — nesse caso, desative em vez de excluir.')) return;
+  const tabela = AUX_TABELAS[campo];
+  sb.from(tabela).delete().eq('id',id).then(({error}) => {
+    if (error){ toast('Erro ao excluir: '+error.message, 'error'); return; }
+    toast('Excluído!'); loadAuxLista(campo);
+  });
+}
+function loadAuxTodas(){
+  Object.keys(AUX_TABELAS).forEach(loadAuxLista);
 }
 
 function openEditPA(p) {
