@@ -698,66 +698,46 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
 
 <!-- MP Entrada -->
 <div class="mo" id="m-mp-e">
-  <div class="md md-lg"><div class="mh"><span class="mt">Registrar Entrada de Matéria-Prima</span><button class="mc" onclick="closeModal('m-mp-e')">✕</button></div>
+  <div class="md md-lg" style="max-width:720px"><div class="mh"><span class="mt">Registrar Entrada de Matéria-Prima</span><button class="mc" onclick="closeModal('m-mp-e')">✕</button></div>
   <div class="mb"><div class="fg">
-    <div class="ftit">📋 Produto e Data</div>
+    <div class="ftit">🧾 Dados da Nota Fiscal <span style="font-weight:400;color:var(--tm);font-size:.78rem">(valem para todos os itens abaixo)</span></div>
     <div class="fgr"><label>Data de Entrada *</label><input id="ent-dt" type="date"></div>
-    <div class="fgr full"><label>Produto *</label>
-      <div class="prod-search-wrap" id="psw-ent">
-        <span class="prod-search-icon">🔍</span>
-        <input class="prod-search-input" id="ent-prod-search" type="text" placeholder="Digite o nome do produto..." autocomplete="off"
-          oninput="psSearch(this,'ent','mp')" onfocus="psSearch(this,'ent','mp')" onkeydown="psKey(event,'ent')">
-        <button class="prod-search-clear" onclick="psClear('ent')" tabindex="-1" title="Limpar">✕</button>
-        <div class="prod-search-dropdown" id="psd-ent"></div>
-      </div>
-      <div class="prod-search-cod-display" id="ps-cod-ent"></div>
-      <input type="hidden" id="ent-prod">
-    </div>
-    <hr class="fdiv">
-    <div class="ftit">🧾 Nota Fiscal</div>
     <div class="fgr"><label>Nº NF *</label><input id="ent-nf" type="text" placeholder="000001"></div>
     <div class="fgr"><label>Série NF</label><input id="ent-ser" type="text" placeholder="1"></div>
     <div class="fgr"><label>CNPJ Fornecedor</label><input id="ent-cnpj" type="text" placeholder="00.000.000/0001-00"></div>
-    <div class="fgr"><label>Fornecedor *</label><input id="ent-forn" type="text" placeholder="Nome do fornecedor"></div>
-    <div class="fgr"><label>Fabricante deste lote</label><select id="ent-fabricante"><option value="">—</option></select></div>
-    <hr class="fdiv">
-    <div class="ftit">📦 Quantidade e Valores</div>
-    <div class="fgr full" style="background:var(--cs);border-radius:10px;padding:12px 14px;margin-bottom:4px">
-      <label style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleCalcConversao()">
-        <span>🧮 Calculadora de conversão <span style="font-weight:400;color:var(--tm);font-size:.78rem">(nota veio em pote, caixa, grama...?)</span></span>
-        <span id="calc-conv-toggle-icon">▾</span>
-      </label>
-      <div id="calc-conv-body" style="display:none;margin-top:10px">
-        <p style="font-size:.78rem;color:var(--tm);margin-bottom:8px">Preencha como veio na nota fiscal — o sistema converte pra unidade cadastrada do produto (<strong id="calc-conv-un-destino">selecione o produto</strong>).</p>
-        <div class="fg" style="grid-template-columns:1fr 1fr 1fr">
-          <div class="fgr"><label>Nº de embalagens/itens</label><input id="calc-conv-qtd-emb" type="number" min="0" step="0.001" placeholder="Ex: 5" oninput="calcularConversaoEntrada()"></div>
-          <div class="fgr"><label>Conteúdo de cada uma</label><input id="calc-conv-conteudo" type="number" min="0" step="0.001" placeholder="Ex: 2" oninput="calcularConversaoEntrada()"></div>
-          <div class="fgr"><label>Unidade do conteúdo</label>
-            <select id="calc-conv-unidade" onchange="calcularConversaoEntrada()">
-              <option value="Kg">Kg</option><option value="g">g</option><option value="L">L</option><option value="ml">ml</option><option value="Un">Un (sem conversão)</option>
-            </select>
-          </div>
-        </div>
-        <div id="calc-conv-resultado" style="font-size:.85rem;margin:8px 0"></div>
-        <button type="button" class="btn btn-o btn-sm" onclick="usarConversaoEntrada()">Usar este valor na Quantidade</button>
-      </div>
+    <div class="fgr full"><label>Fornecedor *</label><input id="ent-forn" type="text" placeholder="Nome do fornecedor"></div>
+  </div>
+  <hr class="fdiv">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div class="ftit" style="margin:0">📦 Itens desta NF</div>
+    <button type="button" class="btn btn-o btn-sm" onclick="addEntItemRow()">+ Adicionar item</button>
+  </div>
+  <div id="ent-itens-wrap" style="display:flex;flex-direction:column;gap:14px"></div>
+  </div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-mp-e')">Cancelar</button><button class="btn btn-p" onclick="saveEnt()">Registrar Entrada(s)</button></div></div>
+</div>
+
+<!-- MP Entrada — Editar (campos seguros, não mexe em quantidade/lote/FIFO) -->
+<div class="mo" id="m-mp-e-edit">
+  <div class="md"><div class="mh"><span class="mt">✏️ Editar Entrada</span><button class="mc" onclick="closeModal('m-mp-e-edit')">✕</button></div>
+  <div class="mb"><div class="fg">
+    <input type="hidden" id="ede-id">
+    <div class="fgr full" style="background:var(--cs);border-radius:10px;padding:10px 14px;font-size:.82rem;color:var(--tm)">
+      <strong id="ede-produto-label">—</strong><br>
+      Lote: <span id="ede-lote-label">—</span> · Qtd: <span id="ede-qtd-label">—</span> · Valor unit.: <span id="ede-vl-label">—</span><br>
+      <em>Para corrigir quantidade, valor, lote ou lote interno, exclua esta entrada e lance novamente — evita inconsistência no rastreio FIFO já gerado.</em>
     </div>
-    <div class="fgr"><label>Quantidade *</label><input id="ent-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
-    <div class="fgr"><label>Valor Unitário (R$) *</label><input id="ent-vl" type="number" min="0" step="0.0001" placeholder="0.00"></div>
-    <hr class="fdiv">
-    <div class="ftit">🏷️ Lote e Datas (FIFO)</div>
-    <div class="fgr"><label>Lote do Fornecedor *</label><input id="ent-lote" type="text" placeholder="LOT-2024-001"></div>
-    <div class="fgr"><label>Lote Interno *</label>
-      <div style="display:flex;gap:6px">
-        <input id="ent-lote-int" type="text" placeholder="Ex: MP-00012-L00001" style="flex:1">
-        <button type="button" class="btn btn-o btn-sm" onclick="sugerirLoteInterno()" title="Sugerir automaticamente">✨</button>
-      </div>
-    </div>
-    <div class="fgr"><label>Data de Fabricação *</label><input id="ent-fab" type="date"></div>
-    <div class="fgr"><label>Data de Validade *</label><input id="ent-val" type="date"></div>
-    <div class="fgr full"><label>Observações</label><textarea id="ent-obs" placeholder="Informações adicionais..."></textarea></div>
+    <div class="fgr"><label>Data de Entrada *</label><input id="ede-dt" type="date"></div>
+    <div class="fgr"><label>Nº NF *</label><input id="ede-nf" type="text"></div>
+    <div class="fgr"><label>Série NF</label><input id="ede-ser" type="text"></div>
+    <div class="fgr"><label>CNPJ Fornecedor</label><input id="ede-cnpj" type="text"></div>
+    <div class="fgr"><label>Fornecedor *</label><input id="ede-forn" type="text"></div>
+    <div class="fgr"><label>Fabricante deste lote</label><select id="ede-fabricante"><option value="">—</option></select></div>
+    <div class="fgr"><label>Data de Fabricação</label><input id="ede-fab" type="date"></div>
+    <div class="fgr"><label>Data de Validade *</label><input id="ede-val" type="date"></div>
+    <div class="fgr full"><label>Observações</label><textarea id="ede-obs" placeholder="Informações adicionais..."></textarea></div>
   </div></div>
-  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-mp-e')">Cancelar</button><button class="btn btn-p" onclick="saveEnt()">Registrar Entrada</button></div></div>
+  <div class="mf"><button class="btn btn-o" onclick="closeModal('m-mp-e-edit')">Cancelar</button><button class="btn btn-p" onclick="saveEditEnt()">Salvar Alterações</button></div></div>
 </div>
 
 <!-- MP Saída -->
@@ -1274,7 +1254,8 @@ function openModal(id){
   document.querySelectorAll(`#${id} input[type=date]`).forEach(f=>{if(!f.value)f.value=today();});
   // Gera código sequencial ao abrir modal de cadastro
   if(id==='m-mp-p'){ gerarCodigo('MP','mp-cod'); carregarListasAuxiliaresMP('mp'); }
-  if(id==='m-mp-e'){ carregarListaAuxSelect('ent-fabricante','materiaprima_fabricantes'); resetarCalcConversao(); }
+  if(id==='m-mp-e'){ document.getElementById('ent-itens-wrap').innerHTML=''; _entItemSeq=0; addEntItemRow(); }
+  if(id==='m-mp-e-edit'){ carregarListaAuxSelect('ede-fabricante','materiaprima_fabricantes'); }
   if(id==='m-ins-p') gerarCodigo('IN','ins-cod');
   // Carrega OPs abertas ao abrir saída MP
   if(id==='m-mp-s')  carregarOPsAbertas();
@@ -1583,12 +1564,89 @@ async function loadMPEnt(){
     const isF=fi[e.codigo_produto]===1&&e.saldo_fifo>0;
     const vc=vCls(e.data_validade);
     const ed=JSON.stringify({nome:e.produto,codigo:e.codigo_produto,lote:e.lote||'',fab:e.data_fabricacao||'',venc:e.data_validade||''});
-    return`<tr><td>${fmtD(e.data_entrada)}</td><td>${isF?'<span class="fb">FIFO ▶</span>':'—'}</td><td><strong>${e.produto}</strong><br><small style="color:var(--tm)">${e.codigo_produto}</small></td><td>${e.nf_numero}${e.nf_serie?'/'+e.nf_serie:''}</td><td>${e.fornecedor}</td><td>${e.lote||'—'}</td><td>${e.lote_interno||'—'}</td><td>${fmtD(e.data_fabricacao)}</td><td class="${vc}">${fmtD(e.data_validade)}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${fmtR(e.valor_unitario)}</td><td>${fmtR(e.valor_total)}</td><td><strong>${fmt(e.saldo_fifo)}</strong></td><td style="display:flex;gap:4px"><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button><button class="del-btn" title="Excluir" onclick="delMPEnt('${e.id}','${(e.lote||'').replace(/'/g,'')}')">🗑</button></td></tr>`;
+    return`<tr><td>${fmtD(e.data_entrada)}</td><td>${isF?'<span class="fb">FIFO ▶</span>':'—'}</td><td><strong>${e.produto}</strong><br><small style="color:var(--tm)">${e.codigo_produto}</small></td><td>${e.nf_numero}${e.nf_serie?'/'+e.nf_serie:''}</td><td>${e.fornecedor}</td><td>${e.lote||'—'}</td><td>${e.lote_interno||'—'}</td><td>${fmtD(e.data_fabricacao)}</td><td class="${vc}">${fmtD(e.data_validade)}</td><td>${fmt(e.quantidade)} ${e.unidade}</td><td>${fmtR(e.valor_unitario)}</td><td>${fmtR(e.valor_total)}</td><td><strong>${fmt(e.saldo_fifo)}</strong></td><td style="display:flex;gap:4px"><button class="btn btn-l btn-xs" onclick='etqUnica(${ed})'>🏷️</button><button class="btn btn-l btn-xs" title="Editar (NF, datas, fornecedor...)" onclick="abrirEditEnt('${e.id}')">✏️</button><button class="del-btn" title="Excluir" onclick="delMPEnt('${e.id}','${(e.lote||'').replace(/'/g,'')}')">🗑</button></td></tr>`;
   }).join('');
 }
-async function sugerirLoteInterno(){
-  const cod=document.getElementById('ent-prod')?.value;
-  const campo=document.getElementById('ent-lote-int');
+// ===== Entrada de MP com múltiplos itens por NF =====
+let _entItemSeq = 0;
+
+function addEntItemRow(){
+  const wrap = document.getElementById('ent-itens-wrap');
+  const n = ++_entItemSeq;
+  const prefix = 'enti' + n;
+  const card = document.createElement('div');
+  card.className = 'ent-item-card';
+  card.dataset.rowid = prefix;
+  card.style.cssText = 'border:1px solid var(--cs);border-radius:12px;padding:14px;position:relative';
+  card.innerHTML = `
+    <button type="button" class="del-btn ent-item-remove" title="Remover item" onclick="removeEntItemRow('${prefix}')" style="position:absolute;top:10px;right:10px">🗑</button>
+    <div class="fg">
+      <div class="fgr full"><label>Produto *</label>
+        <div class="prod-search-wrap" id="psw-${prefix}">
+          <span class="prod-search-icon">🔍</span>
+          <input class="prod-search-input" id="${prefix}-prod-search" type="text" placeholder="Digite o nome do produto..." autocomplete="off"
+            oninput="psSearch(this,'${prefix}','mp')" onfocus="psSearch(this,'${prefix}','mp')" onkeydown="psKey(event,'${prefix}')">
+          <button class="prod-search-clear" onclick="psClear('${prefix}')" tabindex="-1" title="Limpar">✕</button>
+          <div class="prod-search-dropdown" id="psd-${prefix}"></div>
+        </div>
+        <div class="prod-search-cod-display" id="ps-cod-${prefix}"></div>
+        <input type="hidden" id="${prefix}-prod">
+      </div>
+      <div class="fgr"><label>Fabricante deste lote</label><select id="${prefix}-fabricante"><option value="">—</option></select></div>
+      <div class="fgr full" style="background:var(--cs);border-radius:10px;padding:12px 14px;margin-bottom:4px">
+        <label style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleCalcConversaoItem('${prefix}')">
+          <span>🧮 Calculadora de conversão <span style="font-weight:400;color:var(--tm);font-size:.78rem">(nota veio em pote, caixa, grama...?)</span></span>
+          <span id="calc-conv-toggle-icon-${prefix}">▾</span>
+        </label>
+        <div id="calc-conv-body-${prefix}" style="display:none;margin-top:10px">
+          <p style="font-size:.78rem;color:var(--tm);margin-bottom:8px">Preencha como veio na nota fiscal — o sistema converte pra unidade cadastrada do produto (<strong id="calc-conv-un-destino-${prefix}">selecione o produto</strong>) e já calcula o valor unitário correto.</p>
+          <div class="fg" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="fgr"><label>Qtd. de embalagens (NF)</label><input id="calc-conv-qtd-emb-${prefix}" type="number" min="0" step="0.001" placeholder="Ex: 18" oninput="calcularConversaoEntradaItem('${prefix}')"></div>
+            <div class="fgr"><label>Conteúdo de cada embalagem</label><input id="calc-conv-conteudo-${prefix}" type="number" min="0" step="0.001" placeholder="Ex: 5" oninput="calcularConversaoEntradaItem('${prefix}')"></div>
+            <div class="fgr"><label>Unidade do conteúdo</label>
+              <select id="calc-conv-unidade-${prefix}" onchange="calcularConversaoEntradaItem('${prefix}')">
+                <option value="Kg">Kg</option><option value="g">g</option><option value="L">L</option><option value="ml">ml</option><option value="Un">Un (sem conversão)</option>
+              </select>
+            </div>
+          </div>
+          <div class="fgr"><label>Valor unitário da NF (por embalagem, R$)</label><input id="calc-conv-vl-emb-${prefix}" type="number" min="0" step="0.0001" placeholder="Ex: valor de 1 caixa" oninput="calcularConversaoEntradaItem('${prefix}')"></div>
+          <div id="calc-conv-resultado-${prefix}" style="font-size:.85rem;margin:8px 0"></div>
+          <button type="button" class="btn btn-o btn-sm" onclick="usarConversaoEntradaItem('${prefix}')">Usar Quantidade e Valor Unitário</button>
+        </div>
+      </div>
+      <div class="fgr"><label>Quantidade *</label><input id="${prefix}-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
+      <div class="fgr"><label>Valor Unitário (R$) *</label><input id="${prefix}-vl" type="number" min="0" step="0.0001" placeholder="0.00"></div>
+      <div class="fgr"><label>Lote do Fornecedor *</label><input id="${prefix}-lote" type="text" placeholder="LOT-2024-001"></div>
+      <div class="fgr"><label>Lote Interno *</label>
+        <div style="display:flex;gap:6px">
+          <input id="${prefix}-lote-int" type="text" placeholder="Ex: MP-00012-L00001" style="flex:1">
+          <button type="button" class="btn btn-o btn-sm" onclick="sugerirLoteInternoItem('${prefix}')" title="Sugerir automaticamente">✨</button>
+        </div>
+      </div>
+      <div class="fgr"><label>Data de Fabricação *</label><input id="${prefix}-fab" type="date"></div>
+      <div class="fgr"><label>Data de Validade *</label><input id="${prefix}-val" type="date"></div>
+      <div class="fgr full"><label>Observações</label><textarea id="${prefix}-obs" placeholder="Informações adicionais..."></textarea></div>
+    </div>`;
+  wrap.appendChild(card);
+  carregarListaAuxSelect(prefix+'-fabricante','materiaprima_fabricantes');
+  atualizarBotoesRemoverEntItem();
+}
+
+function removeEntItemRow(prefix){
+  const card = document.querySelector(`.ent-item-card[data-rowid="${prefix}"]`);
+  if(card) card.remove();
+  if(!document.querySelectorAll('.ent-item-card').length) addEntItemRow();
+  atualizarBotoesRemoverEntItem();
+}
+
+function atualizarBotoesRemoverEntItem(){
+  const cards = document.querySelectorAll('.ent-item-card');
+  cards.forEach(c => c.querySelector('.ent-item-remove').style.display = cards.length>1 ? '' : 'none');
+}
+
+async function sugerirLoteInternoItem(prefix){
+  const cod=document.getElementById(prefix+'-prod')?.value;
+  const campo=document.getElementById(prefix+'-lote-int');
   if(!cod){toast('Selecione o produto primeiro','error');return;}
   campo.value='⏳...';
   try{
@@ -1599,29 +1657,20 @@ async function sugerirLoteInterno(){
     campo.value=cod+'-L'+String(Date.now()).slice(-5);
   }
 }
-// ===== Calculadora de conversão (nota em pote/caixa/grama → unidade cadastrada) =====
-function resetarCalcConversao(){
-  document.getElementById('calc-conv-body').style.display = 'none';
-  document.getElementById('calc-conv-toggle-icon').textContent = '▾';
-  document.getElementById('calc-conv-qtd-emb').value = '';
-  document.getElementById('calc-conv-conteudo').value = '';
-  document.getElementById('calc-conv-unidade').value = 'Kg';
-  document.getElementById('calc-conv-resultado').innerHTML = '';
-  document.getElementById('calc-conv-un-destino').textContent = 'selecione o produto';
-}
 
-async function toggleCalcConversao(){
-  const body = document.getElementById('calc-conv-body');
-  const icon = document.getElementById('calc-conv-toggle-icon');
+// ===== Calculadora de conversão por item (nota em pote/caixa/grama → unidade cadastrada) =====
+async function toggleCalcConversaoItem(prefix){
+  const body = document.getElementById('calc-conv-body-'+prefix);
+  const icon = document.getElementById('calc-conv-toggle-icon-'+prefix);
   const abrindo = body.style.display === 'none';
   body.style.display = abrindo ? '' : 'none';
   icon.textContent = abrindo ? '▴' : '▾';
-  if(abrindo) await atualizarUnidadeDestinoConversao();
+  if(abrindo) await atualizarUnidadeDestinoConversaoItem(prefix);
 }
 
-async function atualizarUnidadeDestinoConversao(){
-  const cod = document.getElementById('ent-prod')?.value;
-  const label = document.getElementById('calc-conv-un-destino');
+async function atualizarUnidadeDestinoConversaoItem(prefix){
+  const cod = document.getElementById(prefix+'-prod')?.value;
+  const label = document.getElementById('calc-conv-un-destino-'+prefix);
   if(!cod){ label.textContent = 'selecione o produto'; return null; }
   const{data}=await sb.from('materiaprima_produtos').select('unidade').eq('codigo',cod).single();
   const un = data?.unidade || 'Un';
@@ -1638,58 +1687,148 @@ function _fatorConversaoUnidade(unOrigem, unDestino){
   return base[unOrigem] / base[unDestino];
 }
 
-async function calcularConversaoEntrada(){
-  const qtdEmb = parseFloat(document.getElementById('calc-conv-qtd-emb').value);
-  const conteudo = parseFloat(document.getElementById('calc-conv-conteudo').value);
-  const unOrigem = document.getElementById('calc-conv-unidade').value;
-  const resEl = document.getElementById('calc-conv-resultado');
-  const unDestino = await atualizarUnidadeDestinoConversao();
+async function calcularConversaoEntradaItem(prefix){
+  const qtdEmb = parseFloat(document.getElementById('calc-conv-qtd-emb-'+prefix).value);
+  const conteudo = parseFloat(document.getElementById('calc-conv-conteudo-'+prefix).value);
+  const unOrigem = document.getElementById('calc-conv-unidade-'+prefix).value;
+  const vlEmb = parseFloat(document.getElementById('calc-conv-vl-emb-'+prefix).value);
+  const resEl = document.getElementById('calc-conv-resultado-'+prefix);
+  const unDestino = await atualizarUnidadeDestinoConversaoItem(prefix);
 
   if(!unDestino || isNaN(qtdEmb) || isNaN(conteudo) || qtdEmb<=0 || conteudo<=0){ resEl.innerHTML=''; return; }
 
   const totalNaOrigem = qtdEmb * conteudo;
   const fator = _fatorConversaoUnidade(unOrigem, unDestino);
   if(fator === null){
-    resEl.innerHTML = `<span style="color:var(--vc)">⚠️ Não dá pra converter ${unOrigem} em ${unDestino} automaticamente (grandezas diferentes) — informe a quantidade final manualmente.</span>`;
+    resEl.innerHTML = `<span style="color:var(--vc)">⚠️ Não dá pra converter ${unOrigem} em ${unDestino} automaticamente (grandezas diferentes) — informe quantidade e valor unitário manualmente.</span>`;
     return;
   }
   const totalConvertido = totalNaOrigem * fator;
-  resEl.innerHTML = `${fmt(qtdEmb)} × ${fmt(conteudo)} ${unOrigem} = <strong>${fmt(totalNaOrigem)} ${unOrigem}</strong> → <strong style="color:var(--m)">${fmt(totalConvertido)} ${unDestino}</strong>`;
-  resEl.dataset.valor = totalConvertido;
+  let html = `${fmt(qtdEmb)} × ${fmt(conteudo)} ${unOrigem} = <strong>${fmt(totalNaOrigem)} ${unOrigem}</strong> → <strong style="color:var(--m)">${fmt(totalConvertido)} ${unDestino}</strong>`;
+  resEl.dataset.valorQtd = totalConvertido;
+
+  // Valor unitário: preço por embalagem ÷ conteúdo convertido de UMA embalagem na unidade destino
+  if(!isNaN(vlEmb) && vlEmb>0){
+    const conteudoUmaEmbConvertido = conteudo * fator;
+    const valorUnitDestino = vlEmb / conteudoUmaEmbConvertido;
+    html += `<br>${fmtR(vlEmb)}/embalagem ÷ ${fmt(conteudoUmaEmbConvertido)} ${unDestino} = <strong style="color:var(--m)">${fmtR(valorUnitDestino)}/${unDestino}</strong>`;
+    resEl.dataset.valorUnit = valorUnitDestino;
+  } else {
+    delete resEl.dataset.valorUnit;
+  }
+  resEl.innerHTML = html;
 }
 
-function usarConversaoEntrada(){
-  const resEl = document.getElementById('calc-conv-resultado');
-  const valor = parseFloat(resEl.dataset.valor);
-  if(isNaN(valor)){ toast('Preencha a calculadora primeiro','error'); return; }
-  document.getElementById('ent-qtd').value = valor;
-  toast('Quantidade preenchida a partir da conversão!');
+function usarConversaoEntradaItem(prefix){
+  const resEl = document.getElementById('calc-conv-resultado-'+prefix);
+  const valorQtd = parseFloat(resEl.dataset.valorQtd);
+  if(isNaN(valorQtd)){ toast('Preencha a calculadora primeiro','error'); return; }
+  document.getElementById(prefix+'-qtd').value = valorQtd;
+  const valorUnit = parseFloat(resEl.dataset.valorUnit);
+  if(!isNaN(valorUnit)){
+    document.getElementById(prefix+'-vl').value = valorUnit.toFixed(4);
+    toast('Quantidade e Valor Unitário preenchidos a partir da conversão!');
+  } else {
+    toast('Quantidade preenchida a partir da conversão! (informe o valor unitário da NF acima para calcular o valor também)');
+  }
 }
 
 async function saveEnt(){
   const dt=document.getElementById('ent-dt').value;
-  const cod=document.getElementById('ent-prod')?.value;
-  const prod=document.getElementById('ent-prod-search')?.value.trim()||'';
   const nf=document.getElementById('ent-nf').value.trim();
   const ser=document.getElementById('ent-ser').value.trim()||null;
   const cnpj=document.getElementById('ent-cnpj').value.trim()||null;
   const forn=document.getElementById('ent-forn').value.trim();
-  const fabricanteId=document.getElementById('ent-fabricante').value||null;
-  const qtd=parseFloat(document.getElementById('ent-qtd').value);
-  const vl=parseFloat(document.getElementById('ent-vl').value)||0;
-  const lote=document.getElementById('ent-lote').value.trim();
-  const loteInt=document.getElementById('ent-lote-int').value.trim();
-  const fab=document.getElementById('ent-fab').value||null;
-  const val=document.getElementById('ent-val').value;
-  const obs=document.getElementById('ent-obs').value.trim()||null;
-  const{data:pd}=await sb.from('materiaprima_produtos').select('unidade').eq('codigo',cod).single();
-  const un=pd?.unidade||'Un';
-  if(!dt||!nf||!forn||!qtd||!lote||!loteInt||!val){toast('Preencha todos os campos obrigatórios (incluindo Lote Interno)','error');return;}
-  const{error}=await sb.from('materiaprima_entradas').insert({data_entrada:dt,codigo_produto:cod,produto:prod,nf_numero:nf,nf_serie:ser,cnpj_fornecedor:cnpj,fornecedor:forn,fabricante_id:fabricanteId,quantidade:qtd,unidade:un,valor_unitario:vl,lote,lote_interno:loteInt,data_fabricacao:fab,data_validade:val,saldo_fifo:qtd,observacoes:obs});
+  if(!dt||!nf||!forn){toast('Preencha os dados da Nota Fiscal (data, NF e fornecedor)','error');return;}
+
+  const cards = [...document.querySelectorAll('.ent-item-card')];
+  if(!cards.length){toast('Adicione ao menos um item','error');return;}
+
+  const registros = [];
+  for(const card of cards){
+    const prefix = card.dataset.rowid;
+    const cod=document.getElementById(prefix+'-prod')?.value;
+    const prod=document.getElementById(prefix+'-prod-search')?.value.trim()||'';
+    const fabricanteId=document.getElementById(prefix+'-fabricante').value||null;
+    const qtd=parseFloat(document.getElementById(prefix+'-qtd').value);
+    const vl=parseFloat(document.getElementById(prefix+'-vl').value)||0;
+    const lote=document.getElementById(prefix+'-lote').value.trim();
+    const loteInt=document.getElementById(prefix+'-lote-int').value.trim();
+    const fab=document.getElementById(prefix+'-fab').value||null;
+    const val=document.getElementById(prefix+'-val').value;
+    const obs=document.getElementById(prefix+'-obs').value.trim()||null;
+    if(!cod||!prod){toast('Selecione o produto em todos os itens','error');return;}
+    if(!qtd||!lote||!loteInt||!val){toast(`Preencha todos os campos obrigatórios do item "${prod}" (incluindo Lote Interno)`,'error');return;}
+    registros.push({prefix,cod,prod,fabricanteId,qtd,vl,lote,loteInt,fab,val,obs});
+  }
+
+  // Busca unidade cadastrada de cada produto envolvido (uma consulta por produto distinto)
+  const codigosUnicos = [...new Set(registros.map(r=>r.cod))];
+  const{data:produtos}=await sb.from('materiaprima_produtos').select('codigo,unidade,estoque_atual').in('codigo',codigosUnicos);
+  const mapaProd = Object.fromEntries((produtos||[]).map(p=>[p.codigo,p]));
+
+  const inserts = registros.map(r=>({
+    data_entrada:dt, codigo_produto:r.cod, produto:r.prod, nf_numero:nf, nf_serie:ser, cnpj_fornecedor:cnpj,
+    fornecedor:forn, fabricante_id:r.fabricanteId, quantidade:r.qtd, unidade:mapaProd[r.cod]?.unidade||'Un',
+    valor_unitario:r.vl, lote:r.lote, lote_interno:r.loteInt, data_fabricacao:r.fab, data_validade:r.val,
+    saldo_fifo:r.qtd, observacoes:r.obs
+  }));
+
+  const{error}=await sb.from('materiaprima_entradas').insert(inserts);
   if(error){toast('Erro: '+error.message,'error');return;}
-  const{data:cur}=await sb.from('materiaprima_produtos').select('estoque_atual').eq('codigo',cod).single();
-  await sb.from('materiaprima_produtos').update({estoque_atual:(cur?.estoque_atual||0)+qtd,updated_at:new Date().toISOString()}).eq('codigo',cod);
-  toast('Entrada registrada!');closeModal('m-mp-e');loadMPEnt();
+
+  // Atualiza estoque_atual somando as quantidades por produto (um produto pode ter vários itens na mesma NF)
+  const somaPorProduto = {};
+  for(const r of registros) somaPorProduto[r.cod] = (somaPorProduto[r.cod]||0) + r.qtd;
+  for(const [cod,soma] of Object.entries(somaPorProduto)){
+    const atual = mapaProd[cod]?.estoque_atual || 0;
+    await sb.from('materiaprima_produtos').update({estoque_atual:atual+soma,updated_at:new Date().toISOString()}).eq('codigo',cod);
+  }
+
+  toast(inserts.length>1 ? `${inserts.length} itens registrados!` : 'Entrada registrada!');
+  closeModal('m-mp-e');loadMPEnt();
+}
+
+// ===== Editar entrada (campos seguros — não altera quantidade/lote/FIFO) =====
+async function abrirEditEnt(id){
+  const{data:e,error}=await sb.from('materiaprima_entradas').select('*').eq('id',id).single();
+  if(error||!e){toast('Erro ao carregar entrada','error');return;}
+  document.getElementById('ede-id').value=e.id;
+  document.getElementById('ede-produto-label').textContent=`${e.produto} (${e.codigo_produto})`;
+  document.getElementById('ede-lote-label').textContent=e.lote_interno?`${e.lote} (int: ${e.lote_interno})`:e.lote;
+  document.getElementById('ede-qtd-label').textContent=`${fmt(e.quantidade)} ${e.unidade}`;
+  document.getElementById('ede-vl-label').textContent=fmtR(e.valor_unitario);
+  document.getElementById('ede-dt').value=e.data_entrada;
+  document.getElementById('ede-nf').value=e.nf_numero||'';
+  document.getElementById('ede-ser').value=e.nf_serie||'';
+  document.getElementById('ede-cnpj').value=e.cnpj_fornecedor||'';
+  document.getElementById('ede-forn').value=e.fornecedor||'';
+  document.getElementById('ede-fab').value=e.data_fabricacao||'';
+  document.getElementById('ede-val').value=e.data_validade||'';
+  document.getElementById('ede-obs').value=e.observacoes||'';
+  openModal('m-mp-e-edit');
+  await carregarListaAuxSelect('ede-fabricante','materiaprima_fabricantes');
+  document.getElementById('ede-fabricante').value=e.fabricante_id||'';
+}
+
+async function saveEditEnt(){
+  const id=document.getElementById('ede-id').value;
+  const dt=document.getElementById('ede-dt').value;
+  const nf=document.getElementById('ede-nf').value.trim();
+  const ser=document.getElementById('ede-ser').value.trim()||null;
+  const cnpj=document.getElementById('ede-cnpj').value.trim()||null;
+  const forn=document.getElementById('ede-forn').value.trim();
+  const fabricanteId=document.getElementById('ede-fabricante').value||null;
+  const fab=document.getElementById('ede-fab').value||null;
+  const val=document.getElementById('ede-val').value;
+  const obs=document.getElementById('ede-obs').value.trim()||null;
+  if(!dt||!nf||!forn||!val){toast('Preencha os campos obrigatórios','error');return;}
+  const{error}=await sb.from('materiaprima_entradas').update({
+    data_entrada:dt,nf_numero:nf,nf_serie:ser,cnpj_fornecedor:cnpj,fornecedor:forn,
+    fabricante_id:fabricanteId,data_fabricacao:fab,data_validade:val,observacoes:obs
+  }).eq('id',id);
+  if(error){toast('Erro: '+error.message,'error');return;}
+  toast('Entrada atualizada!');closeModal('m-mp-e-edit');loadMPEnt();
 }
 
 // ===== MP SAÍDAS =====
@@ -2237,7 +2376,7 @@ async function psFetchAll(tipo) {
   if (_psCache[tipo]) return _psCache[tipo];
   let data = [];
   if (tipo === 'mp') {
-    const r = await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual').order('produto');
+    const r = await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual,fabricante_id').order('produto');
     data = r.data || [];
   } else if (tipo === 'pa') {
     const r = await sb.from('produto_acabado_cadastro').select('codigo,produto,unidade,estoque_atual,categoria,precificacao_produtos(nome,categoria)').order('produto');
@@ -2307,6 +2446,16 @@ function psSelect(prefix, cod, nome, tipo) {
   if (prefix === 'sai') loadLotesFIFO();
   if (prefix === 'exp') loadLotesFIFO_PA();
   if (prefix === 'sins') loadLotesFIFO_Ins();
+
+  // Autofill do fabricante padrão do produto (Cadastros Auxiliares), se existir select correspondente
+  const fabSel = document.getElementById(prefix + '-fabricante');
+  if (fabSel && tipo === 'mp') {
+    const prod = (_psCache['mp']||[]).find(p => p.codigo === cod);
+    if (prod?.fabricante_id) fabSel.value = prod.fabricante_id;
+  }
+  // Atualiza a unidade-destino mostrada na calculadora de conversão, se estiver aberta
+  const unLabel = document.getElementById('calc-conv-un-destino-' + prefix);
+  if (unLabel) atualizarUnidadeDestinoConversaoItem(prefix);
 }
 
 function psClear(prefix) {
