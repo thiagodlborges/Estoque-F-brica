@@ -686,8 +686,8 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Código <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="mp-cod" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
     <div class="fgr"><label>Unidade *</label><select id="mp-un"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
     <div class="fgr full"><label>Nome Comercial *</label><input id="mp-nome" type="text" placeholder="Ex: Gordura Vegetal"></div>
-    <div class="fgr"><label>Estoque Mínimo *</label><input id="mp-emin" type="number" min="0" step="0.001" placeholder="0"></div>
-    <div class="fgr"><label>Estoque Atual</label><input id="mp-eatu" type="number" min="0" step="0.001" placeholder="0"></div>
+    <div class="fgr"><label>Estoque Mínimo *</label><input id="mp-emin" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="mp-eatu" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr"><label>Nome Técnico</label><select id="mp-nometec"><option value="">—</option></select></div>
     <div class="fgr"><label>Fabricante</label><select id="mp-fabricante"><option value="">—</option></select></div>
     <div class="fgr"><label>Fornecedor</label><select id="mp-fornecedor"><option value="">—</option></select></div>
@@ -759,7 +759,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr full"><label>Lote FIFO (mais antigo disponível) *</label><select id="sai-lote"><option value="">— Selecione o produto primeiro —</option></select></div>
     <div class="fgr"><label>NF Origem</label><input id="sai-nf" type="text"></div>
     <div class="fgr"><label>Série NF Origem</label><input id="sai-ser" type="text"></div>
-    <div class="fgr"><label>Quantidade *</label><input id="sai-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="sai-qtd" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr"><label>Destino *</label>
       <select id="sai-dest" style="font-weight:600" onchange="toggleSaiOP(this.value)">
         <option value="Processo">⚙️ Processo — consumo em produção</option>
@@ -788,13 +788,13 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Data Início *</label><input id="pr-ini" type="date"></div>
     <div class="fgr"><label>Código Produto</label><input id="pr-cod" type="text" placeholder="PA001"></div>
     <div class="fgr"><label>Produto *</label><input id="pr-prod" type="text" placeholder="Nome do produto"></div>
-    <div class="fgr"><label>Quantidade *</label><input id="pr-qtd" type="number" min="0.001" step="0.001"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="pr-qtd" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr"><label>Unidade</label><select id="pr-un"><option>Un</option><option>Kg</option><option>L</option><option>Cx</option></select></div>
     <div class="fgr"><label>Etapa Atual</label><input id="pr-etapa" type="text" placeholder="Ex: Mistura"></div>
     <div class="fgr"><label>% Conclusão</label><input id="pr-pct" type="number" min="0" max="100" step="1" placeholder="0"></div>
     <div class="fgr"><label>Responsável</label><input id="pr-resp" type="text"></div>
     <div class="fgr"><label>Previsão Término</label><input id="pr-prev" type="date"></div>
-    <div class="fgr"><label>Custo MP (R$)</label><input id="pr-custo" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    <div class="fgr"><label>Custo MP (R$)</label><input id="pr-custo" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr"><label>Status</label><select id="pr-status"><option>EM PROCESSO</option><option>AGUARDANDO</option><option>ATRASADO</option><option>FINALIZADO</option></select></div>
     <div class="fgr full"><label>Observações</label><textarea id="pr-obs"></textarea></div>
   </div></div>
@@ -816,7 +816,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr" id="rec-categoria-produto-wrap"><label>Categoria do Produto</label><select id="rec-categoria-produto">
       <option value="">—</option>
     </select></div>
-    <div class="fgr"><label>Quantidade Base *</label><input id="rec-qtdbase" type="number" min="0.001" step="0.001" value="1"></div>
+    <div class="fgr"><label>Quantidade Base *</label><input id="rec-qtdbase" type="text" inputmode="decimal" value="1" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr"><label>Unidade Base</label><select id="rec-unbase"><option>Kg</option><option>L</option><option>Un</option></select></div>
     <div class="fgr full"><label>Embalagens (uma por linha)</label><textarea id="rec-emb" placeholder="Potes de 360 g&#10;Potes de 150 g&#10;Caixas de 6 kg" style="min-height:60px"></textarea></div>
     <hr class="fdiv">
@@ -859,7 +859,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
       <option value="mae">🔗 Mãe (lote grande, gera OPs Filhas de embalagem)</option>
     </select></div>
     <div class="fgr"><label>Receita *</label><select id="opx-receita" onchange="onReceitaSelecionada()"><option value="">— Selecione —</option></select></div>
-    <div class="fgr"><label>Quantidade a Produzir *</label><input id="opx-qtd" type="number" min="0.001" step="0.001" oninput="previewReceitaConsumo()"></div>
+    <div class="fgr"><label>Quantidade a Produzir *</label><input id="opx-qtd" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this);previewReceitaConsumo()"></div>
     <div class="fgr"><label>Unidade</label><input id="opx-un" type="text" disabled></div>
     <div class="fgr" id="opx-embalagem-wrap"><label>Embalagem</label><select id="opx-embalagem"><option value="">—</option></select></div>
     <div class="fgr"><label>Data</label><input id="opx-data" type="date"></div>
@@ -881,7 +881,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
       <div class="fgr"><label>Nº OP Filha <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="opfilha-numero" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
       <div class="fgr"><label>Categoria (embalagem) *</label><select id="opfilha-categoria" onchange="onOpfilhaCategoriaChange()"><option value="">— Selecione —</option></select></div>
       <div class="fgr full"><label>Produto Final *</label><select id="opfilha-produto"><option value="">— Selecione a categoria primeiro —</option></select></div>
-      <div class="fgr"><label>Quantidade a Embalar (Kg) *</label><input id="opfilha-qtd" type="number" min="0.001" step="0.001" oninput="onOpfilhaQtdChange()"></div>
+      <div class="fgr"><label>Quantidade a Embalar (Kg) *</label><input id="opfilha-qtd" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this);onOpfilhaQtdChange()"></div>
       <div class="fgr"><label>Responsável</label><input id="opfilha-resp" type="text"></div>
       <div class="fgr full"><label>Observações</label><textarea id="opfilha-obs"></textarea></div>
       <div class="fgr full" id="opfilha-preview" style="font-size:.82rem;color:var(--tm)"></div>
@@ -909,7 +909,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <input type="hidden" id="rend-ordem-id">
     <p id="rend-info" style="font-size:.84rem;color:var(--tm);margin-bottom:14px;background:var(--cs);padding:10px 12px;border-radius:8px"></p>
     <div class="fg">
-      <div class="fgr full"><label id="rend-qtd-label">Quantidade Real Produzida *</label><input id="rend-qtd" type="number" min="0" step="0.001" oninput="onRendQtdChange()"></div>
+      <div class="fgr full"><label id="rend-qtd-label">Quantidade Real Produzida *</label><input id="rend-qtd" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this);onRendQtdChange()"></div>
       <div class="fgr full" id="rend-perda-wrap" style="display:none">
         <label style="color:var(--vc)">⚠️ Rendeu abaixo do previsto — Motivo da Perda *</label>
         <input id="rend-motivo" type="text" placeholder="Ex: rendimento abaixo do esperado, quebra no envase...">
@@ -944,7 +944,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
       <div class="prod-search-cod-display" id="ps-cod-adj"></div>
       <input type="hidden" id="adj-prod">
     </div>
-    <div class="fgr"><label>Quantidade *</label><input id="adj-qtd" type="number" min="0.001" step="0.001"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="adj-qtd" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr"><label>Data</label><input id="adj-data" type="date"></div>
     <div class="fgr"><label>Motivo</label><input id="adj-motivo" type="text" placeholder="Ex: Sobrou da OP, embalagem rasgada..."></div>
     <div class="fgr"><label>Responsável</label><input id="adj-resp" type="text"></div>
@@ -986,9 +986,9 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Data de Validade *</label><input id="paprod-val" type="date"></div>
     <div class="fgr"><label>Data de Produção *</label><input id="paprod-dt" type="date"></div>
     <hr class="fdiv">
-    <div class="fgr"><label>Quantidade *</label><input id="paprod-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
-    <div class="fgr"><label>Custo Total (R$)</label><input id="paprod-ct" type="number" min="0" step="0.01" placeholder="0.00"></div>
-    <div class="fgr"><label>Custo Unitário (R$)</label><input id="paprod-cu" type="number" min="0" step="0.0001" placeholder="0.00"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="paprod-qtd" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Custo Total (R$)</label><input id="paprod-ct" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Custo Unitário (R$)</label><input id="paprod-cu" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr full"><label>Observações</label><textarea id="paprod-obs"></textarea></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-pa-prod')">Cancelar</button><button class="btn btn-p" onclick="savePAProd()">Registrar</button></div></div>
@@ -1014,7 +1014,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
       <label>Lotes disponíveis (consumo FIFO automático — mais antigo primeiro)</label>
       <div id="exp-lotes-preview" style="font-size:.82rem;color:var(--tm);padding:8px 10px;background:var(--bg2,#F7F3EE);border-radius:8px">Selecione o produto primeiro</div>
     </div>
-    <div class="fgr"><label>Quantidade *</label><input id="exp-qtd" type="number" min="0.001" step="0.001" placeholder="0" oninput="atualizarPreviewLotesPA()"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="exp-qtd" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this);atualizarPreviewLotesPA()"></div>
     <div class="fgr"><label>NF de Venda</label><input id="exp-nf" type="text" placeholder="000001"></div>
     <div class="fgr"><label>Destino</label><input id="exp-dest" type="text" placeholder="Nome do cliente"></div>
     <div class="fgr"><label>Responsável</label><input id="exp-resp" type="text"></div>
@@ -1067,10 +1067,10 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>Unidade</label><select id="mpe-un"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
     <div class="fgr full"><label>Nome Comercial *</label><input id="mpe-nome" type="text"></div>
     <div class="ftit">💰 Preços e Estoque</div>
-    <div class="fgr"><label>Estoque Mínimo</label><input id="mpe-emin" type="number" min="0" step="0.001"></div>
-    <div class="fgr"><label>Estoque Atual</label><input id="mpe-eatu" type="number" min="0" step="0.001"></div>
-    <div class="fgr"><label>Preço de Custo (R$)</label><input id="mpe-preco" type="number" min="0" step="0.0001"></div>
-    <div class="fgr"><label>Preço Médio Ponderado</label><input id="mpe-medio" type="number" min="0" step="0.0001"></div>
+    <div class="fgr"><label>Estoque Mínimo</label><input id="mpe-emin" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="mpe-eatu" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Preço de Custo (R$)</label><input id="mpe-preco" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Preço Médio Ponderado</label><input id="mpe-medio" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
     <div class="ftit">📇 Cadastros Auxiliares</div>
     <div class="fgr"><label>Nome Técnico</label><select id="mpe-nometec"><option value="">—</option></select></div>
     <div class="fgr"><label>Fabricante</label><select id="mpe-fabricante"><option value="">—</option></select></div>
@@ -1089,11 +1089,11 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr full"><label>Produto <span style="color:var(--gok);font-size:.7rem;font-weight:400">(renomeie em Precificação Fábrica)</span></label><input id="pae-nome" type="text" disabled style="background:var(--cs);opacity:.8"></div>
     <div class="ftit">💰 Preços e Estoque</div>
     <div class="fgr"><label>Unidade</label><select id="pae-un"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option></select></div>
-    <div class="fgr"><label>Estoque Mínimo</label><input id="pae-emin" type="number" min="0" step="0.001"></div>
-    <div class="fgr"><label>Estoque Atual</label><input id="pae-eatu" type="number" min="0" step="0.001"></div>
-    <div class="fgr"><label>Preço de Custo (R$)</label><input id="pae-preco" type="number" min="0" step="0.0001"></div>
-    <div class="fgr"><label>Preço Médio (R$)</label><input id="pae-medio" type="number" min="0" step="0.0001"></div>
-    <div class="fgr"><label>Preço de Venda (R$)</label><input id="pae-venda" type="number" min="0" step="0.0001"></div>
+    <div class="fgr"><label>Estoque Mínimo</label><input id="pae-emin" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="pae-eatu" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Preço de Custo (R$)</label><input id="pae-preco" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Preço Médio (R$)</label><input id="pae-medio" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Preço de Venda (R$)</label><input id="pae-venda" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-pa-edit')">Cancelar</button><button class="btn btn-p" onclick="saveEditPA()">Salvar Alterações</button></div></div>
 </div>
@@ -1107,10 +1107,10 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr full"><label>Insumo *</label><input id="ins-nome" type="text" placeholder="Ex: Pote 500ml, Embalagem..."></div>
     <div class="fgr full"><label>Categoria</label><input id="ins-cat" type="text" placeholder="Ex: Embalagem, Limpeza, Descartável..."></div>
     <div class="ftit">💰 Preços e Estoque</div>
-    <div class="fgr"><label>Estoque Mínimo *</label><input id="ins-emin" type="number" min="0" step="0.001" placeholder="0"></div>
-    <div class="fgr"><label>Estoque Atual</label><input id="ins-eatu" type="number" min="0" step="0.001" placeholder="0"></div>
-    <div class="fgr"><label>Preço de Custo (R$)</label><input id="ins-preco" type="number" min="0" step="0.0001" placeholder="0.00"></div>
-    <div class="fgr"><label>Preço Médio (R$)</label><input id="ins-medio" type="number" min="0" step="0.0001" placeholder="0.00"></div>
+    <div class="fgr"><label>Estoque Mínimo *</label><input id="ins-emin" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="ins-eatu" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Preço de Custo (R$)</label><input id="ins-preco" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Preço Médio (R$)</label><input id="ins-medio" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-ins-p')">Cancelar</button><button class="btn btn-p" onclick="saveIns()">Salvar</button></div></div>
 </div>
@@ -1124,10 +1124,10 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr full"><label>Insumo *</label><input id="inse-nome" type="text"></div>
     <div class="fgr full"><label>Categoria</label><input id="inse-cat" type="text"></div>
     <div class="ftit">💰 Preços e Estoque</div>
-    <div class="fgr"><label>Estoque Mínimo</label><input id="inse-emin" type="number" min="0" step="0.001"></div>
-    <div class="fgr"><label>Estoque Atual</label><input id="inse-eatu" type="number" min="0" step="0.001"></div>
-    <div class="fgr"><label>Preço de Custo (R$)</label><input id="inse-preco" type="number" min="0" step="0.0001"></div>
-    <div class="fgr"><label>Preço Médio (R$)</label><input id="inse-medio" type="number" min="0" step="0.0001"></div>
+    <div class="fgr"><label>Estoque Mínimo</label><input id="inse-emin" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Estoque Atual</label><input id="inse-eatu" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Preço de Custo (R$)</label><input id="inse-preco" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Preço Médio (R$)</label><input id="inse-medio" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
   </div></div>
   <div class="mf"><button class="btn btn-o" onclick="closeModal('m-ins-edit')">Cancelar</button><button class="btn btn-p" onclick="saveEditIns()">Salvar Alterações</button></div></div>
 </div>
@@ -1157,8 +1157,8 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     <div class="fgr"><label>CNPJ Fornecedor</label><input id="iens-cnpj" type="text"></div>
     <hr class="fdiv">
     <div class="ftit">📦 Quantidade</div>
-    <div class="fgr"><label>Quantidade *</label><input id="iens-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
-    <div class="fgr"><label>Valor Unitário (R$) *</label><input id="iens-vl" type="number" min="0" step="0.0001" placeholder="0.00"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="iens-qtd" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr"><label>Valor Unitário (R$) *</label><input id="iens-vl" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"></div>
     <hr class="fdiv">
     <div class="ftit">🏷️ Lote e Datas (FIFO)</div>
     <div class="fgr"><label>Número do Lote *</label><input id="iens-lote" type="text" placeholder="LOT-INS-001"></div>
@@ -1187,7 +1187,7 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
     </div>
     <div class="fgr full"><label>Lote FIFO (mais antigo disponível) *</label><select id="sins-lote"><option value="">— Selecione o insumo primeiro —</option></select></div>
     <div class="fgr"><label>NF Origem</label><input id="sins-nf" type="text"></div>
-    <div class="fgr"><label>Quantidade *</label><input id="sins-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
+    <div class="fgr"><label>Quantidade *</label><input id="sins-qtd" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr"><label>Destino</label><input id="sins-dest" type="text" placeholder="Ex: Linha de produção"></div>
     <div class="fgr"><label>Ordem de Produção</label><input id="sins-op" type="text" placeholder="OP-001"></div>
     <div class="fgr"><label>Responsável</label><input id="sins-resp" type="text"></div>
@@ -1535,8 +1535,8 @@ async function saveMP(){
   const cod   = document.getElementById('mp-cod').value.trim();
   const nome  = document.getElementById('mp-nome').value.trim();
   const un    = document.getElementById('mp-un').value;
-  const emin  = parseFloat(document.getElementById('mp-emin').value)||0;
-  const eatu  = parseFloat(document.getElementById('mp-eatu').value)||0;
+  const emin  = parseNumBR(document.getElementById('mp-emin').value)||0;
+  const eatu  = parseNumBR(document.getElementById('mp-eatu').value)||0;
   const nometec = document.getElementById('mp-nometec').value || null;
   const fabricante = document.getElementById('mp-fabricante').value || null;
   const fornecedor = document.getElementById('mp-fornecedor').value || null;
@@ -1913,7 +1913,7 @@ async function saveSai(){
   const lsel = document.getElementById('sai-lote');
   const lote = lsel.value;
   const opt  = lsel.options[lsel.selectedIndex];
-  const qtd  = parseFloat(document.getElementById('sai-qtd').value);
+  const qtd  = parseNumBR(document.getElementById('sai-qtd').value);
   const sal  = parseFloat(opt?.dataset.sal||0);
   const vu   = parseFloat(opt?.dataset.vu||0);
   const nf   = document.getElementById('sai-nf').value.trim()||null;
@@ -2009,13 +2009,13 @@ async function saveProc(){
   const ini=document.getElementById('pr-ini').value;
   const cod=document.getElementById('pr-cod').value.trim();
   const prod=document.getElementById('pr-prod').value.trim();
-  const qtd=parseFloat(document.getElementById('pr-qtd').value);
+  const qtd=parseNumBR(document.getElementById('pr-qtd').value);
   const un=document.getElementById('pr-un').value;
   const etapa=document.getElementById('pr-etapa').value.trim()||null;
   const pct=parseFloat(document.getElementById('pr-pct').value)||0;
   const resp=document.getElementById('pr-resp').value.trim()||null;
   const prev=document.getElementById('pr-prev').value||null;
-  const custo=parseFloat(document.getElementById('pr-custo').value)||0;
+  const custo=parseNumBR(document.getElementById('pr-custo').value)||0;
   const status=document.getElementById('pr-status').value;
   const obs=document.getElementById('pr-obs').value.trim()||null;
   if(!op||!ini||!prod||!qtd){toast('Preencha campos obrigatórios','error');return;}
@@ -2091,13 +2091,13 @@ function renderSyncPA(items){
     <div style="display:grid;grid-template-columns:2fr 90px 110px 100px;gap:8px;align-items:center;padding:10px;background:var(--br);border-radius:8px;border:1px solid var(--mp)">
       <div><strong>${p.nome}</strong>${!p.ativo?' <span class="sb CRITICO" style="font-size:.65rem">inativo</span>':''}<br><small style="color:var(--tm)">${p.categoria} · ${p.codigo}</small></div>
       <select id="sync-un-${i}"><option>Un</option><option>Cx</option><option>Kg</option><option>L</option></select>
-      <input id="sync-emin-${i}" type="number" min="0" step="0.001" placeholder="Estq. mín." value="0">
+      <input id="sync-emin-${i}" type="text" inputmode="decimal" placeholder="Estq. mín." value="0" oninput="saneiaDecimalBR(this)">
       <button class="btn btn-p btn-xs" onclick='confirmarSyncPA(${JSON.stringify(p)},${i})'>+ Adicionar</button>
     </div>`).join('');
 }
 async function confirmarSyncPA(p, i){
   const un = document.getElementById(`sync-un-${i}`).value;
-  const emin = parseFloat(document.getElementById(`sync-emin-${i}`).value)||0;
+  const emin = parseNumBR(document.getElementById(`sync-emin-${i}`).value)||0;
   const { error } = await sb.from('produto_acabado_cadastro').insert({
     codigo: p.codigo, produto: p.nome, categoria: p.categoria, unidade: un,
     estoque_minimo: emin, estoque_atual: 0, precificacao_produto_id: p.id
@@ -2143,10 +2143,10 @@ async function savePAProd(){
   const lote=document.getElementById('paprod-lote').value.trim();
   const fab=document.getElementById('paprod-fab').value||null;
   const val=document.getElementById('paprod-val').value;
-  const qtd=parseFloat(document.getElementById('paprod-qtd').value);
+  const qtd=parseNumBR(document.getElementById('paprod-qtd').value);
   const op=document.getElementById('paprod-op').value.trim()||null;
-  const ct=parseFloat(document.getElementById('paprod-ct').value)||0;
-  const cu=parseFloat(document.getElementById('paprod-cu').value)||0;
+  const ct=parseNumBR(document.getElementById('paprod-ct').value)||0;
+  const cu=parseNumBR(document.getElementById('paprod-cu').value)||0;
   const obs=document.getElementById('paprod-obs').value.trim()||null;
   const{data:pd}=await sb.from('produto_acabado_cadastro').select('unidade').eq('codigo',cod).single();
   const un=pd?.unidade||'Un';
@@ -2170,7 +2170,7 @@ function atualizarPreviewLotesPA(){
   const prev=document.getElementById('exp-lotes-preview');
   const lotes=window._lotesPADisponiveis||[];
   if(!lotes.length){prev.innerHTML='Sem lotes disponíveis para este produto';return;}
-  const qtdPedida=parseFloat(document.getElementById('exp-qtd')?.value)||0;
+  const qtdPedida=parseNumBR(document.getElementById('exp-qtd')?.value)||0;
   let restante=qtdPedida;
   const linhas=lotes.map((l,i)=>{
     const vaiConsumir=qtdPedida>0?Math.max(0,Math.min(l.saldo_fifo,restante)):0;
@@ -2193,7 +2193,7 @@ async function loadExpd(){
 async function saveExpd(){
   const cod=document.getElementById('exp-prod')?.value;
   const dt=document.getElementById('exp-dt').value;
-  const qtd=parseFloat(document.getElementById('exp-qtd').value);
+  const qtd=parseNumBR(document.getElementById('exp-qtd').value);
   const nf=document.getElementById('exp-nf').value.trim()||null;
   const dest=document.getElementById('exp-dest').value.trim()||null;
   const resp=document.getElementById('exp-resp').value.trim()||null;
@@ -2655,7 +2655,7 @@ async function loadItensCriticosCompra(){
       <td style="text-align:right">${fmt(p.estoque_atual)}</td>
       <td style="text-align:right">${fmt(p.estoque_minimo)}</td>
       <td>${p.unidade}</td>
-      <td><input type="number" id="cri-qtd-${rid}" min="0.001" step="0.001" value="${sugestao}" style="width:100px"></td>
+      <td><input type="text" inputmode="decimal" id="cri-qtd-${rid}" value="${sugestao}" style="width:100px" oninput="saneiaDecimalBR(this)"></td>
     </tr>`;
   }).join('');
 }
@@ -2672,7 +2672,7 @@ async function gerarPedidoCompra(){
 
   const itens = marcados.map(c=>{
     const rid = c.dataset.tipo+'-'+c.dataset.codigo;
-    const qtd = parseFloat(document.getElementById('cri-qtd-'+rid)?.value)||0;
+    const qtd = parseNumBR(document.getElementById('cri-qtd-'+rid)?.value)||0;
     return {
       tipo: c.dataset.tipo,
       codigo_produto: c.dataset.codigo,
@@ -3163,10 +3163,10 @@ async function saveEditMP() {
   const upd = {
     produto:        document.getElementById('mpe-nome').value.trim(),
     unidade:        document.getElementById('mpe-un').value,
-    estoque_minimo: parseFloat(document.getElementById('mpe-emin').value)||0,
-    estoque_atual:  parseFloat(document.getElementById('mpe-eatu').value)||0,
-    preco_custo:    parseFloat(document.getElementById('mpe-preco').value)||0,
-    preco_medio:    parseFloat(document.getElementById('mpe-medio').value)||0,
+    estoque_minimo: parseNumBR(document.getElementById('mpe-emin').value)||0,
+    estoque_atual:  parseNumBR(document.getElementById('mpe-eatu').value)||0,
+    preco_custo:    parseNumBR(document.getElementById('mpe-preco').value)||0,
+    preco_medio:    parseNumBR(document.getElementById('mpe-medio').value)||0,
     nome_tecnico_id:   document.getElementById('mpe-nometec').value || null,
     fabricante_id:     document.getElementById('mpe-fabricante').value || null,
     fornecedor_id:     document.getElementById('mpe-fornecedor').value || null,
@@ -3272,11 +3272,11 @@ async function saveEditPA() {
   const upd = {
     // produto/categoria não são mais editáveis aqui — vêm sempre de Precificação Fábrica
     unidade:        document.getElementById('pae-un').value,
-    estoque_minimo: parseFloat(document.getElementById('pae-emin').value)||0,
-    estoque_atual:  parseFloat(document.getElementById('pae-eatu').value)||0,
-    preco_custo:    parseFloat(document.getElementById('pae-preco').value)||0,
-    preco_medio:    parseFloat(document.getElementById('pae-medio').value)||0,
-    preco_venda:    parseFloat(document.getElementById('pae-venda').value)||0,
+    estoque_minimo: parseNumBR(document.getElementById('pae-emin').value)||0,
+    estoque_atual:  parseNumBR(document.getElementById('pae-eatu').value)||0,
+    preco_custo:    parseNumBR(document.getElementById('pae-preco').value)||0,
+    preco_medio:    parseNumBR(document.getElementById('pae-medio').value)||0,
+    preco_venda:    parseNumBR(document.getElementById('pae-venda').value)||0,
     updated_at:     new Date().toISOString(),
   };
   const {error} = await sb.from('produto_acabado_cadastro').update(upd).eq('codigo',cod);
@@ -3333,10 +3333,10 @@ async function saveIns() {
   const nome  = document.getElementById('ins-nome').value.trim();
   const cat   = document.getElementById('ins-cat').value.trim()||null;
   const un    = document.getElementById('ins-un').value;
-  const emin  = parseFloat(document.getElementById('ins-emin').value)||0;
-  const eatu  = parseFloat(document.getElementById('ins-eatu').value)||0;
-  const preco = parseFloat(document.getElementById('ins-preco').value)||0;
-  const medio = parseFloat(document.getElementById('ins-medio').value)||0;
+  const emin  = parseNumBR(document.getElementById('ins-emin').value)||0;
+  const eatu  = parseNumBR(document.getElementById('ins-eatu').value)||0;
+  const preco = parseNumBR(document.getElementById('ins-preco').value)||0;
+  const medio = parseNumBR(document.getElementById('ins-medio').value)||0;
   if(!cod || cod.startsWith('⏳')){toast('Aguarde o código ser gerado','error');return;}
   if(!nome){toast('Preencha o nome do insumo','error');return;}
   const {error} = await sb.from('insumos_produtos').insert({codigo:cod,produto:nome,categoria:cat,unidade:un,estoque_minimo:emin,estoque_atual:eatu,preco_custo:preco,preco_medio:medio});
@@ -3365,10 +3365,10 @@ async function saveEditIns() {
     produto:        document.getElementById('inse-nome').value.trim(),
     categoria:      document.getElementById('inse-cat').value.trim()||null,
     unidade:        document.getElementById('inse-un').value,
-    estoque_minimo: parseFloat(document.getElementById('inse-emin').value)||0,
-    estoque_atual:  parseFloat(document.getElementById('inse-eatu').value)||0,
-    preco_custo:    parseFloat(document.getElementById('inse-preco').value)||0,
-    preco_medio:    parseFloat(document.getElementById('inse-medio').value)||0,
+    estoque_minimo: parseNumBR(document.getElementById('inse-emin').value)||0,
+    estoque_atual:  parseNumBR(document.getElementById('inse-eatu').value)||0,
+    preco_custo:    parseNumBR(document.getElementById('inse-preco').value)||0,
+    preco_medio:    parseNumBR(document.getElementById('inse-medio').value)||0,
     updated_at:     new Date().toISOString(),
   };
   const {error} = await sb.from('insumos_produtos').update(upd).eq('codigo',cod);
@@ -3418,8 +3418,8 @@ async function saveInsEnt() {
   const ser  = document.getElementById('iens-ser').value.trim()||null;
   const forn = document.getElementById('iens-forn').value.trim();
   const cnpj = document.getElementById('iens-cnpj').value.trim()||null;
-  const qtd  = parseFloat(document.getElementById('iens-qtd').value);
-  const vl   = parseFloat(document.getElementById('iens-vl').value)||0;
+  const qtd  = parseNumBR(document.getElementById('iens-qtd').value);
+  const vl   = parseNumBR(document.getElementById('iens-vl').value)||0;
   const lote = document.getElementById('iens-lote').value.trim();
   const fab  = document.getElementById('iens-fab').value||null;
   const val  = document.getElementById('iens-val').value;
@@ -3480,7 +3480,7 @@ async function saveInsSai() {
   const lsel = document.getElementById('sins-lote');
   const lote = lsel.value;
   const opt  = lsel.options[lsel.selectedIndex];
-  const qtd  = parseFloat(document.getElementById('sins-qtd').value);
+  const qtd  = parseNumBR(document.getElementById('sins-qtd').value);
   const sal  = parseFloat(opt?.dataset.sal||0);
   const vu   = parseFloat(opt?.dataset.vu||0);
   const nf   = document.getElementById('sins-nf').value.trim()||null;
@@ -3907,7 +3907,7 @@ function addRecItemRow(tipoItem='mp', codigo='', nome='', pct='', un='', receita
         </select>
       </div>
     </div>
-    <input type="number" min="0.001" step="0.001" placeholder="% (ex: 0.667)" value="${pct}" class="rec-item-pct">
+    <input type="text" inputmode="decimal" placeholder="% (ex: 0,667)" value="${pct}" class="rec-item-pct" oninput="saneiaDecimalBR(this)">
     <select class="rec-item-un"><option${un==='Kg'?' selected':''}>Kg</option><option${un==='L'?' selected':''}>L</option><option${un==='Un'?' selected':''}>Un</option></select>
     <button type="button" class="del-btn" title="Remover" onclick="this.closest('.rec-item-row').remove()">🗑</button>`;
   wrap.appendChild(row);
@@ -3926,7 +3926,7 @@ async function loadEmbPadrao(){
   tb.innerHTML = _embPadraoCache.map(e=>`<tr data-cat-original="${e.categoria}">
     <td><input type="text" class="embpad-categoria" value="${e.categoria}" style="width:150px" placeholder="Ex: Picolé Pequeno"></td>
     <td><input type="text" class="embpad-unidade" value="${e.nome_unidade}" style="width:120px" placeholder="Ex: Picolé P"></td>
-    <td><input type="number" min="0" step="0.001" class="embpad-peso" value="${e.peso_kg??''}" style="width:110px" placeholder="não definido"> kg</td>
+    <td><input type="text" inputmode="decimal" class="embpad-peso" value="${e.peso_kg??''}" style="width:110px" placeholder="não definido" oninput="saneiaDecimalBR(this)"> kg</td>
     <td><div class="bg">
       <button class="btn btn-p btn-xs" onclick="salvarEmbPadrao(this)">Salvar</button>
       <button class="del-btn" title="Excluir" onclick="excluirEmbPadrao(this,'${e.categoria}')">🗑</button>
@@ -3940,7 +3940,7 @@ function novaLinhaEmbPadrao(){
   row.innerHTML = `
     <td><input type="text" class="embpad-categoria" value="" style="width:150px" placeholder="Ex: Picolé Grande"></td>
     <td><input type="text" class="embpad-unidade" value="" style="width:120px" placeholder="Ex: Picolé G"></td>
-    <td><input type="number" min="0" step="0.001" class="embpad-peso" value="" style="width:110px" placeholder="0.100"> kg</td>
+    <td><input type="text" inputmode="decimal" class="embpad-peso" value="" style="width:110px" placeholder="0,100" oninput="saneiaDecimalBR(this)"> kg</td>
     <td><div class="bg">
       <button class="btn btn-p btn-xs" onclick="salvarEmbPadrao(this)">Salvar</button>
       <button class="del-btn" title="Remover linha" onclick="this.closest('tr').remove()">🗑</button>
@@ -3954,7 +3954,7 @@ async function salvarEmbPadrao(btnEl){
   const categoria = row.querySelector('.embpad-categoria').value.trim();
   const nomeUnidade = row.querySelector('.embpad-unidade').value.trim();
   const pesoStr = row.querySelector('.embpad-peso').value;
-  const peso = pesoStr === '' ? null : parseFloat(pesoStr);
+  const peso = pesoStr === '' ? null : parseNumBR(pesoStr);
 
   if(!categoria || !nomeUnidade){ toast('Preencha categoria e nome da unidade','error'); return; }
 
@@ -4270,7 +4270,7 @@ async function saveReceita(){
   const nome = document.getElementById('rec-nome').value.trim();
   const categoriaOp = document.getElementById('rec-categoria-op').value;
   const categoriaProduto = categoriaOp==='produto_acabado' ? (document.getElementById('rec-categoria-produto').value || null) : null;
-  const qtdbase = parseFloat(document.getElementById('rec-qtdbase').value);
+  const qtdbase = parseNumBR(document.getElementById('rec-qtdbase').value);
   const unbase = document.getElementById('rec-unbase').value;
   const emb = document.getElementById('rec-emb').value.split('\n').map(s=>s.trim()).filter(Boolean);
   const roteiro = document.getElementById('rec-roteiro').value.trim()||null;
@@ -4279,7 +4279,7 @@ async function saveReceita(){
   const rows = [...document.querySelectorAll('#rec-itens-wrap .rec-item-row')];
   const itens = rows.filter(row => !(_recVinculadaAtual && row.dataset.tipo === 'mp')).map(row=>{
     const rtipo = row.querySelector('.rec-item-tipo').value;
-    const pct = parseFloat(row.querySelector('.rec-item-pct').value);
+    const pct = parseNumBR(row.querySelector('.rec-item-pct').value);
     const un = row.querySelector('.rec-item-un').value;
     if(rtipo==='semiacabado'){
       const sel = row.querySelector('.rec-item-basesel');
@@ -4362,7 +4362,7 @@ async function previewReceitaConsumo(){
   const prev = document.getElementById('opx-preview');
   const id = document.getElementById('opx-receita').value;
   const r = _receitasCache.find(x=>x.id===id);
-  const qtd = parseFloat(document.getElementById('opx-qtd').value);
+  const qtd = parseNumBR(document.getElementById('opx-qtd').value);
   if(!r || !qtd){ prev.innerHTML=''; return; }
   const { data: itens } = await sb.from('producao_receita_itens').select('*').eq('receita_id', id).order('ordem');
   const fator = qtd / r.quantidade_base;
@@ -4411,7 +4411,7 @@ async function saveNovaOP(){
   const numero = document.getElementById('opx-numero').value;
   const tipoOp = document.getElementById('opx-tipo').value;
   const receitaId = document.getElementById('opx-receita').value;
-  const qtd = parseFloat(document.getElementById('opx-qtd').value);
+  const qtd = parseNumBR(document.getElementById('opx-qtd').value);
   const un = document.getElementById('opx-un').value;
   const embalagem = tipoOp==='mae' ? null : (document.getElementById('opx-embalagem').value || null);
   const data_criacao = document.getElementById('opx-data').value || today();
@@ -4572,7 +4572,7 @@ async function abrirFinalizarOP(id){
   document.getElementById('opf-itens-wrap').innerHTML = (itens||[]).map(i=>`
     <div class="fgr" data-codigo="${i.codigo_mp||''}" data-tipo="${i.tipo_item}" data-basereceita="${i.receita_base_id||''}">
       <label>${i.tipo_item==='semiacabado'?'🧪 ':'📦 '}${i.produto_mp} — separado: ${fmt(i.quantidade_separada)} ${i.unidade}</label>
-      <input type="number" min="0" step="0.001" class="opf-qtd-input" value="${i.quantidade_separada}">
+      <input type="text" inputmode="decimal" class="opf-qtd-input" value="${i.quantidade_separada}" oninput="saneiaDecimalBR(this)">
     </div>`).join('');
   openModal('m-op-final');
 }
@@ -4589,7 +4589,7 @@ async function abrirEncerrarMae(id){
   document.getElementById('opf-itens-wrap').innerHTML = (itens||[]).map(i=>`
     <div class="fgr" data-codigo="${i.codigo_mp||''}" data-tipo="${i.tipo_item}" data-basereceita="${i.receita_base_id||''}">
       <label>${i.tipo_item==='semiacabado'?'🧪 ':'📦 '}${i.produto_mp} — separado: ${fmt(i.quantidade_separada)} ${i.unidade}</label>
-      <input type="number" min="0" step="0.001" class="opf-qtd-input" value="${i.quantidade_separada}">
+      <input type="text" inputmode="decimal" class="opf-qtd-input" value="${i.quantidade_separada}" oninput="saneiaDecimalBR(this)">
     </div>`).join('');
   openModal('m-op-final');
 }
@@ -4602,7 +4602,7 @@ async function confirmarFinalizarOP(){
     tipo_item: row.dataset.tipo,
     codigo_mp: row.dataset.codigo || null,
     receita_base_id: row.dataset.basereceita || null,
-    quantidade: parseFloat(row.querySelector('.opf-qtd-input').value)||0
+    quantidade: parseNumBR(row.querySelector('.opf-qtd-input').value)||0
   }));
   const resp = prompt('Responsável (opcional):','') || null;
   const rpc = modo==='mae' ? 'producao_encerrar_op_mae' : 'producao_finalizar_op';
@@ -4649,7 +4649,7 @@ async function onOpfilhaCategoriaChange(){
 
 function onOpfilhaQtdChange(){
   const cat = document.getElementById('opfilha-categoria').value;
-  const qtd = parseFloat(document.getElementById('opfilha-qtd').value);
+  const qtd = parseNumBR(document.getElementById('opfilha-qtd').value);
   const prev = document.getElementById('opfilha-preview');
   const emb = _embPadraoCache.find(e=>e.categoria===cat);
   if(!cat || !qtd || !emb){ prev.innerHTML=''; return; }
@@ -4665,7 +4665,7 @@ async function salvarOpFilha(){
   const numero = document.getElementById('opfilha-numero').value;
   const produto = document.getElementById('opfilha-produto').value;
   const categoria = document.getElementById('opfilha-categoria').value;
-  const qtd = parseFloat(document.getElementById('opfilha-qtd').value);
+  const qtd = parseNumBR(document.getElementById('opfilha-qtd').value);
   const resp = document.getElementById('opfilha-resp').value.trim() || null;
   const obs = document.getElementById('opfilha-obs').value.trim() || null;
 
@@ -4833,14 +4833,14 @@ async function rastCadeiaDaOP(ordemId, nivel){
 
 
 function onRendQtdChange(){
-  const qtd = parseFloat(document.getElementById('rend-qtd').value);
+  const qtd = parseNumBR(document.getElementById('rend-qtd').value);
   const wrap = document.getElementById('rend-perda-wrap');
   wrap.style.display = (_rendPrevisto != null && !isNaN(qtd) && qtd < _rendPrevisto) ? '' : 'none';
 }
 
 async function confirmarRendimento(){
   const id = document.getElementById('rend-ordem-id').value;
-  const qtd = parseFloat(document.getElementById('rend-qtd').value);
+  const qtd = parseNumBR(document.getElementById('rend-qtd').value);
   const motivo = document.getElementById('rend-motivo').value.trim() || null;
   const resp = document.getElementById('rend-resp').value.trim() || null;
   const lote = document.getElementById('rend-lote').value.trim() || null;
@@ -4894,7 +4894,7 @@ async function saveAjuste(){
   const tipo = document.getElementById('adj-tipo').value;
   const ordemId = document.getElementById('adj-op').value || null;
   const cod = document.getElementById('adj-prod').value;
-  const qtd = parseFloat(document.getElementById('adj-qtd').value);
+  const qtd = parseNumBR(document.getElementById('adj-qtd').value);
   const data_ajuste = document.getElementById('adj-data').value || today();
   const motivo = document.getElementById('adj-motivo').value.trim()||null;
   const resp = document.getElementById('adj-resp').value.trim()||null;
@@ -4963,7 +4963,7 @@ async function loadPrevProdutos(){
     <td><code>${r.codigo}</code></td>
     <td><strong>${r.nome_produto}</strong></td>
     <td style="text-align:right">${estoqueTxt}</td>
-    <td><input type="number" class="prev-qtd-input" min="0" step="0.001" placeholder="0" style="width:130px"
+    <td><input type="text" inputmode="decimal" class="prev-qtd-input" placeholder="0" style="width:130px" oninput="saneiaDecimalBR(this)"
       data-receita-id="${r.id}" data-nome="${(r.nome_produto||'').replace(/"/g,'&quot;')}"></td>
   </tr>`;
   }).join('');
@@ -4975,7 +4975,7 @@ async function loadPrevProdutos(){
 async function calcularPrevisaoProducao(){
   const btn = document.querySelector('#sec-op-prev .btn-p');
   const linhas = [...document.querySelectorAll('.prev-qtd-input')].map(inp=>({
-    receita_id: inp.dataset.receitaId, nome: inp.dataset.nome, kg: parseFloat(inp.value)||0
+    receita_id: inp.dataset.receitaId, nome: inp.dataset.nome, kg: parseNumBR(inp.value)||0
   })).filter(l=>l.kg>0);
 
   if(!linhas.length){ toast('Informe ao menos uma previsão de produção (kg) para calcular.','error'); return; }
