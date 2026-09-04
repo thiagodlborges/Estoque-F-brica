@@ -1745,10 +1745,24 @@ async function calcularConversaoEntradaItem(prefix){
   resEl.innerHTML = html;
 }
 
-function usarConversaoEntradaItem(prefix){
+async function usarConversaoEntradaItem(prefix){
+  // 1) Produto precisa estar de fato selecionado (não basta ter texto digitado
+  // na busca — se a pessoa não clicou na sugestão, o código por trás fica
+  // vazio e a calculadora não sabe pra qual unidade converter).
+  const cod = document.getElementById(prefix+'-prod')?.value;
+  if(!cod){ toast('Selecione o produto (clique na sugestão da busca) antes de usar a calculadora','error'); return; }
+
+  // 2) Recalcula na hora, aguardando terminar — evita a corrida entre o
+  // cálculo (que consulta o banco pra saber a unidade do produto) e o clique
+  // no botão, que antes podia disparar antes do cálculo anterior terminar.
+  await calcularConversaoEntradaItem(prefix);
+
   const resEl = document.getElementById('calc-conv-resultado-'+prefix);
   const valorQtd = parseFloat(resEl.dataset.valorQtd);
-  if(isNaN(valorQtd)){ toast('Preencha a calculadora primeiro','error'); return; }
+  if(isNaN(valorQtd)){
+    toast('Não deu pra calcular — confira se "Qtd. de embalagens" e "Conteúdo de cada embalagem" estão preenchidos e se a unidade escolhida bate com a unidade cadastrada do produto','error');
+    return;
+  }
   document.getElementById(prefix+'-qtd').value = String(valorQtd).replace('.',',');
   const valorUnit = parseFloat(resEl.dataset.valorUnit);
   if(!isNaN(valorUnit)){
