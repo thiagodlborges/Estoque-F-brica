@@ -1601,21 +1601,21 @@ function addEntItemRow(){
         <div id="calc-conv-body-${prefix}" style="display:none;margin-top:10px">
           <p style="font-size:.78rem;color:var(--tm);margin-bottom:8px">Preencha como veio na nota fiscal — o sistema converte pra unidade cadastrada do produto (<strong id="calc-conv-un-destino-${prefix}">selecione o produto</strong>) e já calcula o valor unitário correto.</p>
           <div class="fg" style="grid-template-columns:1fr 1fr 1fr">
-            <div class="fgr"><label>Qtd. de embalagens (NF)</label><input id="calc-conv-qtd-emb-${prefix}" type="number" min="0" step="0.001" placeholder="Ex: 18" oninput="calcularConversaoEntradaItem('${prefix}')"></div>
-            <div class="fgr"><label>Conteúdo de cada embalagem</label><input id="calc-conv-conteudo-${prefix}" type="number" min="0" step="0.001" placeholder="Ex: 5" oninput="calcularConversaoEntradaItem('${prefix}')"></div>
+            <div class="fgr"><label>Qtd. de embalagens (NF)</label><input id="calc-conv-qtd-emb-${prefix}" type="text" inputmode="decimal" placeholder="Ex: 18" oninput="saneiaDecimalBR(this);calcularConversaoEntradaItem('${prefix}')"></div>
+            <div class="fgr"><label>Conteúdo de cada embalagem</label><input id="calc-conv-conteudo-${prefix}" type="text" inputmode="decimal" placeholder="Ex: 5" oninput="saneiaDecimalBR(this);calcularConversaoEntradaItem('${prefix}')"></div>
             <div class="fgr"><label>Unidade do conteúdo</label>
               <select id="calc-conv-unidade-${prefix}" onchange="calcularConversaoEntradaItem('${prefix}')">
                 <option value="Kg">Kg</option><option value="g">g</option><option value="L">L</option><option value="ml">ml</option><option value="Un">Un (sem conversão)</option>
               </select>
             </div>
           </div>
-          <div class="fgr"><label>Valor unitário da NF (por embalagem, R$)</label><input id="calc-conv-vl-emb-${prefix}" type="number" min="0" step="0.0001" placeholder="Ex: valor de 1 caixa" oninput="calcularConversaoEntradaItem('${prefix}')"></div>
+          <div class="fgr"><label>Valor unitário da NF (por embalagem, R$)</label><input id="calc-conv-vl-emb-${prefix}" type="text" inputmode="decimal" placeholder="Ex: 250,58" oninput="saneiaDecimalBR(this);calcularConversaoEntradaItem('${prefix}')"></div>
           <div id="calc-conv-resultado-${prefix}" style="font-size:.85rem;margin:8px 0"></div>
           <button type="button" class="btn btn-o btn-sm" onclick="usarConversaoEntradaItem('${prefix}')">Usar Quantidade e Valor Unitário</button>
         </div>
       </div>
-      <div class="fgr"><label>Quantidade *</label><input id="${prefix}-qtd" type="number" min="0.001" step="0.001" placeholder="0"></div>
-      <div class="fgr"><label>Valor Unitário (R$) *</label><input id="${prefix}-vl" type="number" min="0" step="0.0001" placeholder="0.00"></div>
+      <div class="fgr"><label>Quantidade *</label><input id="${prefix}-qtd" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
+      <div class="fgr"><label>Valor Unitário (R$) *</label><input id="${prefix}-vl" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"></div>
       <div class="fgr"><label>Lote do Fornecedor *</label><input id="${prefix}-lote" type="text" placeholder="LOT-2024-001"></div>
       <div class="fgr"><label>Lote Interno *</label>
         <div style="display:flex;gap:6px">
@@ -1687,11 +1687,37 @@ function _fatorConversaoUnidade(unOrigem, unDestino){
   return base[unOrigem] / base[unDestino];
 }
 
+// ===== Números em formato brasileiro (vírgula decimal) =====
+// Campos type="number" nativos SÓ aceitam ponto como separador decimal — em
+// muitos navegadores, digitar "3,2" deixa o campo com valor vazio ("") por
+// baixo dos panos, mesmo mostrando o texto digitado, e o cálculo quebra
+// silenciosamente. Por isso os campos sensíveis a decimal (calculadora de
+// conversão, Quantidade, Valor Unitário) usam type="text" + este parser, que
+// aceita tanto "3,2" quanto "3.2".
+function parseNumBR(v){
+  if (v === null || v === undefined) return NaN;
+  let s = String(v).trim();
+  if (!s) return NaN;
+  if (s.includes(',') && s.includes('.')) {
+    // Ambos presentes: assume ponto como separador de milhar e vírgula como decimal (ex: "1.234,56")
+    s = s.replace(/\./g,'').replace(',','.');
+  } else if (s.includes(',')) {
+    s = s.replace(',','.');
+  }
+  return parseFloat(s);
+}
+// Filtra o que a pessoa digita, permitindo apenas dígitos, vírgula, ponto e
+// sinal de menos — evita letras/símbolos acidentais sem travar a digitação.
+function saneiaDecimalBR(el){
+  const limpo = el.value.replace(/[^0-9.,\-]/g,'');
+  if (limpo !== el.value) el.value = limpo;
+}
+
 async function calcularConversaoEntradaItem(prefix){
-  const qtdEmb = parseFloat(document.getElementById('calc-conv-qtd-emb-'+prefix).value);
-  const conteudo = parseFloat(document.getElementById('calc-conv-conteudo-'+prefix).value);
+  const qtdEmb = parseNumBR(document.getElementById('calc-conv-qtd-emb-'+prefix).value);
+  const conteudo = parseNumBR(document.getElementById('calc-conv-conteudo-'+prefix).value);
   const unOrigem = document.getElementById('calc-conv-unidade-'+prefix).value;
-  const vlEmb = parseFloat(document.getElementById('calc-conv-vl-emb-'+prefix).value);
+  const vlEmb = parseNumBR(document.getElementById('calc-conv-vl-emb-'+prefix).value);
   const resEl = document.getElementById('calc-conv-resultado-'+prefix);
   const unDestino = await atualizarUnidadeDestinoConversaoItem(prefix);
 
@@ -1723,10 +1749,10 @@ function usarConversaoEntradaItem(prefix){
   const resEl = document.getElementById('calc-conv-resultado-'+prefix);
   const valorQtd = parseFloat(resEl.dataset.valorQtd);
   if(isNaN(valorQtd)){ toast('Preencha a calculadora primeiro','error'); return; }
-  document.getElementById(prefix+'-qtd').value = valorQtd;
+  document.getElementById(prefix+'-qtd').value = String(valorQtd).replace('.',',');
   const valorUnit = parseFloat(resEl.dataset.valorUnit);
   if(!isNaN(valorUnit)){
-    document.getElementById(prefix+'-vl').value = valorUnit.toFixed(4);
+    document.getElementById(prefix+'-vl').value = valorUnit.toFixed(4).replace('.',',');
     toast('Quantidade e Valor Unitário preenchidos a partir da conversão!');
   } else {
     toast('Quantidade preenchida a partir da conversão! (informe o valor unitário da NF acima para calcular o valor também)');
@@ -1750,8 +1776,8 @@ async function saveEnt(){
     const cod=document.getElementById(prefix+'-prod')?.value;
     const prod=document.getElementById(prefix+'-prod-search')?.value.trim()||'';
     const fabricanteId=document.getElementById(prefix+'-fabricante').value||null;
-    const qtd=parseFloat(document.getElementById(prefix+'-qtd').value);
-    const vl=parseFloat(document.getElementById(prefix+'-vl').value)||0;
+    const qtd=parseNumBR(document.getElementById(prefix+'-qtd').value);
+    const vl=parseNumBR(document.getElementById(prefix+'-vl').value)||0;
     const lote=document.getElementById(prefix+'-lote').value.trim();
     const loteInt=document.getElementById(prefix+'-lote-int').value.trim();
     const fab=document.getElementById(prefix+'-fab').value||null;
