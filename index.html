@@ -684,10 +684,14 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="md"><div class="mh"><span class="mt">Cadastrar Matéria-Prima</span><button class="mc" onclick="closeModal('m-mp-p')">✕</button></div>
   <div class="mb"><div class="fg">
     <div class="fgr"><label>Código <span style="color:var(--gok);font-size:.7rem;font-weight:400">(gerado automaticamente)</span></label><input id="mp-cod" type="text" disabled style="background:var(--cs);opacity:.8;font-family:'DM Mono',monospace;font-weight:600"></div>
-    <div class="fgr"><label>Unidade *</label><select id="mp-un"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
+    <div class="fgr"><label>Unidade *</label><select id="mp-un" onchange="toggleMpPesoUnitario('mp-un','mp-peso-wrap')"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
     <div class="fgr full"><label>Nome Comercial *</label><input id="mp-nome" type="text" placeholder="Ex: Gordura Vegetal"></div>
     <div class="fgr"><label>Estoque Mínimo *</label><input id="mp-emin" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr"><label>Estoque Atual</label><input id="mp-eatu" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
+    <div class="fgr full" id="mp-peso-wrap" style="display:none;background:var(--cs);border-radius:10px;padding:12px 14px">
+      <label>Peso por unidade (Kg) <span style="font-weight:400;color:var(--tm);font-size:.78rem">— pra mostrar e lançar o estoque também em Kg, além da unidade cadastrada</span></label>
+      <input id="mp-peso-un" type="text" inputmode="decimal" placeholder="Ex: 5 (cada Un pesa 5 Kg)" oninput="saneiaDecimalBR(this)">
+    </div>
     <div class="fgr"><label>Nome Técnico</label><select id="mp-nometec"><option value="">—</option></select></div>
     <div class="fgr"><label>Fabricante</label><select id="mp-fabricante"><option value="">—</option></select></div>
     <div class="fgr"><label>Fornecedor</label><select id="mp-fornecedor"><option value="">—</option></select></div>
@@ -1064,8 +1068,12 @@ tfoot .grand-total td{background:var(--me) !important;color:var(--mp) !important
   <div class="md"><div class="mh"><span class="mt">✏️ Editar Matéria-Prima</span><button class="mc" onclick="closeModal('m-mp-edit')">✕</button></div>
   <div class="mb"><div class="fg">
     <div class="fgr"><label>Código</label><input id="mpe-cod" type="text" disabled style="opacity:.6"></div>
-    <div class="fgr"><label>Unidade</label><select id="mpe-un"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
+    <div class="fgr"><label>Unidade</label><select id="mpe-un" onchange="toggleMpPesoUnitario('mpe-un','mpe-peso-wrap')"><option>Kg</option><option>L</option><option>Un</option><option>g</option><option>ml</option><option>Cx</option><option>Sc</option></select></div>
     <div class="fgr full"><label>Nome Comercial *</label><input id="mpe-nome" type="text"></div>
+    <div class="fgr full" id="mpe-peso-wrap" style="display:none;background:var(--cs);border-radius:10px;padding:12px 14px">
+      <label>Peso por unidade (Kg) <span style="font-weight:400;color:var(--tm);font-size:.78rem">— pra mostrar e lançar o estoque também em Kg</span></label>
+      <input id="mpe-peso-un" type="text" inputmode="decimal" placeholder="Ex: 5" oninput="saneiaDecimalBR(this)">
+    </div>
     <div class="ftit">💰 Preços e Estoque</div>
     <div class="fgr"><label>Estoque Mínimo</label><input id="mpe-emin" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
     <div class="fgr"><label>Estoque Atual</label><input id="mpe-eatu" type="text" inputmode="decimal" oninput="saneiaDecimalBR(this)"></div>
@@ -1253,7 +1261,7 @@ function openModal(id){
   document.getElementById(id).classList.add('open');
   document.querySelectorAll(`#${id} input[type=date]`).forEach(f=>{if(!f.value)f.value=today();});
   // Gera código sequencial ao abrir modal de cadastro
-  if(id==='m-mp-p'){ gerarCodigo('MP','mp-cod'); carregarListasAuxiliaresMP('mp'); }
+  if(id==='m-mp-p'){ gerarCodigo('MP','mp-cod'); carregarListasAuxiliaresMP('mp'); document.getElementById('mp-peso-un').value=''; toggleMpPesoUnitario('mp-un','mp-peso-wrap'); }
   if(id==='m-mp-e'){ document.getElementById('ent-itens-wrap').innerHTML=''; _entItemSeq=0; addEntItemRow(); }
   if(id==='m-mp-e-edit'){ carregarListaAuxSelect('ede-fabricante','materiaprima_fabricantes'); }
   if(id==='m-ins-p') gerarCodigo('IN','ins-cod');
@@ -1351,7 +1359,8 @@ async function loadDash(){
     b.innerHTML = data.map(p=>{
       const st = isP ? p.status : gst(p.estoque_atual, p.estoque_minimo);
       const pt = isP ? (p.percentual_conclusao||0) : (p.estoque_minimo>0 ? Math.min(100,(p.estoque_atual/p.estoque_minimo)*100) : 100);
-      const num= isP ? `${pt}%` : `${fmt(p.estoque_atual)} ${p.unidade||''}`;
+      const numBase = isP ? `${pt}%` : `${fmt(p.estoque_atual)} ${p.unidade||''}`;
+      const num = (!isP && p.peso_unitario_kg) ? `${numBase} <span style="color:var(--tm);font-weight:400">(≈ ${fmt((p.estoque_atual||0)*p.peso_unitario_kg)} Kg)</span>` : numBase;
       const sub= isP ? `${p.ordem_producao}•${p.etapa_atual||'—'}` : (p.codigo||'');
       const sk = (st||'').replace(/\s+/g,'_').replace(/Í/g,'I').replace(/Ã/g,'A').replace(/É/g,'E');
       return`<div class="pr"><div class="pi"><div class="pn">${p.produto||'—'}</div><div class="pc">${sub}</div><div class="pb" style="margin-top:6px;width:110px"><div class="pf ${st==='CRÍTICO'?'cri':st==='OK'||st==='FINALIZADO'?'ok':''}" style="width:${pt}%"></div></div></div><div class="ps"><div class="sn">${num}</div><span class="sb ${sk}">${st}</span></div></div>`;
@@ -1467,8 +1476,8 @@ async function gerarRelatorioDash() {
 
   // Matéria-Prima
   y = drawTable('🌾 MATÉRIA-PRIMA', mp,
-    ['Código','Produto','Un.','Estq. Atual','Preço Médio','Valor Estoque','Status'],
-    p => [p.codigo, p.produto, p.unidade, fmt(p.estoque_atual), fmtR(p.preco_medio||0), fmtR((p.estoque_atual||0)*(p.preco_medio||0)), stLabel(p)],
+    ['Código','Produto','Un.','Estq. Atual','Estq. (Kg)','Preço Médio','Valor Estoque','Status'],
+    p => [p.codigo, p.produto, p.unidade, fmt(p.estoque_atual), p.peso_unitario_kg ? `≈${fmt((p.estoque_atual||0)*p.peso_unitario_kg)}` : '—', fmtR(p.preco_medio||0), fmtR((p.estoque_atual||0)*(p.preco_medio||0)), stLabel(p)],
     y);
 
   if(y > 165) { doc.addPage(); y = M+8; }
@@ -1513,13 +1522,14 @@ async function loadMP(){
     const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
     const vEst=(p.estoque_atual||0)*(p.preco_medio||0);
     const etqData=JSON.stringify({nome:p.produto,codigo:p.codigo,lote:'',fab:'',venc:''});
-    const editData=JSON.stringify({codigo:p.codigo,produto:p.produto,unidade:p.unidade,estoque_minimo:p.estoque_minimo||0,estoque_atual:p.estoque_atual||0,preco_custo:p.preco_custo||0,preco_medio:p.preco_medio||0});
+    const editData=JSON.stringify({codigo:p.codigo,produto:p.produto,unidade:p.unidade,estoque_minimo:p.estoque_minimo||0,estoque_atual:p.estoque_atual||0,preco_custo:p.preco_custo||0,preco_medio:p.preco_medio||0,peso_unitario_kg:p.peso_unitario_kg||null});
+    const estoqueKgTxt = p.peso_unitario_kg ? ` <span style="color:var(--tm);font-size:.85em">(≈ ${fmt((p.estoque_atual||0)*p.peso_unitario_kg)} Kg)</span>` : '';
     return`<tr>
       <td><code>${p.codigo}</code></td>
       <td><strong>${p.produto}</strong></td>
       <td>${p.unidade}</td>
       <td style="text-align:right">${fmt(p.estoque_minimo)}</td>
-      <td style="text-align:right"><strong>${fmt(p.estoque_atual)}</strong></td>
+      <td style="text-align:right"><strong>${fmt(p.estoque_atual)}</strong>${estoqueKgTxt}</td>
       <td class="preco-cell" style="text-align:right">${fmtR(p.preco_medio||0)}</td>
       <td class="preco-cell val-pos" style="text-align:right">${fmtR(vEst)}</td>
       <td><span class="sb ${sk}">${st}</span></td>
@@ -1531,19 +1541,28 @@ async function loadMP(){
     </tr>`;
   }).join('');
 }
+// Mostra o campo "Peso por unidade (Kg)" só quando a unidade cadastrada é de
+// contagem (Un/Cx/Sc) — pra Kg/L/g/ml o conceito não se aplica (já é peso/volume).
+const UNIDADES_CONTAGEM = ['Un','Cx','Sc'];
+function toggleMpPesoUnitario(selectId, wrapId){
+  const un = document.getElementById(selectId).value;
+  document.getElementById(wrapId).style.display = UNIDADES_CONTAGEM.includes(un) ? '' : 'none';
+}
+
 async function saveMP(){
   const cod   = document.getElementById('mp-cod').value.trim();
   const nome  = document.getElementById('mp-nome').value.trim();
   const un    = document.getElementById('mp-un').value;
   const emin  = parseNumBR(document.getElementById('mp-emin').value)||0;
   const eatu  = parseNumBR(document.getElementById('mp-eatu').value)||0;
+  const pesoUn = UNIDADES_CONTAGEM.includes(un) ? (parseNumBR(document.getElementById('mp-peso-un').value)||null) : null;
   const nometec = document.getElementById('mp-nometec').value || null;
   const fabricante = document.getElementById('mp-fabricante').value || null;
   const fornecedor = document.getElementById('mp-fornecedor').value || null;
   const variacao = document.getElementById('mp-variacao').value || null;
   if(!cod || cod.startsWith('⏳')){toast('Aguarde o código ser gerado','error');return;}
   if(!nome){toast('Preencha o nome comercial do produto','error');return;}
-  const {error} = await sb.from('materiaprima_produtos').insert({codigo:cod,produto:nome,unidade:un,estoque_minimo:emin,estoque_atual:eatu,nome_tecnico_id:nometec,fabricante_id:fabricante,fornecedor_id:fornecedor,variacao_id:variacao});
+  const {error} = await sb.from('materiaprima_produtos').insert({codigo:cod,produto:nome,unidade:un,estoque_minimo:emin,estoque_atual:eatu,peso_unitario_kg:pesoUn,nome_tecnico_id:nometec,fabricante_id:fabricante,fornecedor_id:fornecedor,variacao_id:variacao});
   if(error){
     if(error.code==='23505') toast('Código já existe. Reabra o formulário.','error');
     else toast('Erro: '+error.message,'error');
@@ -1614,7 +1633,7 @@ function addEntItemRow(){
           <button type="button" class="btn btn-o btn-sm" onclick="usarConversaoEntradaItem('${prefix}')">Usar Quantidade e Valor Unitário</button>
         </div>
       </div>
-      <div class="fgr"><label>Quantidade *</label><input id="${prefix}-qtd" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this)"></div>
+      <div class="fgr"><label>Quantidade *</label><input id="${prefix}-qtd" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this);atualizarKgHintEntradaItem('${prefix}')"><small id="${prefix}-kg-hint" style="color:var(--tm);display:none"></small></div>
       <div class="fgr"><label>Valor Unitário (R$) *</label><input id="${prefix}-vl" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"></div>
       <div class="fgr"><label>Lote do Fornecedor *</label><input id="${prefix}-lote" type="text" placeholder="LOT-2024-001"></div>
       <div class="fgr"><label>Lote Interno *</label>
@@ -1764,6 +1783,7 @@ async function usarConversaoEntradaItem(prefix){
     return;
   }
   document.getElementById(prefix+'-qtd').value = String(valorQtd).replace('.',',');
+  atualizarKgHintEntradaItem(prefix);
   const valorUnit = parseFloat(resEl.dataset.valorUnit);
   if(!isNaN(valorUnit)){
     document.getElementById(prefix+'-vl').value = valorUnit.toFixed(4).replace('.',',');
@@ -2416,7 +2436,7 @@ async function psFetchAll(tipo) {
   if (_psCache[tipo]) return _psCache[tipo];
   let data = [];
   if (tipo === 'mp') {
-    const r = await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual,fabricante_id').order('produto');
+    const r = await sb.from('materiaprima_produtos').select('codigo,produto,unidade,estoque_atual,fabricante_id,peso_unitario_kg').order('produto');
     data = r.data || [];
   } else if (tipo === 'pa') {
     const r = await sb.from('produto_acabado_cadastro').select('codigo,produto,unidade,estoque_atual,categoria,precificacao_produtos(nome,categoria)').order('produto');
@@ -2496,6 +2516,28 @@ function psSelect(prefix, cod, nome, tipo) {
   // Atualiza a unidade-destino mostrada na calculadora de conversão, se estiver aberta
   const unLabel = document.getElementById('calc-conv-un-destino-' + prefix);
   if (unLabel) atualizarUnidadeDestinoConversaoItem(prefix);
+
+  // Se o produto tem peso por unidade cadastrado (ex: cada Un pesa 5 Kg),
+  // mostra o equivalente em Kg assim que a Quantidade for preenchida.
+  atualizarKgHintEntradaItem(prefix);
+}
+
+// Mostra "≈ X Kg" abaixo da Quantidade quando o produto tem peso_unitario_kg
+// cadastrado (produtos em Un/Cx/Sc com peso fixo por unidade) — assim a
+// entrada continua sendo lançada na unidade que veio na NF, mas dá pra
+// conferir na hora quanto isso representa em Kg.
+function atualizarKgHintEntradaItem(prefix){
+  const hint = document.getElementById(prefix + '-kg-hint');
+  if (!hint) return;
+  const cod = document.getElementById(prefix + '-prod')?.value;
+  const prod = (_psCache['mp']||[]).find(p => p.codigo === cod);
+  const qtd = parseNumBR(document.getElementById(prefix + '-qtd')?.value);
+  if (prod?.peso_unitario_kg && !isNaN(qtd) && qtd > 0) {
+    hint.textContent = `≈ ${fmt(qtd * prod.peso_unitario_kg)} Kg (${fmt(prod.peso_unitario_kg)} Kg por ${prod.unidade})`;
+    hint.style.display = '';
+  } else {
+    hint.style.display = 'none';
+  }
 }
 
 function psClear(prefix) {
@@ -3164,6 +3206,8 @@ function openEditMP(p) {
   document.getElementById('mpe-eatu').value  = p.estoque_atual||0;
   document.getElementById('mpe-preco').value = p.preco_custo||0;
   document.getElementById('mpe-medio').value = p.preco_medio||0;
+  document.getElementById('mpe-peso-un').value = p.peso_unitario_kg||'';
+  toggleMpPesoUnitario('mpe-un','mpe-peso-wrap');
   carregarListasAuxiliaresMP('mpe').then(() => {
     document.getElementById('mpe-nometec').value    = p.nome_tecnico_id||'';
     document.getElementById('mpe-fabricante').value = p.fabricante_id||'';
@@ -3174,13 +3218,15 @@ function openEditMP(p) {
 }
 async function saveEditMP() {
   const cod = document.getElementById('mpe-cod').value;
+  const unEdit = document.getElementById('mpe-un').value;
   const upd = {
     produto:        document.getElementById('mpe-nome').value.trim(),
-    unidade:        document.getElementById('mpe-un').value,
+    unidade:        unEdit,
     estoque_minimo: parseNumBR(document.getElementById('mpe-emin').value)||0,
     estoque_atual:  parseNumBR(document.getElementById('mpe-eatu').value)||0,
     preco_custo:    parseNumBR(document.getElementById('mpe-preco').value)||0,
     preco_medio:    parseNumBR(document.getElementById('mpe-medio').value)||0,
+    peso_unitario_kg: UNIDADES_CONTAGEM.includes(unEdit) ? (parseNumBR(document.getElementById('mpe-peso-un').value)||null) : null,
     nome_tecnico_id:   document.getElementById('mpe-nometec').value || null,
     fabricante_id:     document.getElementById('mpe-fabricante').value || null,
     fornecedor_id:     document.getElementById('mpe-fornecedor').value || null,
@@ -3592,10 +3638,13 @@ async function loadRelSit(cutoff) {
       const sk=st.replace(/Í/g,'I').replace(/Ã/g,'A');
       const precoBase = Number(p[precoCampo])||0;
       const vEst=(p.estoque_atual||0)*precoBase;
+      const atualTxt = p.peso_unitario_kg
+        ? `<strong>${fmt(p.estoque_atual)}</strong> <span style="color:var(--tm);font-size:.85em">(≈ ${fmt((p.estoque_atual||0)*p.peso_unitario_kg)} Kg)</span>`
+        : `<strong>${fmt(p.estoque_atual)}</strong>`;
       return `<tr>
         <td><code>${p.codigo}</code></td><td>${p.produto}</td><td>${p.categoria||p.unidade}</td>
         <td>${p.numero_lote||'—'}</td><td>${fmtD(p.data_fabricacao)}</td><td class="${vc}">${fmtD(p.data_vencimento)}</td>
-        <td>${fmt(p.estoque_minimo)}</td><td><strong>${fmt(p.estoque_atual)}</strong></td>
+        <td>${fmt(p.estoque_minimo)}</td><td>${atualTxt}</td>
         <td class="preco-cell">${fmtR(precoBase)}</td>
         ${hasVenda?`<td class="preco-cell">${fmtR(p.preco_venda||0)}</td>`:''}
         <td class="preco-cell val-pos"><strong>${fmtR(vEst)}</strong></td>
