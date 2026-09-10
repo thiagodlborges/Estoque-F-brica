@@ -1618,7 +1618,7 @@ function addEntItemRow(){
           <span id="calc-conv-toggle-icon-${prefix}">▾</span>
         </label>
         <div id="calc-conv-body-${prefix}" style="display:none;margin-top:10px">
-          <p style="font-size:.78rem;color:var(--tm);margin-bottom:8px">Preencha como veio na nota fiscal — o sistema converte pra unidade cadastrada do produto (<strong id="calc-conv-un-destino-${prefix}">selecione o produto</strong>) e já calcula o valor unitário correto.</p>
+          <p style="font-size:.78rem;color:var(--tm);margin-bottom:8px">Preencha como veio na nota fiscal — o sistema converte pra unidade cadastrada do produto (<strong id="calc-conv-un-destino-${prefix}">selecione o produto</strong>) e já calcula o valor unitário correto. Ex: nota veio em valor por balde? Preencha "Valor unitário da NF" com o valor do balde aqui embaixo — o sistema calcula sozinho quanto isso dá por Kg.</p>
           <div class="fg" style="grid-template-columns:1fr 1fr 1fr">
             <div class="fgr"><label>Qtd. de embalagens (NF)</label><input id="calc-conv-qtd-emb-${prefix}" type="text" inputmode="decimal" placeholder="Ex: 18" oninput="saneiaDecimalBR(this);calcularConversaoEntradaItem('${prefix}')"></div>
             <div class="fgr"><label>Conteúdo de cada embalagem</label><input id="calc-conv-conteudo-${prefix}" type="text" inputmode="decimal" placeholder="Ex: 5" oninput="saneiaDecimalBR(this);calcularConversaoEntradaItem('${prefix}')"></div>
@@ -1634,7 +1634,7 @@ function addEntItemRow(){
         </div>
       </div>
       <div class="fgr"><label>Quantidade *</label><input id="${prefix}-qtd" type="text" inputmode="decimal" placeholder="0" oninput="saneiaDecimalBR(this);atualizarKgHintEntradaItem('${prefix}')"><small id="${prefix}-kg-hint" style="color:var(--tm);display:none"></small></div>
-      <div class="fgr"><label>Valor Unitário (R$) *</label><input id="${prefix}-vl" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"></div>
+      <div class="fgr"><label id="${prefix}-vl-label">Valor Unitário (R$) *</label><input id="${prefix}-vl" type="text" inputmode="decimal" placeholder="0,00" oninput="saneiaDecimalBR(this)"><small style="color:var(--tm)">Valor já por unidade cadastrada do produto (ex: por Kg) — se a nota vier em valor de balde/caixa, use a calculadora acima pra converter, não digite aqui o valor do balde direto.</small></div>
       <div class="fgr"><label>Lote do Fornecedor *</label><input id="${prefix}-lote" type="text" placeholder="LOT-2024-001"></div>
       <div class="fgr"><label>Lote Interno *</label>
         <div style="display:flex;gap:6px">
@@ -2516,6 +2516,14 @@ function psSelect(prefix, cod, nome, tipo) {
   // Atualiza a unidade-destino mostrada na calculadora de conversão, se estiver aberta
   const unLabel = document.getElementById('calc-conv-un-destino-' + prefix);
   if (unLabel) atualizarUnidadeDestinoConversaoItem(prefix);
+
+  // Deixa explícito em qual unidade o Valor Unitário deve ser digitado —
+  // exatamente a dúvida que gerou confusão: "coloco o valor do balde ou do Kg?"
+  const vlLabel = document.getElementById(prefix + '-vl-label');
+  if (vlLabel) {
+    const prod = (_psCache['mp']||[]).find(p => p.codigo === cod);
+    vlLabel.textContent = prod?.unidade ? `Valor Unitário (R$/${prod.unidade}) *` : 'Valor Unitário (R$) *';
+  }
 
   // Se o produto tem peso por unidade cadastrado (ex: cada Un pesa 5 Kg),
   // mostra o equivalente em Kg assim que a Quantidade for preenchida.
